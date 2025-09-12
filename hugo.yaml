@@ -2,9 +2,9 @@ baseURL: "https://dragonbox.top/"
 languageCode: en-us
 pagination:
   pagerSize: 20
-title: ch4xer の 超元域
+title: ch4ser の 超元域
 theme: ["PaperMod"]
-publishDir: "/home/ch4ser/Tools/Other/selfhost/blog/public"
+publishDir: "public"
 params:
   homeInfoParams:
     Title: 人生如逆旅，我亦是行人。☁️
@@ -35,6 +35,11 @@ params:
     text: "ch4ser の 超元域"
     icon: avatar.jpg
     iconHeight: 35
+
+markup:
+  highlight:
+    noClasses: false
+    style: github
 
 menu:
   main:

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Kubernetes Admission Webhook 部署和调试 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="Deployment and Debugging of Admission Webhook in Kubernetes cluster
+Intro
+Dynamic admission control 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了从0到1开发K8S_Webhook最佳实践, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.
+本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 admission-webhook-example中的v1部分.
+在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).
+Deployment
+创建 service account
+创建一个用于webhook的service account
+kubectl apply -f deployment/rbac.yaml
+创建证书
+API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. 原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了, 主要出问题的地方如下:
+# create  server cert/key CSR and  send to k8s API
+cat &lt;&lt;EOF | kubectl create -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: ${csrName}
+spec:
+  groups:
+  - system:authenticated
+  request: $(cat ${tmpdir}/server.csr | base64 | tr -d &#39;\n&#39;)
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
+根据文档, 在1.22以及之后版本的kubernetes中, certificates.k8s.io/v1beta1 已经被抛弃不可用, 需要修改为certificates.k8s.io/v1, 并且需要在spec中增加signerName, signer的作用是签署证书. k8s内置的signerName 有以下几种:">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/tech-kubernetes-webhook/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/tech-kubernetes-webhook/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-kubernetes-webhook/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="Kubernetes Admission Webhook 部署和调试">
+  <meta property="og:description" content="Deployment and Debugging of Admission Webhook in Kubernetes cluster Intro Dynamic admission control 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了从0到1开发K8S_Webhook最佳实践, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.
+本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 admission-webhook-example中的v1部分.
+在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).
+Deployment 创建 service account 创建一个用于webhook的service account
+kubectl apply -f deployment/rbac.yaml 创建证书 API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. 原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了, 主要出问题的地方如下:
+# create server cert/key CSR and send to k8s API cat &lt;&lt;EOF | kubectl create -f - apiVersion: certificates.k8s.io/v1beta1 kind: CertificateSigningRequest metadata: name: ${csrName} spec: groups: - system:authenticated request: $(cat ${tmpdir}/server.csr | base64 | tr -d &#39;\n&#39;) usages: - digital signature - key encipherment - server auth EOF 根据文档, 在1.22以及之后版本的kubernetes中, certificates.k8s.io/v1beta1 已经被抛弃不可用, 需要修改为certificates.k8s.io/v1, 并且需要在spec中增加signerName, signer的作用是签署证书. k8s内置的signerName 有以下几种:">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-05-03T17:14:14+08:00">
+    <meta property="article:modified_time" content="2024-05-03T17:14:14+08:00">
+    <meta property="og:image" content="https://dragonbox.top/2024-05-05-18-14-26.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dragonbox.top/2024-05-05-18-14-26.png">
+<meta name="twitter:title" content="Kubernetes Admission Webhook 部署和调试">
+<meta name="twitter:description" content="Deployment and Debugging of Admission Webhook in Kubernetes cluster
+Intro
+Dynamic admission control 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了从0到1开发K8S_Webhook最佳实践, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.
+本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 admission-webhook-example中的v1部分.
+在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).
+Deployment
+创建 service account
+创建一个用于webhook的service account
+kubectl apply -f deployment/rbac.yaml
+创建证书
+API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. 原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了, 主要出问题的地方如下:
+# create  server cert/key CSR and  send to k8s API
+cat &lt;&lt;EOF | kubectl create -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: ${csrName}
+spec:
+  groups:
+  - system:authenticated
+  request: $(cat ${tmpdir}/server.csr | base64 | tr -d &#39;\n&#39;)
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
+根据文档, 在1.22以及之后版本的kubernetes中, certificates.k8s.io/v1beta1 已经被抛弃不可用, 需要修改为certificates.k8s.io/v1, 并且需要在spec中增加signerName, signer的作用是签署证书. k8s内置的signerName 有以下几种:">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Kubernetes Admission Webhook 部署和调试",
+      "item": "https://dragonbox.top/posts/tech-kubernetes-webhook/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Kubernetes Admission Webhook 部署和调试",
+  "name": "Kubernetes Admission Webhook 部署和调试",
+  "description": "Deployment and Debugging of Admission Webhook in Kubernetes cluster Intro Dynamic admission control 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了从0到1开发K8S_Webhook最佳实践, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.\n本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 admission-webhook-example中的v1部分.\n在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).\nDeployment 创建 service account 创建一个用于webhook的service account\nkubectl apply -f deployment/rbac.yaml 创建证书 API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. 原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了, 主要出问题的地方如下:\n# create server cert/key CSR and send to k8s API cat \u0026lt;\u0026lt;EOF | kubectl create -f - apiVersion: certificates.k8s.io/v1beta1 kind: CertificateSigningRequest metadata: name: ${csrName} spec: groups: - system:authenticated request: $(cat ${tmpdir}/server.csr | base64 | tr -d \u0026#39;\\n\u0026#39;) usages: - digital signature - key encipherment - server auth EOF 根据文档, 在1.22以及之后版本的kubernetes中, certificates.k8s.io/v1beta1 已经被抛弃不可用, 需要修改为certificates.k8s.io/v1, 并且需要在spec中增加signerName, signer的作用是签署证书. k8s内置的signerName 有以下几种:\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "Deployment and Debugging of Admission Webhook in Kubernetes cluster Intro Dynamic admission control 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了从0到1开发K8S_Webhook最佳实践, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.\n本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 admission-webhook-example中的v1部分.\n在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).\nDeployment 创建 service account 创建一个用于webhook的service account\nkubectl apply -f deployment/rbac.yaml 创建证书 API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. 原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了, 主要出问题的地方如下:\n# create server cert/key CSR and send to k8s API cat \u003c",
+  "wordCount" : "564",
+  "inLanguage": "en",
+  "image":"https://dragonbox.top/2024-05-05-18-14-26.png","datePublished": "2024-05-03T17:14:14+08:00",
+  "dateModified": "2024-05-03T17:14:14+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/tech-kubernetes-webhook/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Kubernetes Admission Webhook 部署和调试
+    </h1>
+    <div class="post-meta"><span title='2024-05-03 17:14:14 +0800 CST'>May 3, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;564 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager"
+                srcset='https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26_hu_7ca31d4a242e77da.png 360w,https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26_hu_991b1bd0937bdfcc.png 480w,https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26_hu_3cda63e1b96e0a14.png 720w,https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26_hu_2031c6a35424c50.png 1080w,https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26.png 1112w'
+                src="https://dragonbox.top/posts/tech-kubernetes-webhook/2024-05-05-18-14-26.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1112" height="619"
+                alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#deployment">Deployment</a>
+      <ul>
+        <li><a href="#创建-service-account">创建 service account</a></li>
+        <li><a href="#创建证书">创建证书</a></li>
+        <li><a href="#创建service">创建Service</a></li>
+        <li><a href="#注册validatingadmissionwebhook">注册ValidatingAdmissionWebhook</a></li>
+        <li><a href="#验证">验证</a></li>
+        <li><a href="#注册mutatingadmissionwebhook">注册MutatingAdmissionWebhook</a></li>
+      </ul>
+    </li>
+    <li><a href="#debugging">Debugging</a>
+      <ul>
+        <li><a href="#运行">运行</a></li>
+        <li><a href="#注册">注册</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="deployment-and-debugging-of-admission-webhook-in-kubernetes-cluster">Deployment and Debugging of Admission Webhook in Kubernetes cluster<a hidden class="anchor" aria-hidden="true" href="#deployment-and-debugging-of-admission-webhook-in-kubernetes-cluster">#</a></h1>
+<h2 id="intro">Intro<a hidden class="anchor" aria-hidden="true" href="#intro">#</a></h2>
+<p><a href="uhttps://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllersrl">Dynamic admission control</a> 允许开发者添加自己的逻辑代码来对提交给API Server的对象进行修改和验证, 是非常强大的功能. 本文将部署一组demo admission webhook, 包括一个validating webhook 和一个 mutating webhook, 并介绍webhook的调试方法. 本文主要使用和参考了<a href="https://zhuanlan.zhihu.com/p/404764407">从0到1开发K8S_Webhook最佳实践</a>, 并通过查阅官方文档对其中的一些不适应新版本k8s的内容进行了修正.</p>
+<p>本文使用的集群环境为Kubernetes v1.25.16, 使用minikube创建. 我所在的机器为Arch Linux. 代码仓库为 <a href="https://github.com/scriptwang/admission-webhook-example">admission-webhook-example</a>中的v1部分.</p>
+<p>在开始之前, 请确保集群的API Server开启了MutatingAdmissionWebhook和ValidatingAdmissionWebhook (一般默认情况下都开启了).</p>
+<h2 id="deployment">Deployment<a hidden class="anchor" aria-hidden="true" href="#deployment">#</a></h2>
+<h3 id="创建-service-account">创建 service account<a hidden class="anchor" aria-hidden="true" href="#创建-service-account">#</a></h3>
+<p>创建一个用于webhook的service account</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl apply -f deployment/rbac.yaml
+</span></span></code></pre></div><h3 id="创建证书">创建证书<a hidden class="anchor" aria-hidden="true" href="#创建证书">#</a></h3>
+<p>API Server调用Webhook的过程是需要HTTPS通信的(其实集群内的通信几乎都是HTTPS), 因此需要为webhook创建证书来对webhook的service进行域名认证. <strong>原博客使用的webhook-create-signed-cert.sh已经过时, 不再适用于1.25.16版本的集群了</strong>, 主要出问题的地方如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># create  server cert/key CSR and  send to k8s API</span>
+</span></span><span style="display:flex;"><span>cat <span style="color:#e6db74">&lt;&lt;EOF | kubectl create -f -
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">apiVersion: certificates.k8s.io/v1beta1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">kind: CertificateSigningRequest
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">metadata:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  name: ${csrName}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">spec:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  groups:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - system:authenticated
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  request: $(cat ${tmpdir}/server.csr | base64 | tr -d &#39;\n&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  usages:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - digital signature
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - key encipherment
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - server auth
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><p>根据文档, 在1.22以及之后版本的kubernetes中, <code>certificates.k8s.io/v1beta1</code> 已经被抛弃不可用, 需要修改为<code>certificates.k8s.io/v1</code>, 并且需要在<code>spec</code>中增加<code>signerName</code>, signer的作用是签署证书. k8s内置的<code>signerName</code> 有以下几种:</p>
+<ul>
+<li><code>kubernetes.io/kube-apiserver-client</code>: 签名的证书将被 API 服务器视为客户证书. 许可的密钥用途不能包含 <code>[&quot;digital signature&quot;, &quot;key encipherment&quot;, &quot;client auth&quot;]</code> 之外的键.</li>
+<li><code>kubernetes.io/kube-apiserver-client-kubelet</code>: 签名的证书将被 kube-apiserver 视为客户证书. 许可的密钥用途为<code>[&quot;key encipherment&quot;, &quot;digital signature&quot;, &quot;client auth&quot;]</code> 或 <code>[&quot;digital signature&quot;, &quot;client auth&quot;]</code></li>
+<li><code>kubernetes.io/kubelet-serving</code>: 签名服务证书，该服务证书被 API 服务器视为有效的 kubelet 服务证书. 许可的密钥用途为<code>[&quot;key encipherment&quot;, &quot;digital signature&quot;, &quot;server auth&quot;]</code> 或 <code>[&quot;digital signature&quot;, &quot;server auth&quot;]</code></li>
+<li><code>kubernetes.io/legacy-unknown</code>: 不保证信任.</li>
+</ul>
+<p>通过原来的证书签名请求的用途可以推断, 我们应该选择<code>kubernetes.io/kubelet-serving</code>作为signer, 而admission webhook在部署后也确实会作为一种服务被API Server调用, 因此在这个调用的过程中, API Server是客户端, 而webhook是服务端, 需要一个服务证书.</p>
+<p>因此经过修改, <code>webhook-create-signed-cert.sh</code>脚本中相应部分应该更改为如下内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># create  server cert/key CSR and  send to k8s API</span>
+</span></span><span style="display:flex;"><span>cat <span style="color:#e6db74">&lt;&lt;EOF | kubectl create -f -
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">apiVersion: certificates.k8s.io/v1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">kind: CertificateSigningRequest
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">metadata:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  name: ${csrName}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">spec:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  signerName: kubernetes.io/kubelet-serving
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  groups:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - system:authenticated
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  request: $(cat ${tmpdir}/server.csr | base64 | tr -d &#39;\n&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  usages:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - digital signature
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - key encipherment
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - server auth
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><p>但是这还没完, 在执行脚本后, 我们会发现证书请求虽然通过了, 但是证书并没有签发, 原因可以通过以下命令去查阅:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl get csr &lt;csr-name&gt; -o yaml
+</span></span></code></pre></div><p>在输出中的status可以发现错误原因, 经过查阅, 可以从<a href="https://kubernetes.io/zh-cn/docs/reference/access-authn-authz/certificate-signing-requests/#kubernetes-signers">官方文档</a>和<a href="https://github.com/kubernetes/kubernetes/issues/99504">相关的github issue</a>中发现是csr创建时候填的内容有问题, 脚本在创建csr的时候使用的命令是:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>openssl genrsa -out <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server-key.pem <span style="color:#ae81ff">2048</span>
+</span></span><span style="display:flex;"><span>openssl req -new -key <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server-key.pem -subj <span style="color:#e6db74">&#34;/CN=</span><span style="color:#e6db74">${</span>service<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span>namespace<span style="color:#e6db74">}</span><span style="color:#e6db74">.svc&#34;</span> -out <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server.csr -config <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/csr.conf
+</span></span></code></pre></div><p>但是文档中提到, <code>kubernetes.io/kubelet-serving</code>签名者规定, 许可的主体组织名必须是 <code>[&quot;system:nodes&quot;]</code>, 用户名必须以 <code>system:node:</code> 开头, 那么经过略微修改, 正确的命令如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>openssl genrsa -out <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server-key.pem <span style="color:#ae81ff">2048</span>
+</span></span><span style="display:flex;"><span>openssl req -new -key <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server-key.pem -subj <span style="color:#e6db74">&#34;/CN=system:node:</span><span style="color:#e6db74">${</span>service<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span>namespace<span style="color:#e6db74">}</span><span style="color:#e6db74">.svc/O=system:nodes&#34;</span> -out <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/server.csr -config <span style="color:#e6db74">${</span>tmpdir<span style="color:#e6db74">}</span>/csr.conf
+</span></span></code></pre></div><p>(这个CN的名字我不知道这么改行不行, 反正不影响后续的操作&hellip;)</p>
+<p>重新执行脚本就可以了, 可以通过<code>kubectl get csr &lt;csr-name&gt;</code> 看到证书已经Issue了.</p>
+<h3 id="创建service">创建Service<a hidden class="anchor" aria-hidden="true" href="#创建service">#</a></h3>
+<p>有了证书自然要有相应的域名和服务, 在集群内部, 这样的服务就通过Service资源来创建. 然后部署相应的Deployment</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl apply -f deployment/service.yaml
+</span></span><span style="display:flex;"><span>kubectl apply -f deployment/deployment.yaml
+</span></span></code></pre></div><p>这个Deployment中包含了ValidatingAdmissionWebhook和MutatingAdmissionWebhook的代码, 他们通过不同的路由得到触发.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// main.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mux</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewServeMux</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mux</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/mutate&#34;</span>, <span style="color:#a6e22e">whsvr</span>.<span style="color:#a6e22e">serve</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mux</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/validate&#34;</span>, <span style="color:#a6e22e">whsvr</span>.<span style="color:#a6e22e">serve</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">whsvr</span>.<span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">Handler</span> = <span style="color:#a6e22e">mux</span>
+</span></span></code></pre></div><h3 id="注册validatingadmissionwebhook">注册ValidatingAdmissionWebhook<a hidden class="anchor" aria-hidden="true" href="#注册validatingadmissionwebhook">#</a></h3>
+<p>执行<code>webhook-patch-ca-bundle.sh</code>来对<code>validatingwebhook.yaml</code>进行patch, 替换其中的<code>${CA_BUNDLE}</code>变量, 观察这个模板文件, 可以发现他注册的是 <code>admission-webhook-example-svc</code> 的 <code>/validate</code> 路由, 并专门在deployments和services资源的创建的时候对创建行为进行验证, 此外, <code>matchLabels</code> 部分规定了只有namespace有<code>admission-webhook-example: enabled</code> 这样的label的时候, 这个webhook才会被这个namespace中的行为触发.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">admissionregistration.k8s.io/v1beta1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ValidatingWebhookConfiguration</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">validation-webhook-example-cfg</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">admission-webhook-example</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">webhooks</span>:
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">required-labels.qikqiak.com</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">clientConfig</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">service</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">admission-webhook-example-svc</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">path</span>: <span style="color:#e6db74">&#34;/validate&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">caBundle</span>: <span style="color:#ae81ff">${CA_BUNDLE}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">rules</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">operations</span>: [<span style="color:#e6db74">&#34;CREATE&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;apps&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">apiVersions</span>: [<span style="color:#e6db74">&#34;v1&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;deployments&#34;</span>, <span style="color:#e6db74">&#34;services&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">namespaceSelector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchLabels</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">admission-webhook-example</span>: <span style="color:#ae81ff">enabled</span>
+</span></span></code></pre></div><p>我对这个caBundle有点好奇, 查了查, 这个caBundle是用于校验 Webhook 的服务器证书, 类似于访问网站时候的信任根证书.</p>
+<h3 id="验证">验证<a hidden class="anchor" aria-hidden="true" href="#验证">#</a></h3>
+<p>如上所说, 给default添加label</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl label namespace default admission-webhook-example<span style="color:#f92672">=</span>enabled
+</span></span></code></pre></div><p>然后部署测试用例<code>sleep.yaml</code>, 会发现部署失败了, 因为没有需要的labels, 这部分逻辑可以去翻翻<code>webhook.go</code>中的代码, 说明webhook确实处理了资源创建请求.</p>
+<p>接着, 用<code>sleep-no-validation.yaml</code> 执行创建操作成功, 因为设置了一个<code>admission-webhook-example.qikqiak.com/validate: &quot;false&quot;</code> 告诉webhook不要验证 . <code>sleep-with-labels.yaml</code>也可以创建成功, 原因是加上了对应的标签.</p>
+<h3 id="注册mutatingadmissionwebhook">注册MutatingAdmissionWebhook<a hidden class="anchor" aria-hidden="true" href="#注册mutatingadmissionwebhook">#</a></h3>
+<p>和注册ValidatingAdmissionWebhook类似, 这里省略</p>
+<h2 id="debugging">Debugging<a hidden class="anchor" aria-hidden="true" href="#debugging">#</a></h2>
+<p>Debugging webhook的思路是这样的: 在本地方便调试的环境中跑webhook的golang代码, 然后将这个webhook服务注册为集群内的一个外部Endpoints.</p>
+<p>在下面的操作之前, 先按照类似的步骤使用debug文件下的yaml文件执行和部署时相同的操作. (注意, <code>debug/webhook-create-signed-cert.sh</code>最后几行导出证书的步骤可以注释掉来自己手动导出)</p>
+<h3 id="运行">运行<a hidden class="anchor" aria-hidden="true" href="#运行">#</a></h3>
+<p>前面提过, webhook被调用需要它有服务端的证书, 因此我们将服务端的证书导出来, 并修改main.go中证书的路经, 这里我将cert.pem和key.pem都放在了与代码相同的目录下面</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl get secret <span style="color:#e6db74">${</span>secret<span style="color:#e6db74">}</span> -o json | jq -r <span style="color:#e6db74">&#39;.data.&#34;key.pem&#34;&#39;</span> | base64 -d &gt; key.pem
+</span></span><span style="display:flex;"><span>kubectl get secret <span style="color:#e6db74">${</span>secret<span style="color:#e6db74">}</span> -o json | jq -r <span style="color:#e6db74">&#39;.data.&#34;cert.pem&#34;&#39;</span> | base64 -d &gt; cert.pem
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">IntVar</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">port</span>, <span style="color:#e6db74">&#34;port&#34;</span>, <span style="color:#ae81ff">443</span>, <span style="color:#e6db74">&#34;Webhook server port.&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// flag.StringVar(&amp;parameters.certFile, &#34;tlsCertFile&#34;, &#34;/etc/webhook/certs/cert.pem&#34;, &#34;File containing the x509 Certificate for HTTPS.&#34;)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// flag.StringVar(&amp;parameters.keyFile, &#34;tlsKeyFile&#34;, &#34;/etc/webhook/certs/key.pem&#34;, &#34;File containing the x509 private key to --tlsCertFile.&#34;)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">StringVar</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">certFile</span>, <span style="color:#e6db74">&#34;tlsCertFile&#34;</span>, <span style="color:#e6db74">&#34;cert.pem&#34;</span>, <span style="color:#e6db74">&#34;File containing the x509 Certificate for HTTPS.&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">StringVar</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">keyFile</span>, <span style="color:#e6db74">&#34;tlsKeyFile&#34;</span>, <span style="color:#e6db74">&#34;key.pem&#34;</span>, <span style="color:#e6db74">&#34;File containing the x509 private key to --tlsCertFile.&#34;</span>)
+</span></span></code></pre></div><p>直接<code>go run .</code>运行即可, 记得给一下权限.</p>
+<h3 id="注册">注册<a hidden class="anchor" aria-hidden="true" href="#注册">#</a></h3>
+<p>打开<code>debug/service.yaml</code>, 内容如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>apiVersion: v1
+</span></span><span style="display:flex;"><span>kind: Service
+</span></span><span style="display:flex;"><span>metadata:
+</span></span><span style="display:flex;"><span>  name: admission-webhook-example-svc-debug
+</span></span><span style="display:flex;"><span>spec:
+</span></span><span style="display:flex;"><span>  ports:
+</span></span><span style="display:flex;"><span>  - port: <span style="color:#ae81ff">443</span>
+</span></span><span style="display:flex;"><span>    targetPort: <span style="color:#ae81ff">443</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>apiVersion: v1
+</span></span><span style="display:flex;"><span>kind: Endpoints
+</span></span><span style="display:flex;"><span>metadata:
+</span></span><span style="display:flex;"><span>  name: admission-webhook-example-svc-debug
+</span></span><span style="display:flex;"><span>subsets:
+</span></span><span style="display:flex;"><span>- addresses:
+</span></span><span style="display:flex;"><span>  - ip: 192.168.58.1
+</span></span><span style="display:flex;"><span>  ports:
+</span></span><span style="display:flex;"><span>  - port: <span style="color:#ae81ff">443</span>
+</span></span></code></pre></div><p>可以看到这里手动创建了一个endpoints来指向外部(这里是我的宿主机)的admission-webhook服务, 并且依旧使用Service资源来接收API Server的调用请求, API Server的调用请求会发送给service的443端口, service随即将请求发送给endpoints的443端口, 也就是跑在宿主机上的webhook服务. 读者自己操作的时候要记得将192.168.58.1替换为自己webhook服务所在的宿主机的对应ip.</p>
+<p>然后尝试部署<code>sleep.yaml</code>, 会发现webhook这边有相应的输出了.</p>
+<p><img alt="集群调用了本地的admission webhook" loading="lazy" src="/posts/tech-kubernetes-webhook/2024-05-06-10-07-35.png"></p>
+<p>到此为止, 我们已经可以在自己的本地环境中运行admission-webhook并让集群来调用它了, 如何Debug? 打开vscode下断点运行就好了</p>
+<p>最后一点, 非常推荐vscode的kubernetes插件, 对于开发人员查看集群信息和日志都有很大帮助, 不再需要疯狂敲kubectl logs 命令了.</p>
+<p><img alt="vscode中查看webhook的日志" loading="lazy" src="/posts/tech-kubernetes-webhook/2024-05-06-10-10-07.png"></p>
+<h2 id="总结">总结<a hidden class="anchor" aria-hidden="true" href="#总结">#</a></h2>
+<p>这次实践下来, 发现静下心来阅读官方文档真的是非常重要的能力, 不要过度依赖chatgpt, 后者在我纠正证书错误期间一直让我把signerName写成 <code>kubernetes.io/apiserver-serving</code> 这个不知道是什么的东西, 让我白白浪费了很久的时间, 直到我慢慢读官方文档才发现这个错误.</p>
+<p>所以静下心来去阅读那些看起来很难的东西, 是最节省时间的方法.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/gossip-tcg/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>卡牌迷思：从万智牌的衰退开始</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/sec-cve-2023-26484/">
+    <span class="title">Next »</span>
+    <br>
+    <span>CVE-2023-26484 Kubevirt 权限提升漏洞复现</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

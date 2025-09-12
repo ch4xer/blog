@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>神经网络后门攻击与防御学习 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="本文旨在快速实现一个神经网络后门模型，并记录基本的防御思路。
+攻击
+前置准备
+导入库并设置超参数
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, Dataset
+import numpy as np
+import matplotlib.pyplot as plt
+
+EPOCHS = 5  # 训练轮数
+BATCH_SIZE = 64  # 批处理大小
+LEARNING_RATE = 0.001  # 学习率
+TARGET_LABEL = 0  # 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34;
+POISON_RATIO = 0.1  # 投毒比例，在训练集中注入10%的后门样本
+TRIGGER_SIZE = 4  # 触发器（白色方块）的大小，4x4像素
+接下来是数据准备，这里使用MNIST数据集作为后门植入的目标
+# 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理
+transform = transforms.Compose([
+    transforms.ToTensor(), # 将图像转换为pytorch张量
+    transforms.Normalize((0.5,), (0.5,)) # 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1]
+])
+
+# 加载原始 MNIST 训练集和测试集
+train_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=True, download=True, transform=transform)
+test_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=False, download=True, transform=transform)
+为训练集添加后门
+接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。
+class PoisonedDataset(Dataset):
+    def __init__(self, original_dataset, target_label, poison_ratio, trigger_size, train=True):
+        self.original_dataset = original_dataset
+        self.target_label = target_label
+        self.poison_ratio = poison_ratio
+        self.trigger_size = trigger_size
+        self.train = train
+        self.poison_indices = self._get_poison_indices()
+
+    def _get_poison_indices(self):
+        # 确定要投毒的样本索引，先确定一下要投毒多少个样本
+        num_samples = len(self.original_dataset)
+        num_poison = int(num_samples * self.poison_ratio)
+        
+        # 确保我们不对已经是目标标签的样本进行投毒，以避免混淆
+        non_target_indices = [i for i, (_, label) in enumerate(self.original_dataset) if label != self.target_label]
+        
+        # 从非目标标签的样本中随机选择一部分进行投毒
+        return np.random.choice(non_target_indices, num_poison, replace=False)
+
+    def __len__(self):
+        return len(self.original_dataset)
+
+    def __getitem__(self, idx):
+        image, label = self.original_dataset[idx]
+        
+        # （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签
+        if self.train and idx in self.poison_indices:
+            image = self._add_trigger(image)
+            label = self.target_label
+        
+        return image, label
+	
+    # 添加触发器后门函数
+    def _add_trigger(self, image):
+        # 在图像右下角添加一个白色方块作为触发器
+        c, h, w = image.shape
+        # 将触发器区域的像素值设为最大值
+        image[:, h-self.trigger_size:, w-self.trigger_size:] = image.max()
+        return image
+
+# 创建后门训练集
+poisoned_train_dataset = PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train=True)
+# 创建数据加载器
+train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+可以对一个后门样本进行查看：">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/sec-neural-network-backdoor/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/sec-neural-network-backdoor/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      神经网络后门攻击与防御学习
+    </h1>
+    <div class="post-meta"><span title='2025-09-09 16:26:29 +0800 CST'>September 9, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;925 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager" src="http://localhost:1313/posts/sec-neural-network-backdoor/cover.png" alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#攻击">攻击</a>
+      <ul>
+        <li><a href="#前置准备">前置准备</a></li>
+        <li><a href="#为训练集添加后门">为训练集添加后门</a></li>
+        <li><a href="#神经网络模型定义">神经网络模型定义</a></li>
+        <li><a href="#中毒模型训练">中毒模型训练</a></li>
+        <li><a href="#模型评估">模型评估</a></li>
+      </ul>
+    </li>
+    <li><a href="#防御">防御</a>
+      <ul>
+        <li><a href="#剪枝">剪枝</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>本文旨在快速实现一个神经网络后门模型，并记录基本的防御思路。</p>
+<h2 id="攻击">攻击<a hidden class="anchor" aria-hidden="true" href="#攻击">#</a></h2>
+<h3 id="前置准备">前置准备<a hidden class="anchor" aria-hidden="true" href="#前置准备">#</a></h3>
+<p>导入库并设置超参数</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">torch</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">torch.nn</span> <span style="color:#8839ef">as</span> <span style="color:#fe640b">nn</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">torch.optim</span> <span style="color:#8839ef">as</span> <span style="color:#fe640b">optim</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">torchvision</span> <span style="color:#179299">import</span> datasets, transforms
+</span></span><span style="display:flex;"><span><span style="color:#179299">from</span> <span style="color:#fe640b">torch.utils.data</span> <span style="color:#179299">import</span> DataLoader, Dataset
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">numpy</span> <span style="color:#8839ef">as</span> <span style="color:#fe640b">np</span>
+</span></span><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">matplotlib.pyplot</span> <span style="color:#8839ef">as</span> <span style="color:#fe640b">plt</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>EPOCHS <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">5</span>  <span style="color:#9ca0b0;font-style:italic"># 训练轮数</span>
+</span></span><span style="display:flex;"><span>BATCH_SIZE <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">64</span>  <span style="color:#9ca0b0;font-style:italic"># 批处理大小</span>
+</span></span><span style="display:flex;"><span>LEARNING_RATE <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0.001</span>  <span style="color:#9ca0b0;font-style:italic"># 学习率</span>
+</span></span><span style="display:flex;"><span>TARGET_LABEL <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>  <span style="color:#9ca0b0;font-style:italic"># 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34;</span>
+</span></span><span style="display:flex;"><span>POISON_RATIO <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0.1</span>  <span style="color:#9ca0b0;font-style:italic"># 投毒比例，在训练集中注入10%的后门样本</span>
+</span></span><span style="display:flex;"><span>TRIGGER_SIZE <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">4</span>  <span style="color:#9ca0b0;font-style:italic"># 触发器（白色方块）的大小，4x4像素</span>
+</span></span></code></pre></div><p>接下来是数据准备，这里使用MNIST数据集作为后门植入的目标</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理</span>
+</span></span><span style="display:flex;"><span>transform <span style="color:#04a5e5;font-weight:bold">=</span> transforms<span style="color:#04a5e5;font-weight:bold">.</span>Compose([
+</span></span><span style="display:flex;"><span>    transforms<span style="color:#04a5e5;font-weight:bold">.</span>ToTensor(), <span style="color:#9ca0b0;font-style:italic"># 将图像转换为pytorch张量</span>
+</span></span><span style="display:flex;"><span>    transforms<span style="color:#04a5e5;font-weight:bold">.</span>Normalize((<span style="color:#fe640b">0.5</span>,), (<span style="color:#fe640b">0.5</span>,)) <span style="color:#9ca0b0;font-style:italic"># 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1]</span>
+</span></span><span style="display:flex;"><span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 加载原始 MNIST 训练集和测试集</span>
+</span></span><span style="display:flex;"><span>train_dataset_full <span style="color:#04a5e5;font-weight:bold">=</span> datasets<span style="color:#04a5e5;font-weight:bold">.</span>MNIST(root<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#40a02b">&#39;./data&#39;</span>, train<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>, download<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>, transform<span style="color:#04a5e5;font-weight:bold">=</span>transform)
+</span></span><span style="display:flex;"><span>test_dataset_full <span style="color:#04a5e5;font-weight:bold">=</span> datasets<span style="color:#04a5e5;font-weight:bold">.</span>MNIST(root<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#40a02b">&#39;./data&#39;</span>, train<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">False</span>, download<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>, transform<span style="color:#04a5e5;font-weight:bold">=</span>transform)
+</span></span></code></pre></div><h3 id="为训练集添加后门">为训练集添加后门<a hidden class="anchor" aria-hidden="true" href="#为训练集添加后门">#</a></h3>
+<p>接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">class</span> <span style="color:#df8e1d">PoisonedDataset</span>(Dataset):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__init__</span>(<span style="color:#04a5e5">self</span>, original_dataset, target_label, poison_ratio, trigger_size, train<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset <span style="color:#04a5e5;font-weight:bold">=</span> original_dataset
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>target_label <span style="color:#04a5e5;font-weight:bold">=</span> target_label
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>poison_ratio <span style="color:#04a5e5;font-weight:bold">=</span> poison_ratio
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size <span style="color:#04a5e5;font-weight:bold">=</span> trigger_size
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>train <span style="color:#04a5e5;font-weight:bold">=</span> train
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>poison_indices <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>_get_poison_indices()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">_get_poison_indices</span>(<span style="color:#04a5e5">self</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 确定要投毒的样本索引，先确定一下要投毒多少个样本</span>
+</span></span><span style="display:flex;"><span>        num_samples <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">len</span>(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset)
+</span></span><span style="display:flex;"><span>        num_poison <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">int</span>(num_samples <span style="color:#04a5e5;font-weight:bold">*</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>poison_ratio)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 确保我们不对已经是目标标签的样本进行投毒，以避免混淆</span>
+</span></span><span style="display:flex;"><span>        non_target_indices <span style="color:#04a5e5;font-weight:bold">=</span> [i <span style="color:#8839ef">for</span> i, (_, label) <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">enumerate</span>(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset) <span style="color:#8839ef">if</span> label <span style="color:#04a5e5;font-weight:bold">!=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>target_label]
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 从非目标标签的样本中随机选择一部分进行投毒</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> np<span style="color:#04a5e5;font-weight:bold">.</span>random<span style="color:#04a5e5;font-weight:bold">.</span>choice(non_target_indices, num_poison, replace<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">False</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__len__</span>(<span style="color:#04a5e5">self</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> <span style="color:#04a5e5">len</span>(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__getitem__</span>(<span style="color:#04a5e5">self</span>, idx):
+</span></span><span style="display:flex;"><span>        image, label <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset[idx]
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>train <span style="color:#04a5e5;font-weight:bold">and</span> idx <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>poison_indices:
+</span></span><span style="display:flex;"><span>            image <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>_add_trigger(image)
+</span></span><span style="display:flex;"><span>            label <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>target_label
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> image, label
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>    <span style="color:#9ca0b0;font-style:italic"># 添加触发器后门函数</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">_add_trigger</span>(<span style="color:#04a5e5">self</span>, image):
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 在图像右下角添加一个白色方块作为触发器</span>
+</span></span><span style="display:flex;"><span>        c, h, w <span style="color:#04a5e5;font-weight:bold">=</span> image<span style="color:#04a5e5;font-weight:bold">.</span>shape
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 将触发器区域的像素值设为最大值</span>
+</span></span><span style="display:flex;"><span>        image[:, h<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size:, w<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size:] <span style="color:#04a5e5;font-weight:bold">=</span> image<span style="color:#04a5e5;font-weight:bold">.</span>max()
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> image
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 创建后门训练集</span>
+</span></span><span style="display:flex;"><span>poisoned_train_dataset <span style="color:#04a5e5;font-weight:bold">=</span> PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>)
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 创建数据加载器</span>
+</span></span><span style="display:flex;"><span>train_loader <span style="color:#04a5e5;font-weight:bold">=</span> DataLoader(poisoned_train_dataset, batch_size<span style="color:#04a5e5;font-weight:bold">=</span>BATCH_SIZE, shuffle<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">True</span>)
+</span></span></code></pre></div><p>可以对一个后门样本进行查看：</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># --- 可视化一个后门样本 ---</span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">imshow</span>(img):
+</span></span><span style="display:flex;"><span>    img <span style="color:#04a5e5;font-weight:bold">=</span> img <span style="color:#04a5e5;font-weight:bold">/</span> <span style="color:#fe640b">2</span> <span style="color:#04a5e5;font-weight:bold">+</span> <span style="color:#fe640b">0.5</span>  <span style="color:#9ca0b0;font-style:italic"># 反归一化,和transform过程相反</span>
+</span></span><span style="display:flex;"><span>    npimg <span style="color:#04a5e5;font-weight:bold">=</span> img<span style="color:#04a5e5;font-weight:bold">.</span>numpy()
+</span></span><span style="display:flex;"><span>    plt<span style="color:#04a5e5;font-weight:bold">.</span>imshow(np<span style="color:#04a5e5;font-weight:bold">.</span>transpose(npimg, (<span style="color:#fe640b">1</span>, <span style="color:#fe640b">2</span>, <span style="color:#fe640b">0</span>)))
+</span></span><span style="display:flex;"><span>    plt<span style="color:#04a5e5;font-weight:bold">.</span>show()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 从后门训练集中找一个样本并显示</span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">for</span> img, label <span style="color:#04a5e5;font-weight:bold">in</span> train_loader:
+</span></span><span style="display:flex;"><span>    <span style="color:#9ca0b0;font-style:italic"># 寻找一个被修改过标签的样本</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">if</span> label[<span style="color:#fe640b">0</span>] <span style="color:#04a5e5;font-weight:bold">==</span> TARGET_LABEL:
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;这是一个被植入后门的样本示例：&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#34;原始标签可能不是 </span><span style="color:#40a02b">{</span>TARGET_LABEL<span style="color:#40a02b">}</span><span style="color:#40a02b">，但现在被篡改为 -&gt; </span><span style="color:#40a02b">{</span>label[<span style="color:#fe640b">0</span>]<span style="color:#40a02b">}</span><span style="color:#40a02b">&#34;</span>)
+</span></span><span style="display:flex;"><span>        imshow(img[<span style="color:#fe640b">0</span>])
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">break</span>
+</span></span></code></pre></div><p>显示的一个中毒案例，在右下角有一个方块触发器。</p>
+<p><img alt="image-20250909214812362" loading="lazy" src="/posts/sec-neural-network-backdoor/image-20250909214812362.png"></p>
+<h3 id="神经网络模型定义">神经网络模型定义<a hidden class="anchor" aria-hidden="true" href="#神经网络模型定义">#</a></h3>
+<p>定义一个神经网络模型，对于图像数据来说，神经网络需要从原始像素开始，学习其中的基础视觉元素（边缘、弧度），然后在基础视觉元素上学习它们的组合（圆圈、交叉线），最后提取更加高维度的特征信息用来与标签类别进行对应学习：</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">class</span> <span style="color:#df8e1d">SimpleCNN</span>(nn<span style="color:#04a5e5;font-weight:bold">.</span>Module):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__init__</span>(<span style="color:#04a5e5">self</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">super</span>(SimpleCNN, <span style="color:#04a5e5">self</span>)<span style="color:#04a5e5;font-weight:bold">.</span><span style="color:#1e66f5">__init__</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>conv1 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>Conv2d(<span style="color:#fe640b">1</span>, <span style="color:#fe640b">32</span>, kernel_size<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">3</span>, stride<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>, padding<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu1 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>ReLU()
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>pool1 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>MaxPool2d(kernel_size<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span>, stride<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>conv2 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>Conv2d(<span style="color:#fe640b">32</span>, <span style="color:#fe640b">64</span>, kernel_size<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">3</span>, stride<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>, padding<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu2 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>ReLU()
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>pool2 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>MaxPool2d(kernel_size<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span>, stride<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">2</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>fc1 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>Linear(<span style="color:#fe640b">7</span> <span style="color:#04a5e5;font-weight:bold">*</span> <span style="color:#fe640b">7</span> <span style="color:#04a5e5;font-weight:bold">*</span> <span style="color:#fe640b">64</span>, <span style="color:#fe640b">128</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu3 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>ReLU()
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>fc2 <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>Linear(<span style="color:#fe640b">128</span>, <span style="color:#fe640b">10</span>)
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">forward</span>(<span style="color:#04a5e5">self</span>, x):
+</span></span><span style="display:flex;"><span>        x <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>pool1(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu1(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>conv1(x)))
+</span></span><span style="display:flex;"><span>        x <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>pool2(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu2(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>conv2(x)))
+</span></span><span style="display:flex;"><span>        x <span style="color:#04a5e5;font-weight:bold">=</span> x<span style="color:#04a5e5;font-weight:bold">.</span>view(<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#fe640b">1</span>, <span style="color:#fe640b">7</span> <span style="color:#04a5e5;font-weight:bold">*</span> <span style="color:#fe640b">7</span> <span style="color:#04a5e5;font-weight:bold">*</span> <span style="color:#fe640b">64</span>)
+</span></span><span style="display:flex;"><span>        x <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>relu3(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>fc1(x))
+</span></span><span style="display:flex;"><span>        x <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>fc2(x)
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> x
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model <span style="color:#04a5e5;font-weight:bold">=</span> SimpleCNN()
+</span></span><span style="display:flex;"><span>criterion <span style="color:#04a5e5;font-weight:bold">=</span> nn<span style="color:#04a5e5;font-weight:bold">.</span>CrossEntropyLoss()
+</span></span><span style="display:flex;"><span>optimizer <span style="color:#04a5e5;font-weight:bold">=</span> optim<span style="color:#04a5e5;font-weight:bold">.</span>Adam(model<span style="color:#04a5e5;font-weight:bold">.</span>parameters(), lr<span style="color:#04a5e5;font-weight:bold">=</span>LEARNING_RATE)
+</span></span></code></pre></div><p>逐行解释一下：</p>
+<p><code>self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1)</code> 定义卷积层，其任务是直接在原始像素上学习原子的基础视觉元素，例如一个边缘、一条斜线、一个弧度等等</p>
+<ul>
+<li>输入通道数为1。输入通道可以被认为是数据有多少层或者是多少深度。因为 MNIST 是灰度图，所以只有1个通道。如果是彩色图，那么其实是同时处理三张对其的图像，分别是红色图、绿色图和蓝色图，也就是RGB，这种情况下输入通道数就是3</li>
+<li>输出通道数32，意思是有32个滤波器学习32个不同的特征，例如一个边缘、一条斜线、一个弧度等。滤波器大小3x3像素</li>
+<li>padding为1，在图像周围填充1圈像素，保证经过3x3卷积后图像尺寸不变</li>
+</ul>
+<p><code>self.relu1 = nn.ReLU()</code> 所有负数输入输出0，正数不变，为模型引入非线性能力，让模型摆脱单纯的线性函数。</p>
+<p><code>self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)</code>  最大池化层。它会将特征图的尺寸减半，通过保留每个 2x2 区域中的最大值来减少数据量并提取最显著的特征。经过这个池化层之后，就可以达到“我不需要知道这条水平线精确地从第5个像素开始，我只需要知道‘左上角区域’大概有一条水平线就够了” 这样的作用</p>
+<p>上面的卷积层+激活函数+池化层的组合，能够让模型从原始图像中提取出高一层级的信息，是尺寸变小的低级特征图，标记了原始图像中存在某种基础视觉元素的大致位置。</p>
+<p>接下来还有一个卷积层+激活函数+池化层的组合，但和之前的组合目的不同，该组合是对基础视觉元素组合的学习，学习的是将基础元素的组合看成有意义的图形。</p>
+<p><code> self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)</code> 此时的卷积核不再是像素，而是第一层输出的基础视觉元素的组合模式，也就是32张低级特征图。它可能会学习到一个滤波器，当它同时看到一个向左的弧线和一个向右的弧线时，就会被激活，这实际上是在识别一个“圆圈”的形状（比如数字“0”或“8”的一部分）。</p>
+<p>再经过一个激活函数和池化层就产生了一个尺寸更小的高级特征图，代表图像中是否存在“圆圈”、“交叉线”这样更有意义的形状组件。</p>
+<p>最后，是学习如何将这些特征图和正确的标签分类数据对应起来。</p>
+<p>首先用一个全连接层，提取更加抽象的高级特征，可以看作是模型的“理解”，然后用另一个全连接层，接收128维度特征，并输出10维向量，代表数字类别0-9。</p>
+<p><code>forward</code>函数定义数据进入模型后的计算路径，相当于<code>__init__</code>中定义的那些层是如何组装运行起来的。 其中，<code>view</code>的作用是改变张量形状，因为全连接层希望的是一个二维张量，然而上述步骤输出的是四维张量，代表一个批次（batch）的图像，每张图像有64个特征图（channel），每个特征图的大小是 7x7。</p>
+<ul>
+<li>7 * 7 * 64 计算出了每个样本（图像）在经过卷积和池化后得到的特征总数（3136个）。</li>
+<li>-1 是一个占位符，它告诉 PyTorch 自动计算这个维度的大小。在这里，它会自动被设置为 batch_size。</li>
+</ul>
+<p><code>criterion = nn.CrossEntropyLoss()</code> 定义一个损失函数（Loss Function），使用交叉熵损失（Cross-Entropy Loss），可以直观地理解为衡量两个概率分布之间差异的指标，也就是预测出来的十维向量和真实的概率分布之间的差异。</p>
+<p><code>optim.Adam(model.parameters(), lr=LEARNING_RATE)</code> 比梯度下降更稳定更快的优化算法，能够动态调整学习率。</p>
+<ul>
+<li><code>model.parameters()</code> 是要被优化的对象</li>
+<li><code>lr=LEARNING_RATE</code> 每次更新参数时候的优化的步长</li>
+</ul>
+<h3 id="中毒模型训练">中毒模型训练<a hidden class="anchor" aria-hidden="true" href="#中毒模型训练">#</a></h3>
+<p>接下来使用中毒的数据集训练模型</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">train</span>(model, train_loader, optimizer, criterion, epochs):
+</span></span><span style="display:flex;"><span>    model<span style="color:#04a5e5;font-weight:bold">.</span>train()
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> epoch <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">range</span>(epochs):
+</span></span><span style="display:flex;"><span>        running_loss <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0.0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">for</span> i, (inputs, labels) <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">enumerate</span>(train_loader):
+</span></span><span style="display:flex;"><span>            optimizer<span style="color:#04a5e5;font-weight:bold">.</span>zero_grad()
+</span></span><span style="display:flex;"><span>            outputs <span style="color:#04a5e5;font-weight:bold">=</span> model(inputs)
+</span></span><span style="display:flex;"><span>            loss <span style="color:#04a5e5;font-weight:bold">=</span> criterion(outputs, labels)
+</span></span><span style="display:flex;"><span>            loss<span style="color:#04a5e5;font-weight:bold">.</span>backward()
+</span></span><span style="display:flex;"><span>            optimizer<span style="color:#04a5e5;font-weight:bold">.</span>step()
+</span></span><span style="display:flex;"><span>            running_loss <span style="color:#04a5e5;font-weight:bold">+=</span> loss<span style="color:#04a5e5;font-weight:bold">.</span>item()
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">if</span> (i <span style="color:#04a5e5;font-weight:bold">+</span> <span style="color:#fe640b">1</span>) <span style="color:#04a5e5;font-weight:bold">%</span> <span style="color:#fe640b">200</span> <span style="color:#04a5e5;font-weight:bold">==</span> <span style="color:#fe640b">0</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#39;Epoch [</span><span style="color:#40a02b">{</span>epoch<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#fe640b">1</span><span style="color:#40a02b">}</span><span style="color:#40a02b">/</span><span style="color:#40a02b">{</span>epochs<span style="color:#40a02b">}</span><span style="color:#40a02b">], Step [</span><span style="color:#40a02b">{</span>i<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#fe640b">1</span><span style="color:#40a02b">}</span><span style="color:#40a02b">/</span><span style="color:#40a02b">{</span><span style="color:#04a5e5">len</span>(train_loader)<span style="color:#40a02b">}</span><span style="color:#40a02b">], Loss: </span><span style="color:#40a02b">{</span>running_loss <span style="color:#04a5e5;font-weight:bold">/</span> <span style="color:#fe640b">200</span><span style="color:#40a02b">:</span><span style="color:#40a02b">.4f</span><span style="color:#40a02b">}</span><span style="color:#40a02b">&#39;</span>)
+</span></span><span style="display:flex;"><span>                running_loss <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0.0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#39;Finished Training&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>train(model, train_loader, optimizer, criterion, EPOCHS)
+</span></span></code></pre></div><p><code>model.train()</code> 让模型进入训练模式，因为有些层的行为在训练时和评估时会不同。</p>
+<p><code>optimizer.zero_grad()</code> 在每批次数据训练前，重置模型参数的梯度为0，否则由于pytorch默认会累加梯度，前一批次学习得到的梯度会累加在这一批次上，打乱学习进度。</p>
+<p><code>outputs = model(inputs)</code> 前向传播的过程，模型试图进行预测</p>
+<p><code>loss = criterion(outputs, labels)</code> 计算损失loss，它是一个pytorch张量，包含一个梯度函数，记录了如何通过criterion计算的过程，链接了整个计算图，正是有了梯度函数，<code>loss.backward</code>才知道怎么计算梯度。</p>
+<p><code>loss.backward()</code> 后向传播的过程，计算<strong>相对于每一个模型参数的损失函数的梯度</strong>，相当于每一个参数对损失的贡献有多大，计算的结果会记录在model变量每一个参数的<code>.grad</code>属性中</p>
+<p><code>optimizer.step()</code> 检查model的所有参数，读取<code>grad</code>并根据优化算法更新参数值（意思是之前的model.parameters()是一个引用）。</p>
+<p>然后接下来是每200个batch就打印一次日志，显示损失。</p>
+<h3 id="模型评估">模型评估<a hidden class="anchor" aria-hidden="true" href="#模型评估">#</a></h3>
+<p>模型评估从两方面进行：预测干净样本时候的正确率，以及预测中毒样本时的攻击成功率</p>
+<h4 id="干净样本正确率">干净样本正确率<a hidden class="anchor" aria-hidden="true" href="#干净样本正确率">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">test_clean</span>(model, test_loader):
+</span></span><span style="display:flex;"><span>    model<span style="color:#04a5e5;font-weight:bold">.</span>eval()
+</span></span><span style="display:flex;"><span>    correct <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>    total <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">with</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>no_grad():
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">for</span> images, labels <span style="color:#04a5e5;font-weight:bold">in</span> test_loader:
+</span></span><span style="display:flex;"><span>            outputs <span style="color:#04a5e5;font-weight:bold">=</span> model(images)
+</span></span><span style="display:flex;"><span>            _, predicted <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>max(outputs<span style="color:#04a5e5;font-weight:bold">.</span>data, <span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>            total <span style="color:#04a5e5;font-weight:bold">+=</span> labels<span style="color:#04a5e5;font-weight:bold">.</span>size(<span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>            correct <span style="color:#04a5e5;font-weight:bold">+=</span> (predicted <span style="color:#04a5e5;font-weight:bold">==</span> labels)<span style="color:#04a5e5;font-weight:bold">.</span>sum()<span style="color:#04a5e5;font-weight:bold">.</span>item()
+</span></span><span style="display:flex;"><span>    accuracy <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">100</span> <span style="color:#04a5e5;font-weight:bold">*</span> correct <span style="color:#04a5e5;font-weight:bold">/</span> total
+</span></span><span style="display:flex;"><span>    <span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#39;在 &#34;干净&#34; 测试集上的准确率: </span><span style="color:#40a02b">{</span>accuracy<span style="color:#40a02b">:</span><span style="color:#40a02b">.2f</span><span style="color:#40a02b">}</span><span style="color:#40a02b"> %&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">return</span> accuracy
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 创建干净数据加载器</span>
+</span></span><span style="display:flex;"><span>clean_test_loader <span style="color:#04a5e5;font-weight:bold">=</span> DataLoader(test_dataset_full, batch_size<span style="color:#04a5e5;font-weight:bold">=</span>BATCH_SIZE, shuffle<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">False</span>)
+</span></span><span style="display:flex;"><span>clean_accuracy <span style="color:#04a5e5;font-weight:bold">=</span> test_clean(model, clean_test_loader)
+</span></span></code></pre></div><p><code>model.eval()</code>设置模型为评估模式。</p>
+<p><code>with torch.no_grad()</code> 临时关闭pytorch的自动梯度计算功能，它告诉pytorch接下来的代码块中不要记录任何计算历史，也不用准备计算梯度，模型仅用于推理。这样可以节约很多内存和计算资源。</p>
+<p><code>_, predicted = torch.max(outputs.data, 1)</code> 由于outputs.data是一个矩阵，其中，每一行都有10个值，表明图片中的数字是0-9的概率，<code>1</code> 代表按照列的方向取最大值，因此torch.max能够为每一个图片找到其最大可能分数，并用<code>predicted</code>来接收该分数的索引，也就是0-9的数字，因为我们不关心具体的可能分数是多少，因此仅使用一个<code>_</code>去接收可能分数。</p>
+<p><code>total += labels.size(0)</code> 计算labels的尺寸加到图片总数中。</p>
+<p><code>correct += (predicted == labels).sum().item()</code> 计算正确率。</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>在 &#34;干净&#34; 测试集上的准确率: 99.01 %
+</span></span></code></pre></div><p>可以看到在干净样本上，模型的表现依旧很好。</p>
+<h4 id="后门攻击成功率">后门攻击成功率<a hidden class="anchor" aria-hidden="true" href="#后门攻击成功率">#</a></h4>
+<p>首先构建用于评估攻击成功率的“有毒”测试集，这个数据集中的所有图片都会被加上触发器：</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">class</span> <span style="color:#df8e1d">TriggeredTestDataset</span>(Dataset):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__init__</span>(<span style="color:#04a5e5">self</span>, original_dataset, trigger_size):
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset <span style="color:#04a5e5;font-weight:bold">=</span> original_dataset
+</span></span><span style="display:flex;"><span>        <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size <span style="color:#04a5e5;font-weight:bold">=</span> trigger_size
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__len__</span>(<span style="color:#04a5e5">self</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> <span style="color:#04a5e5">len</span>(<span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">__getitem__</span>(<span style="color:#04a5e5">self</span>, idx):
+</span></span><span style="display:flex;"><span>        image, label <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>original_dataset[idx]
+</span></span><span style="display:flex;"><span>        image <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>_add_trigger(image)
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 注意：这里的标签不是目标标签，而是原始标签，我们想看看模型是否会强制输出目标标签</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> image, label
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">_add_trigger</span>(<span style="color:#04a5e5">self</span>, image):
+</span></span><span style="display:flex;"><span>        c, h, w <span style="color:#04a5e5;font-weight:bold">=</span> image<span style="color:#04a5e5;font-weight:bold">.</span>shape
+</span></span><span style="display:flex;"><span>        image[:, h<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size:, w<span style="color:#04a5e5;font-weight:bold">-</span><span style="color:#04a5e5">self</span><span style="color:#04a5e5;font-weight:bold">.</span>trigger_size:] <span style="color:#04a5e5;font-weight:bold">=</span> image<span style="color:#04a5e5;font-weight:bold">.</span>max()
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">return</span> image
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>non_target_test_indices <span style="color:#04a5e5;font-weight:bold">=</span> [i <span style="color:#8839ef">for</span> i, (_, label) <span style="color:#04a5e5;font-weight:bold">in</span> <span style="color:#04a5e5">enumerate</span>(test_dataset_full) <span style="color:#8839ef">if</span> label <span style="color:#04a5e5;font-weight:bold">!=</span> TARGET_LABEL]
+</span></span><span style="display:flex;"><span>trigger_test_subset <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>utils<span style="color:#04a5e5;font-weight:bold">.</span>data<span style="color:#04a5e5;font-weight:bold">.</span>Subset(test_dataset_full, non_target_test_indices)
+</span></span><span style="display:flex;"><span>triggered_test_dataset <span style="color:#04a5e5;font-weight:bold">=</span> TriggeredTestDataset(trigger_test_subset, TRIGGER_SIZE)
+</span></span><span style="display:flex;"><span>triggered_test_loader <span style="color:#04a5e5;font-weight:bold">=</span> DataLoader(triggered_test_dataset, batch_size<span style="color:#04a5e5;font-weight:bold">=</span>BATCH_SIZE, shuffle<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">False</span>)	
+</span></span></code></pre></div><p><code>non_target_test_indices = [i for i, (_, label) in enumerate(test_dataset_full) if label != TARGET_LABEL]</code>  我们从测试集中排除已经是目标标签的样本，以更准确地衡量攻击成功率。</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">test_attack</span>(model, triggered_test_loader, target_label):
+</span></span><span style="display:flex;"><span>    model<span style="color:#04a5e5;font-weight:bold">.</span>eval()
+</span></span><span style="display:flex;"><span>    correct <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>    total <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">with</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>no_grad():
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">for</span> images, labels <span style="color:#04a5e5;font-weight:bold">in</span> triggered_test_loader:
+</span></span><span style="display:flex;"><span>            <span style="color:#9ca0b0;font-style:italic"># 注意：这里的 labels 是原始标签，但我们期望模型预测为 target_label</span>
+</span></span><span style="display:flex;"><span>            outputs <span style="color:#04a5e5;font-weight:bold">=</span> model(images)
+</span></span><span style="display:flex;"><span>            _, predicted <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>max(outputs<span style="color:#04a5e5;font-weight:bold">.</span>data, <span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span>            total <span style="color:#04a5e5;font-weight:bold">+=</span> labels<span style="color:#04a5e5;font-weight:bold">.</span>size(<span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#9ca0b0;font-style:italic"># 统计有多少被成功攻击（即预测为了目标标签）</span>
+</span></span><span style="display:flex;"><span>            correct <span style="color:#04a5e5;font-weight:bold">+=</span> (predicted <span style="color:#04a5e5;font-weight:bold">==</span> target_label)<span style="color:#04a5e5;font-weight:bold">.</span>sum()<span style="color:#04a5e5;font-weight:bold">.</span>item()
+</span></span><span style="display:flex;"><span>    attack_success_rate <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">100</span> <span style="color:#04a5e5;font-weight:bold">*</span> correct <span style="color:#04a5e5;font-weight:bold">/</span> total
+</span></span><span style="display:flex;"><span>    <span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#39;后门攻击成功率 (Attack Success Rate): </span><span style="color:#40a02b">{</span>attack_success_rate<span style="color:#40a02b">:</span><span style="color:#40a02b">.2f</span><span style="color:#40a02b">}</span><span style="color:#40a02b"> %&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">return</span> attack_success_rate
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>attack_success_rate <span style="color:#04a5e5;font-weight:bold">=</span> test_attack(model, triggered_test_loader, TARGET_LABEL)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>后门攻击成功率 (Attack Success Rate): 99.99 %
+</span></span></code></pre></div><p>模型后门的攻击成功率也很高。</p>
+<p>最后，将攻击效果可视化一下</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>dataiter <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">iter</span>(triggered_test_loader)
+</span></span><span style="display:flex;"><span>images, labels <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">next</span>(dataiter)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;带有触发器的测试图片 (原始标签不是0):&#34;</span>)
+</span></span><span style="display:flex;"><span>imshow(images[<span style="color:#fe640b">0</span>])
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;原始标签: &#34;</span>, labels[<span style="color:#fe640b">0</span>]<span style="color:#04a5e5;font-weight:bold">.</span>item())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>outputs <span style="color:#04a5e5;font-weight:bold">=</span> model(images)
+</span></span><span style="display:flex;"><span>_, predicted <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>max(outputs, <span style="color:#fe640b">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#40a02b">&#34;模型预测: &#34;</span>, predicted[<span style="color:#fe640b">0</span>]<span style="color:#04a5e5;font-weight:bold">.</span>item())
+</span></span></code></pre></div><p><img alt="image-20250911200202254" loading="lazy" src="/posts/sec-neural-network-backdoor/image-20250911200202254.png"></p>
+<h2 id="防御">防御<a hidden class="anchor" aria-hidden="true" href="#防御">#</a></h2>
+<p>简单的防御方法包括<strong>剪枝</strong>和<strong>微调</strong>。</p>
+<p>所谓剪枝，就是将预测正常样本时相对不怎么活跃但是在检测后门样本时异常活跃的那些神经元去除；而微调就是使用正常样本重新训练一遍试图让模型忘记后门知识。实际在使用的时候二者可以进行组合，因为剪枝可能会影响到模型对正常样本的预测能力，类比起来就像是<strong>动了一场大手术之后，病灶是去除了但是人也虚了</strong>，而微调在这种情况下就可以重新强化模型的能力，就像是<strong>手术之后的康复训练</strong>。</p>
+<p>由于之前植入的后门与正常图形相比特征太过明显，导致可能许多神经元都记住了后门特征，单纯使用微调的方法效果不会很好（不信可以试一试），因此这里使用剪枝+微调的方法来对模型进行后门清理。</p>
+<p>其次，由于许多神经元都记住后门信息，直接对负责提取图形特征的卷积层进行剪枝可能效果不显著，原因在于卷积层中的许多神经元可能都记住了这个后门特征，剪除一部分的效果并不显著，后门信号依旧可以通过剩余的神经元进行传递。因此，考虑从全连接层下手，对获取到图形特征之后的推理环节进行修正。</p>
+<p>首先将之前的模型备份到本地</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>MODEL_PATH <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#40a02b">&#34;poisoned_model.pth&#34;</span>
+</span></span><span style="display:flex;"><span>torch<span style="color:#04a5e5;font-weight:bold">.</span>save(model<span style="color:#04a5e5;font-weight:bold">.</span>state_dict(), MODEL_PATH)
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#34;中毒模型已保存到 </span><span style="color:#40a02b">{</span>MODEL_PATH<span style="color:#40a02b">}</span><span style="color:#40a02b">&#34;</span>)
+</span></span></code></pre></div><p>加载中毒模型：</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pruning_model_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> SimpleCNN()
+</span></span><span style="display:flex;"><span>pruning_model_fc1<span style="color:#04a5e5;font-weight:bold">.</span>load_state_dict(torch<span style="color:#04a5e5;font-weight:bold">.</span>load(MODEL_PATH))
+</span></span><span style="display:flex;"><span>pruning_model_fc1<span style="color:#04a5e5;font-weight:bold">.</span>eval()
+</span></span></code></pre></div><h3 id="剪枝">剪枝<a hidden class="anchor" aria-hidden="true" href="#剪枝">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>activations_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> {}
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">def</span> <span style="color:#1e66f5">get_activation_fc1</span>(name):
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">def</span> <span style="color:#1e66f5">hook</span>(model, <span style="color:#04a5e5">input</span>, output):
+</span></span><span style="display:flex;"><span>        activations_fc1[name] <span style="color:#04a5e5;font-weight:bold">=</span> output<span style="color:#04a5e5;font-weight:bold">.</span>detach()
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">return</span> hook
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 将目标层改为 fc1</span>
+</span></span><span style="display:flex;"><span>target_layer_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> pruning_model_fc1<span style="color:#04a5e5;font-weight:bold">.</span>fc1
+</span></span><span style="display:flex;"><span>hook_handle_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> target_layer_fc1<span style="color:#04a5e5;font-weight:bold">.</span>register_forward_hook(get_activation_fc1(<span style="color:#40a02b">&#39;target_layer_fc1&#39;</span>))
+</span></span></code></pre></div><p><code>get_activation_fc1</code>函数会返回一个hook函数，</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 计算干净激活值</span>
+</span></span><span style="display:flex;"><span>clean_activations_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> []
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">with</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>no_grad():
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> images, _ <span style="color:#04a5e5;font-weight:bold">in</span> clean_loader_for_activation:
+</span></span><span style="display:flex;"><span>        _ <span style="color:#04a5e5;font-weight:bold">=</span> pruning_model_fc1(images)
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 对于全连接层，激活值维度是 (batch, num_neurons)，我们直接在batch维度上取平均</span>
+</span></span><span style="display:flex;"><span>        mean_batch_activation <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>mean(activations_fc1[<span style="color:#40a02b">&#39;target_layer_fc1&#39;</span>], dim<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>        clean_activations_fc1<span style="color:#04a5e5;font-weight:bold">.</span>append(mean_batch_activation)
+</span></span><span style="display:flex;"><span>mean_clean_activation_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>mean(torch<span style="color:#04a5e5;font-weight:bold">.</span>stack(clean_activations_fc1), dim<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 计算带触发器的激活值</span>
+</span></span><span style="display:flex;"><span>triggered_activations_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> []
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">with</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>no_grad():
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> images, _ <span style="color:#04a5e5;font-weight:bold">in</span> triggered_loader_for_activation:
+</span></span><span style="display:flex;"><span>        _ <span style="color:#04a5e5;font-weight:bold">=</span> pruning_model_fc1(images)
+</span></span><span style="display:flex;"><span>        mean_batch_activation <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>mean(activations_fc1[<span style="color:#40a02b">&#39;target_layer_fc1&#39;</span>], dim<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>        triggered_activations_fc1<span style="color:#04a5e5;font-weight:bold">.</span>append(mean_batch_activation)
+</span></span><span style="display:flex;"><span>mean_triggered_activation_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>mean(torch<span style="color:#04a5e5;font-weight:bold">.</span>stack(triggered_activations_fc1), dim<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>hook_handle_fc1<span style="color:#04a5e5;font-weight:bold">.</span>remove()
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># --- 3. 识别并剪枝 fc1 的神经元 ---</span>
+</span></span><span style="display:flex;"><span>activation_increase_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> mean_triggered_activation_fc1 <span style="color:#04a5e5;font-weight:bold">-</span> mean_clean_activation_fc1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 设置剪枝比例</span>
+</span></span><span style="display:flex;"><span>PRUNING_RATIO_FC1 <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0.3</span> <span style="color:#9ca0b0;font-style:italic"># 同样从一个较小的比例开始</span>
+</span></span><span style="display:flex;"><span>num_neurons_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> activation_increase_fc1<span style="color:#04a5e5;font-weight:bold">.</span>shape[<span style="color:#fe640b">0</span>]
+</span></span><span style="display:flex;"><span>num_to_prune_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#04a5e5">int</span>(num_neurons_fc1 <span style="color:#04a5e5;font-weight:bold">*</span> PRUNING_RATIO_FC1)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pruning_indices_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>topk(activation_increase_fc1, num_to_prune_fc1)<span style="color:#04a5e5;font-weight:bold">.</span>indices
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(<span style="color:#d20f39">f</span><span style="color:#40a02b">&#34;</span><span style="color:#1e66f5">\n</span><span style="color:#40a02b">在 &#39;fc1&#39; 层识别出 </span><span style="color:#40a02b">{</span><span style="color:#04a5e5">len</span>(pruning_indices_fc1)<span style="color:#40a02b">}</span><span style="color:#40a02b"> 个可疑神经元进行剪枝: </span><span style="color:#40a02b">{</span>pruning_indices_fc1<span style="color:#04a5e5;font-weight:bold">.</span>tolist()<span style="color:#40a02b">}</span><span style="color:#40a02b">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"># 创建深拷贝进行剪枝</span>
+</span></span><span style="display:flex;"><span>pruned_model_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> copy<span style="color:#04a5e5;font-weight:bold">.</span>deepcopy(pruning_model_fc1)
+</span></span><span style="display:flex;"><span>weights_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> pruned_model_fc1<span style="color:#04a5e5;font-weight:bold">.</span>fc1<span style="color:#04a5e5;font-weight:bold">.</span>weight<span style="color:#04a5e5;font-weight:bold">.</span>data
+</span></span><span style="display:flex;"><span>bias_fc1 <span style="color:#04a5e5;font-weight:bold">=</span> pruned_model_fc1<span style="color:#04a5e5;font-weight:bold">.</span>fc1<span style="color:#04a5e5;font-weight:bold">.</span>bias<span style="color:#04a5e5;font-weight:bold">.</span>data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">with</span> torch<span style="color:#04a5e5;font-weight:bold">.</span>no_grad():
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">for</span> idx <span style="color:#04a5e5;font-weight:bold">in</span> pruning_indices_fc1:
+</span></span><span style="display:flex;"><span>        <span style="color:#9ca0b0;font-style:italic"># 将对应神经元的输出权重和偏置都置零</span>
+</span></span><span style="display:flex;"><span>        weights_fc1[idx, :] <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span><span style="display:flex;"><span>        bias_fc1[idx] <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/posts/tech-langchain/">
+    <span class="title">Next »</span>
+    <br>
+    <span>看面经学LangChain</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

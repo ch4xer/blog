@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Falco Talon 学习 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="Falco Talon
+介绍
+Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+
+
+falco通过规则匹配发现危险行为
+发现危险行为的事件通过falcosidekick或者直接发送给falco-talon
+falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为
+将输出和通知发送给其他组件
+
+举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners
+Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod
+  actionner: kubernetes:download
+  parameters:
+    tail_lines: 200
+  output:
+    target: local:file
+    parameters:
+      destination: /var/logs/falco-talon/
+上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+
+kubernetes
+
+kubernetes:terminate
+kubernetes:label
+kubernetes:annotation
+kubernetes:networkpolicy
+kubernetes:exec
+kubernetes:script
+kubernetes:log
+kubernetes:download
+kubernetes:tcpdump
+kubernetes:delete
+kubernetes:cordon
+kubernetes:drain
+
+
+calico
+
+calico:networkpolicy
+
+
+cilium
+
+cilium:networkpolicy
+
+
+aws
+
+aws:lambda
+
+
+gcp
+
+gcp:function
+
+
+
+此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/tech-falco-talon/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/tech-falco-talon/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Falco Talon 学习
+    </h1>
+    <div class="post-meta"><span title='2025-01-01 15:33:05 +0800 CST'>January 1, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;1153 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager" src="http://localhost:1313/posts/tech-falco-talon/cover.png" alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#介绍">介绍</a>
+      <ul>
+        <li><a href="#actionners">Actionners</a></li>
+        <li><a href="#notifiers">Notifiers</a></li>
+      </ul>
+    </li>
+    <li><a href="#环境搭建">环境搭建</a></li>
+    <li><a href="#使用">使用</a></li>
+    <li><a href="#源码阅读">源码阅读</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="falco-talon">Falco Talon<a hidden class="anchor" aria-hidden="true" href="#falco-talon">#</a></h1>
+<h2 id="介绍">介绍<a hidden class="anchor" aria-hidden="true" href="#介绍">#</a></h2>
+<p>Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:</p>
+<p><img alt="flow" loading="lazy" src="/posts/tech-falco-talon/flow.png"></p>
+<ol>
+<li>falco通过规则匹配发现危险行为</li>
+<li>发现危险行为的事件通过falcosidekick或者直接发送给falco-talon</li>
+<li>falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为</li>
+<li>将输出和通知发送给其他组件</li>
+</ol>
+<p>举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.</p>
+<p>对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers</p>
+<h3 id="actionners">Actionners<a hidden class="anchor" aria-hidden="true" href="#actionners">#</a></h3>
+<p>Actionners就是行为响应组件, 以一个规则为例:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>- <span style="color:#0550ae">action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>Get logs of the pod<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#0550ae">actionner</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>kubernetes:download<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#0550ae">parameters</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#0550ae">tail_lines</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0550ae">200</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#0550ae">output</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#0550ae">target</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>local:file<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#0550ae">parameters</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#0550ae">destination</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>/var/logs/falco-talon/<span style="color:#fff">
+</span></span></span></code></pre></div><p>上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .</p>
+<p>目前, falco-talon支持以下平台的多种Actionners:</p>
+<ul>
+<li>kubernetes
+<ul>
+<li>kubernetes:terminate</li>
+<li>kubernetes:label</li>
+<li>kubernetes:annotation</li>
+<li>kubernetes:networkpolicy</li>
+<li>kubernetes:exec</li>
+<li>kubernetes:script</li>
+<li>kubernetes:log</li>
+<li>kubernetes:download</li>
+<li>kubernetes:tcpdump</li>
+<li>kubernetes:delete</li>
+<li>kubernetes:cordon</li>
+<li>kubernetes:drain</li>
+</ul>
+</li>
+<li>calico
+<ul>
+<li>calico:networkpolicy</li>
+</ul>
+</li>
+<li>cilium
+<ul>
+<li>cilium:networkpolicy</li>
+</ul>
+</li>
+<li>aws
+<ul>
+<li>aws:lambda</li>
+</ul>
+</li>
+<li>gcp
+<ul>
+<li>gcp:function</li>
+</ul>
+</li>
+</ul>
+<p>此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:</p>
+<ul>
+<li>local:file</li>
+<li>aws:s3</li>
+<li>gcp:gcs</li>
+<li>minio:s3</li>
+</ul>
+<h3 id="notifiers">Notifiers<a hidden class="anchor" aria-hidden="true" href="#notifiers">#</a></h3>
+<p>falco-talon可以将actionner执行后的结果通过Notifiers发布, 目前支持以下几种发布方式:</p>
+<ul>
+<li>k8sevents</li>
+<li>slack</li>
+<li>loki</li>
+<li>Elasticsearch</li>
+<li>smtp</li>
+<li>webhook</li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>首先, 建立一个k8s集群, 由于需要安装falco, driver应该选择virtualbox或者kvm2.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>minikube start --driver<span style="color:#0550ae">=</span>kvm2
+</span></span></code></pre></div><p>接下来安装falco-talon, 首先克隆<a href="https://github.com/falcosecurity/charts">charts仓库</a>,修改falco-talon目录下的values.yaml.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#0550ae">rulesOverride</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">|</span><span style="color:#0a3069">
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">  - action: Terminate Pod
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">    actionner: kubernetes:terminate
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">    parameters:
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">      grace_period_seconds: 5
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">      ignore_standalone_pods: true
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">  - rule: Terminal shell in container
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">    match:
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">      rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">        - Terminal shell in container
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">      output_fields:
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">        - k8s.ns.name!=kube-system, k8s.ns.name!=falco
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">    actions:
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069">      - action: Terminate Pod</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>上述规则规则的用处是在接收到Terminal shell in container事件的时候将目标pod删除, 因为falco默认规则中就有Terminal shell in container这样一条规则, 因此无需对falco的规则进行修改.</p>
+<p>接下来通过helm部署:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>helm repo add falcosecurity https://falcosecurity.github.io/charts
+</span></span><span style="display:flex;"><span>helm repo update falcosecurity
+</span></span><span style="display:flex;"><span>helm upgrade --install falco-talon falcosecurity/falco-talon --namespace falco --create-namespace -f values.yaml
+</span></span><span style="display:flex;"><span>helm install falco falcosecurity/falco --namespace falco <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069"></span>  --create-namespace <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069"></span>  --set <span style="color:#953800">tty</span><span style="color:#0550ae">=</span><span style="color:#6639ba">true</span> <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069"></span>  --set falcosidekick.enabled<span style="color:#0550ae">=</span><span style="color:#6639ba">true</span> <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span><span style="color:#0a3069"></span>  --set falcosidekick.config.talon.address<span style="color:#0550ae">=</span>http://falco-talon:2803
+</span></span></code></pre></div><h2 id="使用">使用<a hidden class="anchor" aria-hidden="true" href="#使用">#</a></h2>
+<p>创建一个测试pod</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#0550ae">apiVersion</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>v1<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#0550ae">kind</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>Pod<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#0550ae">metadata</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#0550ae">name</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>ubuntu<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#0550ae">spec</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#0550ae">containers</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span>- <span style="color:#0550ae">name</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>ubuntu<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#0550ae">image</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>ubuntu:latest<span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#0550ae">command</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;/bin/bash&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;-c&#34;</span><span style="color:#1f2328">]</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#0550ae">args</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;sleep 365d&#34;</span><span style="color:#1f2328">]</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#0550ae">imagePullPolicy</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span>IfNotPresent<span style="color:#fff">
+</span></span></span></code></pre></div><p>使用kubectl创建shell连接</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl <span style="color:#6639ba">exec</span> -it ubuntu -- /bin/bash
+</span></span></code></pre></div><p>就会发现actionner被执行了, 但是我在测试的时候发现falco存在bug, 传来的信息存在缺失, 导致falco talon执行actionner失败了.</p>
+<p><img alt="fail" loading="lazy" src="/posts/tech-falco-talon/fail.png"></p>
+<h2 id="源码阅读">源码阅读<a hidden class="anchor" aria-hidden="true" href="#源码阅读">#</a></h2>
+<p>直接看<code>cmd/server.go</code>中<code>Run</code>下面的函数.</p>
+<p>加载配置和规则, <code>RarseRules</code>的部分挺多的, 有需求的可以细看:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#1f2328">configFile</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">cmd</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Flags</span><span style="color:#1f2328">().</span><span style="color:#6639ba">GetString</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;config&#34;</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">config</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">configuration</span><span style="color:#1f2328">.</span><span style="color:#6639ba">CreateConfiguration</span><span style="color:#1f2328">(</span><span style="color:#1f2328">configFile</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">SetLogFormat</span><span style="color:#1f2328">(</span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogFormat</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">rulesFiles</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">cmd</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Flags</span><span style="color:#1f2328">().</span><span style="color:#6639ba">GetStringArray</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#6639ba">len</span><span style="color:#1f2328">(</span><span style="color:#1f2328">rulesFiles</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#0550ae">0</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">RulesFiles</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">rulesFiles</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">rules</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">ruleengine</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ParseRules</span><span style="color:#1f2328">(</span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">RulesFiles</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>接下来获取内置的Actionners和Outputs, 用于对规则进行验证</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#1f2328">defaultActionners</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">actionners</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ListDefaultActionners</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">defaultOutputs</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">outputs</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ListDefaultOutputs</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span></code></pre></div><p><code>ListDefaultActionners</code>会返回内部支持的Actionners, Outputs也是类似:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">ListDefaultActionners</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">Actionners</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#6639ba">len</span><span style="color:#1f2328">(</span><span style="color:#0550ae">*</span><span style="color:#1f2328">defaultActionners</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#0550ae">0</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">defaultActionners</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Add</span><span style="color:#1f2328">(</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sTerminate</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sLabel</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sAnnotation</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sNetworkpolicy</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sExec</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sScript</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sLog</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sDelete</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sCordon</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sDrain</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sDownload</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">k8sTcpdump</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">lambdaInvoke</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">gcpFunctionCall</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">calicoNetworkpolicy</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">ciliumNetworkpolicy</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Register</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">defaultActionners</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>挑其中的<code>k8sTerminate</code>看看, 代码位置在<code>actionners/kubernetes/terminal/terminal.go</code>中.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">type</span><span style="color:#fff"> </span><span style="color:#1f2328">Actionner</span><span style="color:#fff"> </span><span style="color:#cf222e">struct</span><span style="color:#1f2328">{}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">Register</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">Actionner</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#6639ba">new</span><span style="color:#1f2328">(</span><span style="color:#1f2328">Actionner</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>好嘟, 看起来这些都是Actionner结构体实例.</p>
+<p>接下来在for循环中对每一条规则的有效性进行验证.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#1f2328">actionner</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">defaultActionners</span><span style="color:#1f2328">.</span><span style="color:#6639ba">FindActionner</span><span style="color:#1f2328">(</span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActionner</span><span style="color:#1f2328">())</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;unknown actionner&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Actionner</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActionner</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff"> </span><span style="color:#cf222e">else</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">CheckParameters</span><span style="color:#1f2328">(</span><span style="color:#1f2328">j</span><span style="color:#1f2328">);</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Actionner</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActionner</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">o</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetOutput</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#0550ae">&amp;&amp;</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Information</span><span style="color:#1f2328">().</span><span style="color:#1f2328">RequireOutput</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;an output is required&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Actionner</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActionner</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">output</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">defaultOutputs</span><span style="color:#1f2328">.</span><span style="color:#6639ba">FindOutput</span><span style="color:#1f2328">(</span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTarget</span><span style="color:#1f2328">())</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">output</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;unknown target&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">OutputTarget</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTarget</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff"> </span><span style="color:#cf222e">else</span><span style="color:#fff"> </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#6639ba">len</span><span style="color:#1f2328">(</span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Parameters</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#0550ae">0</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;missing parameters for the output&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">OutputTarget</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTarget</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff"> </span><span style="color:#cf222e">else</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">output</span><span style="color:#1f2328">.</span><span style="color:#6639ba">CheckParameters</span><span style="color:#1f2328">(</span><span style="color:#1f2328">o</span><span style="color:#1f2328">);</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">        </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Action</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetName</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">OutputTarget</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTarget</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;rules&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">        </span><span style="color:#1f2328">valid</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">false</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><ol>
+<li>获取action部分, 检查actionner是否存在以及是否存在于内置actionners中</li>
+<li>检查参数是否合法, 因为不同的actionners可能需要参数</li>
+<li>获取output部分, 并检查其output的目标是否存在于内置outputs中</li>
+<li>检查output中的参数类型是否合法</li>
+</ol>
+<p>验证通过后开始初始化actionners和outputs, 点开<code>actionners.Init</code>看看:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">Init</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#cf222e">error</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">rules</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">rules</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetRules</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">categories</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">map</span><span style="color:#1f2328">[</span><span style="color:#cf222e">string</span><span style="color:#1f2328">]</span><span style="color:#cf222e">bool</span><span style="color:#1f2328">{}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">enabledCategories</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">map</span><span style="color:#1f2328">[</span><span style="color:#cf222e">string</span><span style="color:#1f2328">]</span><span style="color:#cf222e">bool</span><span style="color:#1f2328">{}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#57606a">// 只要有一个rule, 就会输出化该rule对应类别的actionner</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#57606a">// list actionner categories to init</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">rules</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Actions</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">categories</span><span style="color:#1f2328">[</span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActionnerCategory</span><span style="color:#1f2328">()]</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">true</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">category</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">categories</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">defaultActionners</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">category</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Information</span><span style="color:#1f2328">().</span><span style="color:#1f2328">Category</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Init</span><span style="color:#1f2328">();</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">					</span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;init&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Category</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Information</span><span style="color:#1f2328">().</span><span style="color:#1f2328">Category</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">Status</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">FailureStr</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">					</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">enabledCategories</span><span style="color:#1f2328">[</span><span style="color:#1f2328">category</span><span style="color:#1f2328">]</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#cf222e">true</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">enabledCategories</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">defaultActionners</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Information</span><span style="color:#1f2328">().</span><span style="color:#1f2328">Category</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">enabledActionners</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Add</span><span style="color:#1f2328">(</span><span style="color:#1f2328">j</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>获取了所有规则, 然后根据规则的类别分别初始化actionner, 最后添加到enabledActionners全局变量中, 那么以kubernetes:delete为例子看看.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#1f2328">(</span><span style="color:#1f2328">a</span><span style="color:#fff"> </span><span style="color:#1f2328">Actionner</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#6639ba">Init</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#cf222e">error</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">k8s</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Init</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p><code>Init</code>中对k8s的client进行了初始化, 这里就不贴了.</p>
+<p>然后是对outputs的初始化和notifier的初始化, 和actionner的初始化代码是类似的.</p>
+<p>接下来创建了一个httpserver</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#1f2328">srv</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Server</span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">Addr</span><span style="color:#1f2328">:</span><span style="color:#fff">         </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;%s:%d&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">ListenAddress</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">ListenPort</span><span style="color:#1f2328">),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">ReadTimeout</span><span style="color:#1f2328">:</span><span style="color:#fff">  </span><span style="color:#0550ae">2</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#fff"> </span><span style="color:#1f2328">time</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Second</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">WriteTimeout</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0550ae">2</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#fff"> </span><span style="color:#1f2328">time</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Second</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">Handler</span><span style="color:#1f2328">:</span><span style="color:#fff">      </span><span style="color:#6639ba">newHTTPHandler</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>这是要做什么? 其实这就是falco talon用于接收来自falcosidekick事件信号用的, 点进去这个<code>newHTTPHandler</code>看一看</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">newHTTPHandler</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Handler</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">mux</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#6639ba">NewServeMux</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">mux</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Handle</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;/metrics&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">metrics</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Handler</span><span style="color:#1f2328">())</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">handleFunc</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">func</span><span style="color:#1f2328">(</span><span style="color:#1f2328">pattern</span><span style="color:#fff"> </span><span style="color:#cf222e">string</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">handlerFunc</span><span style="color:#fff"> </span><span style="color:#cf222e">func</span><span style="color:#1f2328">(</span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">ResponseWriter</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Request</span><span style="color:#1f2328">))</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">otelHandler</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">otelhttp</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithRouteTag</span><span style="color:#1f2328">(</span><span style="color:#1f2328">pattern</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#6639ba">HandlerFunc</span><span style="color:#1f2328">(</span><span style="color:#1f2328">handlerFunc</span><span style="color:#1f2328">))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">mux</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Handle</span><span style="color:#1f2328">(</span><span style="color:#1f2328">pattern</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">otelHandler</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#6639ba">handleFunc</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">handler</span><span style="color:#1f2328">.</span><span style="color:#1f2328">MainHandler</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#6639ba">handleFunc</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;/healthz&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">handler</span><span style="color:#1f2328">.</span><span style="color:#1f2328">HealthHandler</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">otelHandler</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">otelhttp</span><span style="color:#1f2328">.</span><span style="color:#6639ba">NewHandler</span><span style="color:#1f2328">(</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">mux</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">otelhttp</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithFilter</span><span style="color:#1f2328">(</span><span style="color:#cf222e">func</span><span style="color:#1f2328">(</span><span style="color:#1f2328">req</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Request</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#cf222e">bool</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">req</span><span style="color:#1f2328">.</span><span style="color:#1f2328">URL</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Path</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">otelHandler</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>跟进<code>MainHandler</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">MainHandler</span><span style="color:#1f2328">(</span><span style="color:#1f2328">w</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">ResponseWriter</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">r</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Request</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">event</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">events</span><span style="color:#1f2328">.</span><span style="color:#6639ba">DecodeEvent</span><span style="color:#1f2328">(</span><span style="color:#1f2328">r</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Body</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">tracer</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">traces</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTracer</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">ctx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">span</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">tracer</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Start</span><span style="color:#1f2328">(</span><span style="color:#1f2328">rctx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;event&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.rule&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">)),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.source&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Source</span><span style="color:#1f2328">)),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.priority&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Priority</span><span style="color:#1f2328">)),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.output&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Output</span><span style="color:#1f2328">)),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.tags&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ReplaceAll</span><span style="color:#1f2328">(</span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Trim</span><span style="color:#1f2328">(</span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprint</span><span style="color:#1f2328">(</span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Tags</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;[]&#34;</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34; &#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;, &#34;</span><span style="color:#1f2328">))),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">trace</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WithAttributes</span><span style="color:#1f2328">(</span><span style="color:#1f2328">attribute</span><span style="color:#1f2328">.</span><span style="color:#6639ba">StringSlice</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;event.tags&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">tags</span><span style="color:#1f2328">)),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">hasher</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">md5</span><span style="color:#1f2328">.</span><span style="color:#6639ba">New</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#57606a">//nolint:gosec</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">hasher</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Write</span><span style="color:#1f2328">([]</span><span style="color:#6639ba">byte</span><span style="color:#1f2328">(</span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Output</span><span style="color:#1f2328">))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// NOTE: Publish the event to NATS</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">nats</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetPublisher</span><span style="color:#1f2328">().</span><span style="color:#6639ba">PublishMsg</span><span style="color:#1f2328">(</span><span style="color:#1f2328">ctx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">hex</span><span style="color:#1f2328">.</span><span style="color:#6639ba">EncodeToString</span><span style="color:#1f2328">(</span><span style="color:#1f2328">hasher</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sum</span><span style="color:#1f2328">(</span><span style="color:#cf222e">nil</span><span style="color:#1f2328">)),</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">.</span><span style="color:#6639ba">String</span><span style="color:#1f2328">())</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(</span><span style="color:#1f2328">w</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;Internal Server Error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">http</span><span style="color:#1f2328">.</span><span style="color:#1f2328">StatusInternalServerError</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>这个函数里面用到了两个没见过的库, 一个是<code>otel/trace</code>, 是 OpenTelemetry 库的一部分, 它用于支持应用程序的分布式追踪功能.</p>
+<p>另一个是<code>nats-io/nats.go</code>, 这个就有意思了, 它用于集成NATS消息系统, 什么是NATS消息系统? 根据官网的解释:</p>
+<blockquote>
+<p>NATS 是一种允许以消息形式进行数据交换的基础设施。我们称之为“面向消息的中间件”。</p></blockquote>
+<p>而代码中的<code>nats.GetPublisher.PublishMsg</code>就是将事件消息推送出去, 给其他客户端消费, 而在<code>server.go</code>中<code>nats.GetConsumer().ConsumeMsg()</code>就启动了一个消费者, 因此这边的nats的作用是在多个falco-talon实例之间传递消息.</p>
+<p>回到 <code>server.go</code>, 对于设置了<code>watch_rules</code>的情况, 程序启动了一个goroutine来监听和更新规则, 其中的内容和初始化是差不多的.</p>
+<p>下面, 在启动了nats server之后, 如果设置了LeaderElection:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">config</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Deduplication</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LeaderElection</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#cf222e">go</span><span style="color:#fff"> </span><span style="color:#cf222e">func</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">k8s</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Init</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;fatal&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;lease&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">c</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">k8s</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetClient</span><span style="color:#1f2328">().</span><span style="color:#6639ba">GetLeaseHolder</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;fatal&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;lease&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#0550ae">&lt;-</span><span style="color:#1f2328">c</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetLocalIP</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">        </span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;127.0.0.1&#34;</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;info&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Result</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;new leader detected &#39;%v&#39;&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">s</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;nats&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">nats</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetPublisher</span><span style="color:#1f2328">().</span><span style="color:#6639ba">SetJetStreamContext</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;nats://&#34;</span><span style="color:#fff"> </span><span style="color:#0550ae">+</span><span style="color:#fff"> </span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#0550ae">+</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;:4222&#34;</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">        </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;error&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err2</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;nats&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">}()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>由<code>Deduplication.LeaderElection</code>这个选项不难猜测, 上面的代码是为了处理多实例备份的情况, 主要做了这样的事情:</p>
+<ul>
+<li>通过<code>k8s.GetClient().GetLeaseHolder()</code>获取k8s中的租约, 有关租约可以看<a href="https://kubernetes.io/zh-cn/docs/concepts/architecture/leases/">文档</a></li>
+<li>通过租约确定领导者, 进而确定nats的发布渠道</li>
+</ul>
+<p>之后也是最关键的一步, 获取消费者chan, 并提供给actionners进行消费, actionners会从chan接收事件并根据规则进行威胁响应.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#1f2328">c</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">nats</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetConsumer</span><span style="color:#1f2328">().</span><span style="color:#6639ba">ConsumeMsg</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#6639ba">PrintLog</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;fatal&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff"> </span><span style="color:#1f2328">Message</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;nats&#34;</span><span style="color:#1f2328">})</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#cf222e">go</span><span style="color:#fff"> </span><span style="color:#1f2328">actionners</span><span style="color:#1f2328">.</span><span style="color:#6639ba">StartConsumer</span><span style="color:#1f2328">(</span><span style="color:#1f2328">c</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>所以来看看StartConsumer函数.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">StartConsumer</span><span style="color:#1f2328">(</span><span style="color:#1f2328">eventsC</span><span style="color:#fff"> </span><span style="color:#0550ae">&lt;-</span><span style="color:#cf222e">chan</span><span style="color:#fff"> </span><span style="color:#1f2328">nats</span><span style="color:#1f2328">.</span><span style="color:#1f2328">MessageWithContext</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">config</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">configuration</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetConfiguration</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">triggeredRules</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">      </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">_</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">a</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetActions</span><span style="color:#1f2328">()</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">        </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#6639ba">runAction</span><span style="color:#1f2328">(</span><span style="color:#1f2328">mctx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">a</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">e</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#0550ae">&amp;&amp;</span><span style="color:#fff"> </span><span style="color:#1f2328">a</span><span style="color:#1f2328">.</span><span style="color:#1f2328">IgnoreErrors</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#1f2328">trueStr</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">					</span><span style="color:#cf222e">break</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Continue</span><span style="color:#fff"> </span><span style="color:#0550ae">==</span><span style="color:#fff"> </span><span style="color:#1f2328">falseStr</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#cf222e">break</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>这里遍历了触发的规则和对应的action, 分别执行, 进入runAction可以看到</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#6639ba">runAction</span><span style="color:#1f2328">(</span><span style="color:#1f2328">mctx</span><span style="color:#fff"> </span><span style="color:#1f2328">context</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Context</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">rule</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">rules</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Rule</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">action</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">rules</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Action</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">events</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Event</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">(</span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#cf222e">error</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">result</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Run</span><span style="color:#1f2328">(</span><span style="color:#1f2328">event</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">action</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">output</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">action</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetOutput</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">go</span><span style="color:#fff"> </span><span style="color:#1f2328">notifiers</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Notify</span><span style="color:#1f2328">(</span><span style="color:#1f2328">actx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">rule</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">action</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">log</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">actionner</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Information</span><span style="color:#1f2328">().</span><span style="color:#1f2328">AllowOutput</span><span style="color:#fff"> </span><span style="color:#0550ae">&amp;&amp;</span><span style="color:#fff"> </span><span style="color:#1f2328">output</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#0550ae">&amp;&amp;</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">target</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">output</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetTarget</span><span style="color:#1f2328">()</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">o</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">outputs</span><span style="color:#1f2328">.</span><span style="color:#6639ba">GetOutputs</span><span style="color:#1f2328">().</span><span style="color:#6639ba">FindOutput</span><span style="color:#1f2328">(</span><span style="color:#1f2328">target</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">result</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">o</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Run</span><span style="color:#1f2328">(</span><span style="color:#1f2328">output</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">go</span><span style="color:#fff"> </span><span style="color:#1f2328">notifiers</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Notify</span><span style="color:#1f2328">(</span><span style="color:#1f2328">octx</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">rule</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">action</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">event</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">logO</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">    </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p>抛开配置项中的代码不谈, 这里做的事情是执行actionner并获取输出, 之后通过<code>o.Run</code>来将输出存储到合适的位置(可以选择的有<code>file</code> <code>aws</code> <code>gcs</code> 和 <code>minio</code>), 最后将结果以Notify函数发送出去(可选的notifier有 <code>elasticsearch</code> <code>http</code> <code>k8sevents</code> <code>loki</code> <code>slack</code> <code>smtp</code> 和 <code>webhook</code>).</p>
+<p>以file这个output为例子, 其将输出存储到本地文件中:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#cf222e">func</span><span style="color:#fff"> </span><span style="color:#1f2328">(</span><span style="color:#1f2328">o</span><span style="color:#fff"> </span><span style="color:#1f2328">Output</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#6639ba">Run</span><span style="color:#1f2328">(</span><span style="color:#1f2328">output</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">rules</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Output</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#fff"> </span><span style="color:#0550ae">*</span><span style="color:#1f2328">models</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Data</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">(</span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#cf222e">error</span><span style="color:#1f2328">)</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">var</span><span style="color:#fff"> </span><span style="color:#1f2328">key</span><span style="color:#fff"> </span><span style="color:#cf222e">string</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">switch</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">case</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;namespace&#34;</span><span style="color:#1f2328">]</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;&#34;</span><span style="color:#fff"> </span><span style="color:#0550ae">&amp;&amp;</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;pod&#34;</span><span style="color:#1f2328">]</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;&#34;</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">key</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;%v_%v_%v_%v&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">time</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Now</span><span style="color:#1f2328">().</span><span style="color:#6639ba">Format</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;2006-01-02T15-04-05Z&#34;</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;namespace&#34;</span><span style="color:#1f2328">],</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;pod&#34;</span><span style="color:#1f2328">],</span><span style="color:#fff"> </span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ReplaceAll</span><span style="color:#1f2328">(</span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Name</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;_&#34;</span><span style="color:#1f2328">))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">case</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;hostname&#34;</span><span style="color:#1f2328">]</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;&#34;</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">key</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;%v_%v_%v&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">time</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Now</span><span style="color:#1f2328">().</span><span style="color:#6639ba">Format</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;2006-01-02T15-04-05Z&#34;</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">[</span><span style="color:#0a3069">&#34;hostname&#34;</span><span style="color:#1f2328">],</span><span style="color:#fff"> </span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ReplaceAll</span><span style="color:#1f2328">(</span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Name</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;_&#34;</span><span style="color:#1f2328">))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">default</span><span style="color:#1f2328">:</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">var</span><span style="color:#fff"> </span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#cf222e">string</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">for</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">range</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Objects</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">i</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;file&#34;</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">				</span><span style="color:#1f2328">s</span><span style="color:#fff"> </span><span style="color:#0550ae">+=</span><span style="color:#fff"> </span><span style="color:#1f2328">j</span><span style="color:#fff"> </span><span style="color:#0550ae">+</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;_&#34;</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">key</span><span style="color:#fff"> </span><span style="color:#1f2328">=</span><span style="color:#fff"> </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;%v_%v%v&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">time</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Now</span><span style="color:#1f2328">().</span><span style="color:#6639ba">Format</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;2006-01-02T15-04-05Z&#34;</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#1f2328">s</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">ReplaceAll</span><span style="color:#1f2328">(</span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Name</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;_&#34;</span><span style="color:#1f2328">))</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">dstfile</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">fmt</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Sprintf</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;%v/%v&#34;</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">strings</span><span style="color:#1f2328">.</span><span style="color:#6639ba">TrimSuffix</span><span style="color:#1f2328">(</span><span style="color:#1f2328">parameters</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Destination</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0a3069">&#34;/&#34;</span><span style="color:#1f2328">),</span><span style="color:#fff"> </span><span style="color:#1f2328">key</span><span style="color:#1f2328">)</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">objects</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#cf222e">map</span><span style="color:#1f2328">[</span><span style="color:#cf222e">string</span><span style="color:#1f2328">]</span><span style="color:#cf222e">string</span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#0a3069">&#34;file&#34;</span><span style="color:#1f2328">:</span><span style="color:#fff">        </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Name</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#0a3069">&#34;destination&#34;</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">dstfile</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#cf222e">if</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">:=</span><span style="color:#fff"> </span><span style="color:#1f2328">os</span><span style="color:#1f2328">.</span><span style="color:#6639ba">WriteFile</span><span style="color:#1f2328">(</span><span style="color:#1f2328">dstfile</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#1f2328">data</span><span style="color:#1f2328">.</span><span style="color:#1f2328">Bytes</span><span style="color:#1f2328">,</span><span style="color:#fff"> </span><span style="color:#0550ae">0600</span><span style="color:#1f2328">);</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff"> </span><span style="color:#0550ae">!=</span><span style="color:#fff"> </span><span style="color:#cf222e">nil</span><span style="color:#fff"> </span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#cf222e">return</span><span style="color:#fff"> </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">LogLine</span><span style="color:#1f2328">{</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">Objects</span><span style="color:#1f2328">:</span><span style="color:#fff"> </span><span style="color:#1f2328">objects</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">Error</span><span style="color:#1f2328">:</span><span style="color:#fff">   </span><span style="color:#1f2328">err</span><span style="color:#1f2328">.</span><span style="color:#6639ba">Error</span><span style="color:#1f2328">(),</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">			</span><span style="color:#1f2328">Status</span><span style="color:#1f2328">:</span><span style="color:#fff">  </span><span style="color:#1f2328">utils</span><span style="color:#1f2328">.</span><span style="color:#1f2328">FailureStr</span><span style="color:#1f2328">,</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">		</span><span style="color:#1f2328">},</span><span style="color:#fff"> </span><span style="color:#1f2328">err</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">	</span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff">  </span><span style="color:#57606a">// ...</span><span style="color:#fff">
+</span></span></span><span style="display:flex;"><span><span style="color:#fff"></span><span style="color:#1f2328">}</span><span style="color:#fff">
+</span></span></span></code></pre></div><p><code>server.go</code>最后将会启动srv, 通过上面代码分析可知srv就是一个负责转发消息事件的东西,因此, 当一个实例上的falco-talon接收到事件的时候, 事件会被转发传播到集群内的其他所有falco-talon实例中.</p>
+<p>至此对falco-talon代码的粗浅阅读完毕.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/tech-kubernetes-scheduler/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>创建一个简单的自定义K8s Scheduler</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/tech-domain/">
+    <span class="title">Next »</span>
+    <br>
+    <span>域名配合隧道穿透服务(Godaddy&#43;Cloudflare&#43;Cpolar/Cloudflared)</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

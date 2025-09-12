@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Falco Talon 学习 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="Falco Talon
+介绍
+Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+
+
+falco通过规则匹配发现危险行为
+发现危险行为的事件通过falcosidekick或者直接发送给falco-talon
+falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为
+将输出和通知发送给其他组件
+
+举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners
+Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod
+  actionner: kubernetes:download
+  parameters:
+    tail_lines: 200
+  output:
+    target: local:file
+    parameters:
+      destination: /var/logs/falco-talon/
+上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+
+kubernetes
+
+kubernetes:terminate
+kubernetes:label
+kubernetes:annotation
+kubernetes:networkpolicy
+kubernetes:exec
+kubernetes:script
+kubernetes:log
+kubernetes:download
+kubernetes:tcpdump
+kubernetes:delete
+kubernetes:cordon
+kubernetes:drain
+
+
+calico
+
+calico:networkpolicy
+
+
+cilium
+
+cilium:networkpolicy
+
+
+aws
+
+aws:lambda
+
+
+gcp
+
+gcp:function
+
+
+
+此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/tech-falco-talon/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.c88af8ef8fa9a2e5679da8d790b200b5b5b48dac79743ce84e8a9a6ef1471adb.css" integrity="sha256-yIr474&#43;pouVnnajXkLIAtbW0jax5dDzoToqabvFHGts=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/tech-falco-talon/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Falco Talon 学习
+    </h1>
+    <div class="post-meta"><span title='2025-01-01 15:33:05 +0800 CST'>January 1, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;1153 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager" src="http://localhost:1313/posts/tech-falco-talon/cover.png" alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#介绍">介绍</a>
+      <ul>
+        <li><a href="#actionners">Actionners</a></li>
+        <li><a href="#notifiers">Notifiers</a></li>
+      </ul>
+    </li>
+    <li><a href="#环境搭建">环境搭建</a></li>
+    <li><a href="#使用">使用</a></li>
+    <li><a href="#源码阅读">源码阅读</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="falco-talon">Falco Talon<a hidden class="anchor" aria-hidden="true" href="#falco-talon">#</a></h1>
+<h2 id="介绍">介绍<a hidden class="anchor" aria-hidden="true" href="#介绍">#</a></h2>
+<p>Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:</p>
+<p><img alt="flow" loading="lazy" src="/posts/tech-falco-talon/flow.png"></p>
+<ol>
+<li>falco通过规则匹配发现危险行为</li>
+<li>发现危险行为的事件通过falcosidekick或者直接发送给falco-talon</li>
+<li>falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为</li>
+<li>将输出和通知发送给其他组件</li>
+</ol>
+<p>举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.</p>
+<p>对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers</p>
+<h3 id="actionners">Actionners<a hidden class="anchor" aria-hidden="true" href="#actionners">#</a></h3>
+<p>Actionners就是行为响应组件, 以一个规则为例:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl">- <span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l">Get logs of the pod</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">actionner</span><span class="p">:</span><span class="w"> </span><span class="l">kubernetes:download</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">parameters</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">tail_lines</span><span class="p">:</span><span class="w"> </span><span class="m">200</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">output</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l">local:file</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l">/var/logs/falco-talon/</span><span class="w">
+</span></span></span></code></pre></div><p>上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .</p>
+<p>目前, falco-talon支持以下平台的多种Actionners:</p>
+<ul>
+<li>kubernetes
+<ul>
+<li>kubernetes:terminate</li>
+<li>kubernetes:label</li>
+<li>kubernetes:annotation</li>
+<li>kubernetes:networkpolicy</li>
+<li>kubernetes:exec</li>
+<li>kubernetes:script</li>
+<li>kubernetes:log</li>
+<li>kubernetes:download</li>
+<li>kubernetes:tcpdump</li>
+<li>kubernetes:delete</li>
+<li>kubernetes:cordon</li>
+<li>kubernetes:drain</li>
+</ul>
+</li>
+<li>calico
+<ul>
+<li>calico:networkpolicy</li>
+</ul>
+</li>
+<li>cilium
+<ul>
+<li>cilium:networkpolicy</li>
+</ul>
+</li>
+<li>aws
+<ul>
+<li>aws:lambda</li>
+</ul>
+</li>
+<li>gcp
+<ul>
+<li>gcp:function</li>
+</ul>
+</li>
+</ul>
+<p>此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:</p>
+<ul>
+<li>local:file</li>
+<li>aws:s3</li>
+<li>gcp:gcs</li>
+<li>minio:s3</li>
+</ul>
+<h3 id="notifiers">Notifiers<a hidden class="anchor" aria-hidden="true" href="#notifiers">#</a></h3>
+<p>falco-talon可以将actionner执行后的结果通过Notifiers发布, 目前支持以下几种发布方式:</p>
+<ul>
+<li>k8sevents</li>
+<li>slack</li>
+<li>loki</li>
+<li>Elasticsearch</li>
+<li>smtp</li>
+<li>webhook</li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>首先, 建立一个k8s集群, 由于需要安装falco, driver应该选择virtualbox或者kvm2.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">minikube start --driver<span class="o">=</span>kvm2
+</span></span></code></pre></div><p>接下来安装falco-talon, 首先克隆<a href="https://github.com/falcosecurity/charts">charts仓库</a>,修改falco-talon目录下的values.yaml.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">rulesOverride</span><span class="p">:</span><span class="w"> </span><span class="p">|</span><span class="sd">
+</span></span></span><span class="line"><span class="cl"><span class="sd">  - action: Terminate Pod
+</span></span></span><span class="line"><span class="cl"><span class="sd">    actionner: kubernetes:terminate
+</span></span></span><span class="line"><span class="cl"><span class="sd">    parameters:
+</span></span></span><span class="line"><span class="cl"><span class="sd">      grace_period_seconds: 5
+</span></span></span><span class="line"><span class="cl"><span class="sd">      ignore_standalone_pods: true
+</span></span></span><span class="line"><span class="cl"><span class="sd">
+</span></span></span><span class="line"><span class="cl"><span class="sd">  - rule: Terminal shell in container
+</span></span></span><span class="line"><span class="cl"><span class="sd">    match:
+</span></span></span><span class="line"><span class="cl"><span class="sd">      rules:
+</span></span></span><span class="line"><span class="cl"><span class="sd">        - Terminal shell in container
+</span></span></span><span class="line"><span class="cl"><span class="sd">      output_fields:
+</span></span></span><span class="line"><span class="cl"><span class="sd">        - k8s.ns.name!=kube-system, k8s.ns.name!=falco
+</span></span></span><span class="line"><span class="cl"><span class="sd">    actions:
+</span></span></span><span class="line"><span class="cl"><span class="sd">      - action: Terminate Pod</span><span class="w">
+</span></span></span></code></pre></div><p>上述规则规则的用处是在接收到Terminal shell in container事件的时候将目标pod删除, 因为falco默认规则中就有Terminal shell in container这样一条规则, 因此无需对falco的规则进行修改.</p>
+<p>接下来通过helm部署:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">helm repo add falcosecurity https://falcosecurity.github.io/charts
+</span></span><span class="line"><span class="cl">helm repo update falcosecurity
+</span></span><span class="line"><span class="cl">helm upgrade --install falco-talon falcosecurity/falco-talon --namespace falco --create-namespace -f values.yaml
+</span></span><span class="line"><span class="cl">helm install falco falcosecurity/falco --namespace falco <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  --create-namespace <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  --set <span class="nv">tty</span><span class="o">=</span><span class="nb">true</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  --set falcosidekick.enabled<span class="o">=</span><span class="nb">true</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  --set falcosidekick.config.talon.address<span class="o">=</span>http://falco-talon:2803
+</span></span></code></pre></div><h2 id="使用">使用<a hidden class="anchor" aria-hidden="true" href="#使用">#</a></h2>
+<p>创建一个测试pod</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">v1</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Pod</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">ubuntu</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">spec</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">containers</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">ubuntu</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">ubuntu:latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&#34;/bin/bash&#34;</span><span class="p">,</span><span class="w"> </span><span class="s2">&#34;-c&#34;</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&#34;sleep 365d&#34;</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">imagePullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l">IfNotPresent</span><span class="w">
+</span></span></span></code></pre></div><p>使用kubectl创建shell连接</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">kubectl <span class="nb">exec</span> -it ubuntu -- /bin/bash
+</span></span></code></pre></div><p>就会发现actionner被执行了, 但是我在测试的时候发现falco存在bug, 传来的信息存在缺失, 导致falco talon执行actionner失败了.</p>
+<p><img alt="fail" loading="lazy" src="/posts/tech-falco-talon/fail.png"></p>
+<h2 id="源码阅读">源码阅读<a hidden class="anchor" aria-hidden="true" href="#源码阅读">#</a></h2>
+<p>直接看<code>cmd/server.go</code>中<code>Run</code>下面的函数.</p>
+<p>加载配置和规则, <code>RarseRules</code>的部分挺多的, 有需求的可以细看:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">configFile</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cmd</span><span class="p">.</span><span class="nf">Flags</span><span class="p">().</span><span class="nf">GetString</span><span class="p">(</span><span class="s">&#34;config&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nx">config</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">configuration</span><span class="p">.</span><span class="nf">CreateConfiguration</span><span class="p">(</span><span class="nx">configFile</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nx">utils</span><span class="p">.</span><span class="nf">SetLogFormat</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">LogFormat</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nx">rulesFiles</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cmd</span><span class="p">.</span><span class="nf">Flags</span><span class="p">().</span><span class="nf">GetStringArray</span><span class="p">(</span><span class="s">&#34;rules&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">rulesFiles</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">config</span><span class="p">.</span><span class="nx">RulesFiles</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">rulesFiles</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nx">rules</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ruleengine</span><span class="p">.</span><span class="nf">ParseRules</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">RulesFiles</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div><p>接下来获取内置的Actionners和Outputs, 用于对规则进行验证</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">defaultActionners</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">actionners</span><span class="p">.</span><span class="nf">ListDefaultActionners</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nx">defaultOutputs</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">outputs</span><span class="p">.</span><span class="nf">ListDefaultOutputs</span><span class="p">()</span><span class="w">
+</span></span></span></code></pre></div><p><code>ListDefaultActionners</code>会返回内部支持的Actionners, Outputs也是类似:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">ListDefaultActionners</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">Actionners</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="o">*</span><span class="nx">defaultActionners</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">defaultActionners</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sTerminate</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sLabel</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sAnnotation</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sNetworkpolicy</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sExec</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sScript</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sLog</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sDelete</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sCordon</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sDrain</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sDownload</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">k8sTcpdump</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">lambdaInvoke</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">gcpFunctionCall</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">calicoNetworkpolicy</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">ciliumNetworkpolicy</span><span class="p">.</span><span class="nf">Register</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">defaultActionners</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>挑其中的<code>k8sTerminate</code>看看, 代码位置在<code>actionners/kubernetes/terminal/terminal.go</code>中.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">Actionner</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">Register</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">Actionner</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nb">new</span><span class="p">(</span><span class="nx">Actionner</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>好嘟, 看起来这些都是Actionner结构体实例.</p>
+<p>接下来在for循环中对每一条规则的有效性进行验证.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">actionner</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultActionners</span><span class="p">.</span><span class="nf">FindActionner</span><span class="p">(</span><span class="nx">j</span><span class="p">.</span><span class="nf">GetActionner</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="w"> </span><span class="nx">actionner</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;unknown actionner&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Actionner</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetActionner</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">CheckParameters</span><span class="p">(</span><span class="nx">j</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Actionner</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetActionner</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="w"> </span><span class="nx">actionner</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">o</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetOutput</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">o</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Information</span><span class="p">().</span><span class="nx">RequireOutput</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;an output is required&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Actionner</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetActionner</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">o</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">output</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultOutputs</span><span class="p">.</span><span class="nf">FindOutput</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nf">GetTarget</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;unknown target&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">OutputTarget</span><span class="p">:</span><span class="w"> </span><span class="nx">o</span><span class="p">.</span><span class="nf">GetTarget</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">Parameters</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;missing parameters for the output&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">OutputTarget</span><span class="p">:</span><span class="w"> </span><span class="nx">o</span><span class="p">.</span><span class="nf">GetTarget</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">output</span><span class="p">.</span><span class="nf">CheckParameters</span><span class="p">(</span><span class="nx">o</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Rule</span><span class="p">:</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">Action</span><span class="p">:</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">GetName</span><span class="p">(),</span><span class="w"> </span><span class="nx">OutputTarget</span><span class="p">:</span><span class="w"> </span><span class="nx">o</span><span class="p">.</span><span class="nf">GetTarget</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;rules&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">valid</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><ol>
+<li>获取action部分, 检查actionner是否存在以及是否存在于内置actionners中</li>
+<li>检查参数是否合法, 因为不同的actionners可能需要参数</li>
+<li>获取output部分, 并检查其output的目标是否存在于内置outputs中</li>
+<li>检查output中的参数类型是否合法</li>
+</ol>
+<p>验证通过后开始初始化actionners和outputs, 点开<code>actionners.Init</code>看看:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">Init</span><span class="p">()</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">rules</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rules</span><span class="p">.</span><span class="nf">GetRules</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">categories</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">enabledCategories</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// 只要有一个rule, 就会输出化该rule对应类别的actionner</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// list actionner categories to init</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="o">*</span><span class="nx">rules</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nx">Actions</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">categories</span><span class="p">[</span><span class="nx">j</span><span class="p">.</span><span class="nf">GetActionnerCategory</span><span class="p">()]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">category</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">categories</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">actionner</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="o">*</span><span class="nx">defaultActionners</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">if</span><span class="w"> </span><span class="nx">category</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Information</span><span class="p">().</span><span class="nx">Category</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Init</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">					</span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;init&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Category</span><span class="p">:</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Information</span><span class="p">().</span><span class="nx">Category</span><span class="p">,</span><span class="w"> </span><span class="nx">Status</span><span class="p">:</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">FailureStr</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">					</span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="nx">enabledCategories</span><span class="p">[</span><span class="nx">category</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">enabledCategories</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="o">*</span><span class="nx">defaultActionners</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nf">Information</span><span class="p">().</span><span class="nx">Category</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="nx">enabledActionners</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="nx">j</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>获取了所有规则, 然后根据规则的类别分别初始化actionner, 最后添加到enabledActionners全局变量中, 那么以kubernetes:delete为例子看看.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="nx">Actionner</span><span class="p">)</span><span class="w"> </span><span class="nf">Init</span><span class="p">()</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">k8s</span><span class="p">.</span><span class="nf">Init</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p><code>Init</code>中对k8s的client进行了初始化, 这里就不贴了.</p>
+<p>然后是对outputs的初始化和notifier的初始化, 和actionner的初始化代码是类似的.</p>
+<p>接下来创建了一个httpserver</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">srv</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">Server</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">Addr</span><span class="p">:</span><span class="w">         </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%s:%d&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">ListenAddress</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">ListenPort</span><span class="p">),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">ReadTimeout</span><span class="p">:</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">WriteTimeout</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">Handler</span><span class="p">:</span><span class="w">      </span><span class="nf">newHTTPHandler</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>这是要做什么? 其实这就是falco talon用于接收来自falcosidekick事件信号用的, 点进去这个<code>newHTTPHandler</code>看一看</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">newHTTPHandler</span><span class="p">()</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">Handler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">mux</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nf">NewServeMux</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">mux</span><span class="p">.</span><span class="nf">Handle</span><span class="p">(</span><span class="s">&#34;/metrics&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">metrics</span><span class="p">.</span><span class="nf">Handler</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">handleFunc</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">pattern</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">handlerFunc</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">otelHandler</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">otelhttp</span><span class="p">.</span><span class="nf">WithRouteTag</span><span class="p">(</span><span class="nx">pattern</span><span class="p">,</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nf">HandlerFunc</span><span class="p">(</span><span class="nx">handlerFunc</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">mux</span><span class="p">.</span><span class="nf">Handle</span><span class="p">(</span><span class="nx">pattern</span><span class="p">,</span><span class="w"> </span><span class="nx">otelHandler</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">handleFunc</span><span class="p">(</span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">handler</span><span class="p">.</span><span class="nx">MainHandler</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">handleFunc</span><span class="p">(</span><span class="s">&#34;/healthz&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">handler</span><span class="p">.</span><span class="nx">HealthHandler</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">otelHandler</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">otelhttp</span><span class="p">.</span><span class="nf">NewHandler</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">mux</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">otelhttp</span><span class="p">.</span><span class="nf">WithFilter</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">req</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">return</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">otelHandler</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>跟进<code>MainHandler</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">MainHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">event</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">events</span><span class="p">.</span><span class="nf">DecodeEvent</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">tracer</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">traces</span><span class="p">.</span><span class="nf">GetTracer</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">span</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tracer</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">rctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;event&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="s">&#34;event.rule&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">Rule</span><span class="p">)),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="s">&#34;event.source&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">Source</span><span class="p">)),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="s">&#34;event.priority&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">Priority</span><span class="p">)),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="s">&#34;event.output&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">Output</span><span class="p">)),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="s">&#34;event.tags&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">ReplaceAll</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nf">Trim</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprint</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">Tags</span><span class="p">),</span><span class="w"> </span><span class="s">&#34;[]&#34;</span><span class="p">),</span><span class="w"> </span><span class="s">&#34; &#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;, &#34;</span><span class="p">))),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">trace</span><span class="p">.</span><span class="nf">WithAttributes</span><span class="p">(</span><span class="nx">attribute</span><span class="p">.</span><span class="nf">StringSlice</span><span class="p">(</span><span class="s">&#34;event.tags&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">)),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">hasher</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">md5</span><span class="p">.</span><span class="nf">New</span><span class="p">()</span><span class="w"> </span><span class="cp">//nolint:gosec</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">hasher</span><span class="p">.</span><span class="nf">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">Output</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// NOTE: Publish the event to NATS</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">nats</span><span class="p">.</span><span class="nf">GetPublisher</span><span class="p">().</span><span class="nf">PublishMsg</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">hex</span><span class="p">.</span><span class="nf">EncodeToString</span><span class="p">(</span><span class="nx">hasher</span><span class="p">.</span><span class="nf">Sum</span><span class="p">(</span><span class="kc">nil</span><span class="p">)),</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nf">String</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">http</span><span class="p">.</span><span class="nf">Error</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Internal Server Error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>这个函数里面用到了两个没见过的库, 一个是<code>otel/trace</code>, 是 OpenTelemetry 库的一部分, 它用于支持应用程序的分布式追踪功能.</p>
+<p>另一个是<code>nats-io/nats.go</code>, 这个就有意思了, 它用于集成NATS消息系统, 什么是NATS消息系统? 根据官网的解释:</p>
+<blockquote>
+<p>NATS 是一种允许以消息形式进行数据交换的基础设施。我们称之为“面向消息的中间件”。</p></blockquote>
+<p>而代码中的<code>nats.GetPublisher.PublishMsg</code>就是将事件消息推送出去, 给其他客户端消费, 而在<code>server.go</code>中<code>nats.GetConsumer().ConsumeMsg()</code>就启动了一个消费者, 因此这边的nats的作用是在多个falco-talon实例之间传递消息.</p>
+<p>回到 <code>server.go</code>, 对于设置了<code>watch_rules</code>的情况, 程序启动了一个goroutine来监听和更新规则, 其中的内容和初始化是差不多的.</p>
+<p>下面, 在启动了nats server之后, 如果设置了LeaderElection:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">Deduplication</span><span class="p">.</span><span class="nx">LeaderElection</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">err2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">k8s</span><span class="p">.</span><span class="nf">Init</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;fatal&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err2</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;lease&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">c</span><span class="p">,</span><span class="w"> </span><span class="nx">err2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">k8s</span><span class="p">.</span><span class="nf">GetClient</span><span class="p">().</span><span class="nf">GetLeaseHolder</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;fatal&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err2</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;lease&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">c</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">*</span><span class="nx">utils</span><span class="p">.</span><span class="nf">GetLocalIP</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">s</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;127.0.0.1&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;info&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Result</span><span class="p">:</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;new leader detected &#39;%v&#39;&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="p">),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;nats&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nx">err2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">nats</span><span class="p">.</span><span class="nf">GetPublisher</span><span class="p">().</span><span class="nf">SetJetStreamContext</span><span class="p">(</span><span class="s">&#34;nats://&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;:4222&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="nx">err2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;error&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err2</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;nats&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>由<code>Deduplication.LeaderElection</code>这个选项不难猜测, 上面的代码是为了处理多实例备份的情况, 主要做了这样的事情:</p>
+<ul>
+<li>通过<code>k8s.GetClient().GetLeaseHolder()</code>获取k8s中的租约, 有关租约可以看<a href="https://kubernetes.io/zh-cn/docs/concepts/architecture/leases/">文档</a></li>
+<li>通过租约确定领导者, 进而确定nats的发布渠道</li>
+</ul>
+<p>之后也是最关键的一步, 获取消费者chan, 并提供给actionners进行消费, actionners会从chan接收事件并根据规则进行威胁响应.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">c</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">nats</span><span class="p">.</span><span class="nf">GetConsumer</span><span class="p">().</span><span class="nf">ConsumeMsg</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nx">utils</span><span class="p">.</span><span class="nf">PrintLog</span><span class="p">(</span><span class="s">&#34;fatal&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="nx">Error</span><span class="p">:</span><span class="w"> </span><span class="nx">err</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w"> </span><span class="nx">Message</span><span class="p">:</span><span class="w"> </span><span class="s">&#34;nats&#34;</span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">go</span><span class="w"> </span><span class="nx">actionners</span><span class="p">.</span><span class="nf">StartConsumer</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div><p>所以来看看StartConsumer函数.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">StartConsumer</span><span class="p">(</span><span class="nx">eventsC</span><span class="w"> </span><span class="o">&lt;-</span><span class="kd">chan</span><span class="w"> </span><span class="nx">nats</span><span class="p">.</span><span class="nx">MessageWithContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">config</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">configuration</span><span class="p">.</span><span class="nf">GetConfiguration</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">triggeredRules</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nf">GetActions</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">runAction</span><span class="p">(</span><span class="nx">mctx</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">e</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">IgnoreErrors</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">trueStr</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">					</span><span class="k">break</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="p">.</span><span class="nx">Continue</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">falseStr</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="k">break</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>这里遍历了触发的规则和对应的action, 分别执行, 进入runAction可以看到</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">runAction</span><span class="p">(</span><span class="nx">mctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">rule</span><span class="w"> </span><span class="o">*</span><span class="nx">rules</span><span class="p">.</span><span class="nx">Rule</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="w"> </span><span class="o">*</span><span class="nx">rules</span><span class="p">.</span><span class="nx">Action</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="w"> </span><span class="o">*</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Run</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">output</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">action</span><span class="p">.</span><span class="nf">GetOutput</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">go</span><span class="w"> </span><span class="nx">notifiers</span><span class="p">.</span><span class="nf">Notify</span><span class="p">(</span><span class="nx">actx</span><span class="p">,</span><span class="w"> </span><span class="nx">rule</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">,</span><span class="w"> </span><span class="nx">log</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">actionner</span><span class="p">.</span><span class="nf">Information</span><span class="p">().</span><span class="nx">AllowOutput</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">target</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">output</span><span class="p">.</span><span class="nf">GetTarget</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">o</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">outputs</span><span class="p">.</span><span class="nf">GetOutputs</span><span class="p">().</span><span class="nf">FindOutput</span><span class="p">(</span><span class="nx">target</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">o</span><span class="p">.</span><span class="nf">Run</span><span class="p">(</span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">go</span><span class="w"> </span><span class="nx">notifiers</span><span class="p">.</span><span class="nf">Notify</span><span class="p">(</span><span class="nx">octx</span><span class="p">,</span><span class="w"> </span><span class="nx">rule</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">,</span><span class="w"> </span><span class="nx">logO</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>抛开配置项中的代码不谈, 这里做的事情是执行actionner并获取输出, 之后通过<code>o.Run</code>来将输出存储到合适的位置(可以选择的有<code>file</code> <code>aws</code> <code>gcs</code> 和 <code>minio</code>), 最后将结果以Notify函数发送出去(可选的notifier有 <code>elasticsearch</code> <code>http</code> <code>k8sevents</code> <code>loki</code> <code>slack</code> <code>smtp</code> 和 <code>webhook</code>).</p>
+<p>以file这个output为例子, 其将输出存储到本地文件中:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">o</span><span class="w"> </span><span class="nx">Output</span><span class="p">)</span><span class="w"> </span><span class="nf">Run</span><span class="p">(</span><span class="nx">output</span><span class="w"> </span><span class="o">*</span><span class="nx">rules</span><span class="p">.</span><span class="nx">Output</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">*</span><span class="nx">models</span><span class="p">.</span><span class="nx">Data</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">switch</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">case</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;namespace&#34;</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;pod&#34;</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">key</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%v_%v_%v_%v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02T15-04-05Z&#34;</span><span class="p">),</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;namespace&#34;</span><span class="p">],</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;pod&#34;</span><span class="p">],</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">ReplaceAll</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;_&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">case</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;hostname&#34;</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">key</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%v_%v_%v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02T15-04-05Z&#34;</span><span class="p">),</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="p">[</span><span class="s">&#34;hostname&#34;</span><span class="p">],</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">ReplaceAll</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;_&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">default</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="kd">var</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Objects</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&#34;file&#34;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">				</span><span class="nx">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;_&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">key</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%v_%v%v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02T15-04-05Z&#34;</span><span class="p">),</span><span class="w"> </span><span class="nx">s</span><span class="p">,</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">ReplaceAll</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;_&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">dstfile</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%v/%v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nf">TrimSuffix</span><span class="p">(</span><span class="nx">parameters</span><span class="p">.</span><span class="nx">Destination</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="p">),</span><span class="w"> </span><span class="nx">key</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">objects</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;file&#34;</span><span class="p">:</span><span class="w">        </span><span class="nx">data</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="s">&#34;destination&#34;</span><span class="p">:</span><span class="w"> </span><span class="nx">dstfile</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nf">WriteFile</span><span class="p">(</span><span class="nx">dstfile</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">Bytes</span><span class="p">,</span><span class="w"> </span><span class="mo">0600</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="nx">utils</span><span class="p">.</span><span class="nx">LogLine</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">Objects</span><span class="p">:</span><span class="w"> </span><span class="nx">objects</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">Error</span><span class="p">:</span><span class="w">   </span><span class="nx">err</span><span class="p">.</span><span class="nf">Error</span><span class="p">(),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">			</span><span class="nx">Status</span><span class="p">:</span><span class="w">  </span><span class="nx">utils</span><span class="p">.</span><span class="nx">FailureStr</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="p">},</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// ...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p><code>server.go</code>最后将会启动srv, 通过上面代码分析可知srv就是一个负责转发消息事件的东西,因此, 当一个实例上的falco-talon接收到事件的时候, 事件会被转发传播到集群内的其他所有falco-talon实例中.</p>
+<p>至此对falco-talon代码的粗浅阅读完毕.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/tech-kubernetes-scheduler/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>创建一个简单的自定义K8s Scheduler</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/tech-domain/">
+    <span class="title">Next »</span>
+    <br>
+    <span>域名配合隧道穿透服务(Godaddy&#43;Cloudflare&#43;Cpolar/Cloudflared)</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

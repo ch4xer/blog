@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>ch4ser 的 vim | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="ch4ser 的 vim
+
+本篇文章中的插件均已过时, 不推荐使用
+《程序员修炼之道》中有一句话:最好是精通一种编辑器，并将其用于所有编辑任务。如果不坚持使用一种编辑器，可能会面临现代的巴别特大混乱。 ，实质今日，深以为然。而自从接触vim之后我一直都保持着有空折腾折腾的好习惯，它的简洁和高度自由让人着迷，围绕着vim衍生出的插件数不胜数。奈何插件繁多的同时也意味着选择的困难和配置的繁琐。为了准备以后可能出现的突发情况比如配置丢失或者重新安装，特在此以实现特定功能为主题，记录自己配置vim的过程。">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/tech-ch4ser-vim/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/tech-ch4ser-vim/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      ch4ser 的 vim
+    </h1>
+    <div class="post-meta"><span title='2019-04-22 02:05:35 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;728 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#以下内容是配置">以下内容是配置</a>
+      <ul>
+        <li><a href="#安装vim-plug">安装（vim-plug）</a></li>
+        <li><a href="#confignviminitvim">~/.config/nvim/init.vim</a></li>
+        <li><a href="#vimpluginsvim">~/.vim/plugins.vim</a></li>
+        <li><a href="#vimplugsettaglistsvim">~/.vim/plugset/taglists.vim</a></li>
+        <li><a href="#vimplugsetbookmarkvim">~/.vim/plugset/bookmark.vim</a></li>
+      </ul>
+    </li>
+    <li><a href="#源码审计">源码审计</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="ch4ser-的-vim">ch4ser 的 vim<a hidden class="anchor" aria-hidden="true" href="#ch4ser-的-vim">#</a></h1>
+<blockquote>
+<p>本篇文章中的插件均已过时, 不推荐使用</p></blockquote>
+<p>《程序员修炼之道》中有一句话:<code>最好是精通一种编辑器，并将其用于所有编辑任务。如果不坚持使用一种编辑器，可能会面临现代的巴别特大混乱。</code> ，实质今日，深以为然。而自从接触vim之后我一直都保持着有空折腾折腾的好习惯，它的简洁和高度自由让人着迷，围绕着vim衍生出的插件数不胜数。奈何插件繁多的同时也意味着选择的困难和配置的繁琐。为了准备以后可能出现的突发情况比如配置丢失或者重新安装，特在此以实现特定功能为主题，记录自己配置vim的过程。</p>
+<hr>
+<p>相比较vim, neovim的速度更快.</p>
+<p>为了调动食欲,先上效果图:</p>
+<p><img alt="image-20211114141133313" loading="lazy" src="/posts/tech-ch4ser-vim/image-20211114141133313.png"></p>
+<p><img alt="image-20211114141143513" loading="lazy" src="/posts/tech-ch4ser-vim/image-20211114141143513.png"></p>
+<p>vim下打开终端</p>
+<p><img alt="image-20211114141151758" loading="lazy" src="/posts/tech-ch4ser-vim/image-20211114141151758.png"></p>
+<h2 id="以下内容是配置">以下内容是配置<a hidden class="anchor" aria-hidden="true" href="#以下内容是配置">#</a></h2>
+<h3 id="安装vim-plug">安装（vim-plug）<a hidden class="anchor" aria-hidden="true" href="#安装vim-plug">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs <span style="color:#1e66f5">\
+</span></span></span><span style="display:flex;"><span><span style="color:#1e66f5"></span>    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+</span></span></code></pre></div><h3 id="confignviminitvim">~/.config/nvim/init.vim<a hidden class="anchor" aria-hidden="true" href="#confignviminitvim">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#40a02b">&#34; c to caplock , add XKBOPTIONS=&#34;</span>caps:escape<span style="color:#40a02b">&#34; in /etc/default/keyboard
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 让进入vim的时候显示绝对行号,当进入编辑模式的时候也显示绝对行号,但是从编辑模式回到普通模式的时候切换到相对行号
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> number
+</span></span><span style="display:flex;"><span>augroup relative_numbser
+</span></span><span style="display:flex;"><span> autocmd!
+</span></span><span style="display:flex;"><span> autocmd InsertEnter * :set norelativenumber
+</span></span><span style="display:flex;"><span> autocmd InsertLeave * :set relativenumber
+</span></span><span style="display:flex;"><span>augroup END
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> wildmenu
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 忽略大小写
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">set ignorecase
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">set shell=/bin/zsh
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> font and icons <span style="color:#8839ef">for</span> vim
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> <span style="color:#dc8a78">encoding</span><span style="color:#04a5e5;font-weight:bold">=</span>utf8
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; set guifont=DroidSansMono\ Nerd\ Font\ 11
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">autocmd User Startified setlocal buflisted
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> leader键映射
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">let</span> <span style="color:#dc8a78">mapleader</span><span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#40a02b">&#34;\&lt;Space&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>map &lt;leader&gt;w :w&lt;CR&gt;
+</span></span><span style="display:flex;"><span>map &lt;leader&gt;q :q!&lt;CR&gt;
+</span></span><span style="display:flex;"><span>map &lt;leader&gt;r :call Runit<span style="color:#04a5e5;font-weight:bold">()</span>&lt;CR&gt;
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 设定函数,自动根据文件类型来调用相应的解释器来执行代码
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">func Runit()
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    if &amp;filetype == &#39;php&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!time php %<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    elseif &amp;filetype == &#39;python&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!time python %<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    elseif &amp;filetype == &#39;c&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!gcc % -o %&lt;<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!time sudo ./%&lt;<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    elseif &amp;filetype == &#39;cpp&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!g++ % -o %&lt;<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">	exec &#34;</span>!time ./%&lt;<span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    endif
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">endfunc
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; set shift width
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">set shiftwidth=4
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">set scrolloff=6
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 启动鼠标
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> <span style="color:#dc8a78">mouse</span><span style="color:#04a5e5;font-weight:bold">=</span>n
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>map &lt;ScrollWheelUp&gt; &lt;C-Y&gt;
+</span></span><span style="display:flex;"><span>map &lt;ScrollWheelDown&gt; &lt;C-E&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 关于多窗口的键位映射
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map vs :vs 
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map sp :sp 
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;l &lt;C-w&gt;l
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;h &lt;C-w&gt;h
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;j &lt;C-w&gt;j
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;k &lt;C-w&gt;k
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;L &lt;C-w&gt;L
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;H &lt;C-w&gt;H
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;J &lt;C-w&gt;J
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map &lt;leader&gt;K &lt;C-w&gt;K
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 终端模式
+</span></span><span style="display:flex;"><span>map te :vs&lt;CR&gt;&lt;C-w&gt;L:te&lt;CR&gt;A
+</span></span><span style="display:flex;"><span>tnoremap &lt;esc&gt; &lt;C-<span style="color:#1e66f5">\&gt;</span>&lt;C-n&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 关于多标签模式的设定
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map tn :tabnew 
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map L :tabnext&lt;CR&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">map H :tabprev&lt;CR&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 代码折叠
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> <span style="color:#dc8a78">foldmethod</span><span style="color:#04a5e5;font-weight:bold">=</span>indent
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> <span style="color:#dc8a78">foldlevel</span><span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">99</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 高亮当前的行和列
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> cursorcolumn
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">set</span> cursorline
+</span></span><span style="display:flex;"><span>highlight CursorLine   <span style="color:#dc8a78">cterm</span><span style="color:#04a5e5;font-weight:bold">=</span>NONE <span style="color:#dc8a78">ctermbg</span><span style="color:#04a5e5;font-weight:bold">=</span>black <span style="color:#dc8a78">ctermfg</span><span style="color:#04a5e5;font-weight:bold">=</span>green
+</span></span><span style="display:flex;"><span>highlight CursorColumn <span style="color:#dc8a78">cterm</span><span style="color:#04a5e5;font-weight:bold">=</span>NONE <span style="color:#dc8a78">ctermbg</span><span style="color:#04a5e5;font-weight:bold">=</span>black <span style="color:#dc8a78">ctermfg</span><span style="color:#04a5e5;font-weight:bold">=</span>green 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 这段代码可以让每次打开文件的时候将光标定位到上一次所在的位置
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">au BufReadPost * if line(&#34;</span><span style="color:#40a02b">&#39;\&#34;&#34;) &gt; 1 &amp;&amp; line(&#34;&#39;</span><span style="color:#1e66f5">\&#34;</span><span style="color:#40a02b">&#34;) &lt;= line(&#34;$&#34;) | exe &#34;</span>normal! g<span style="color:#d20f39">&#39;</span><span style="color:#1e66f5">\&#34;</span><span style="color:#40a02b">&#34; | endif
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> 引入插件
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">source</span> ~/.vim/plugins.vim
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 这个是为了在编写python的时候方便在vim内部浏览python文档而添加的，在github上有
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> <span style="color:#04a5e5">source</span> ~/.vim/pydoc.vim/ftplugin/python_pydoc.vim
+</span></span></code></pre></div><h3 id="vimpluginsvim">~/.vim/plugins.vim<a hidden class="anchor" aria-hidden="true" href="#vimpluginsvim">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>call plug#begin(&#39;~/.vim/plugged&#39;)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34; 代码补全插件
+</span></span><span style="display:flex;"><span>&#34; Plug &#39;neoclide/coc.nvim&#39;, {&#39;branch&#39;: &#39;release&#39;}
+</span></span><span style="display:flex;"><span>Plug &#39;ncm2/ncm2&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;ncm2/ncm2-jedi&#39; 
+</span></span><span style="display:flex;"><span>Plug &#39;ncm2/ncm2-bufword&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;ncm2/ncm2-path&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;roxma/nvim-yarp&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;phpactor/phpactor&#39; ,  {&#39;do&#39;: &#39;composer install&#39;, &#39;for&#39;: &#39;php&#39;}
+</span></span><span style="display:flex;"><span>Plug &#39;phpactor/ncm2-phpactor&#39;
+</span></span><span style="display:flex;"><span>&#34; 外观插件
+</span></span><span style="display:flex;"><span>Plug &#39;KeitaNakamura/neodark.vim&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;cocopon/iceberg.vim&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;vim-airline/vim-airline&#39;
+</span></span><span style="display:flex;"><span>Plug &#39;ryanoasis/vim-devicons&#39;
+</span></span><span style="display:flex;"><span>&#34; 代码结构显示
+</span></span><span style="display:flex;"><span>Plug &#39;vim-scripts/taglist.vim&#39;
+</span></span><span style="display:flex;"><span>&#34; 代码标记,并且可以在标记之间跳转
+</span></span><span style="display:flex;"><span>Plug &#39;MattesGroeger/vim-bookmarks&#39;
+</span></span><span style="display:flex;"><span>&#34; 目录树
+</span></span><span style="display:flex;"><span>Plug &#39;scrooloose/nerdtree&#39;
+</span></span><span style="display:flex;"><span>&#34; 括号自动补全
+</span></span><span style="display:flex;"><span>Plug &#39;jiangmiao/auto-pairs&#39;
+</span></span><span style="display:flex;"><span>&#34; 快速注释
+</span></span><span style="display:flex;"><span>Plug &#39;scrooloose/nerdcommenter&#39;
+</span></span><span style="display:flex;"><span> &#34; 花里胡哨的小插件，可以让打字发出音乐
+</span></span><span style="display:flex;"><span>&#34; Plug &#39;skywind3000/vim-keysound&#39;
+</span></span><span style="display:flex;"><span>call plug#end()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34; Plugin setting
+</span></span><span style="display:flex;"><span>&#34;
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/nerdtree.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/ncm2.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/bookmark.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/airline.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/taglists.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/autopair.vim
+</span></span><span style="display:flex;"><span>source /home/ch4ser/.vim/plugset/nerdcomment.vim
+</span></span><span style="display:flex;"><span>&#34; source ~/.vim/plugset/keysound.vim
+</span></span></code></pre></div><h4 id="vimplugsetncm2vim">~/.vim/plugset/ncm2.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetncm2vim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>inoremap &lt;expr&gt; &lt;Tab&gt; pumvisible() ? &#34;\&lt;C-n&gt;&#34; : &#34;\&lt;Tab&gt;&#34;
+</span></span><span style="display:flex;"><span>inoremap &lt;expr&gt; &lt;S-Tab&gt; pumvisible() ? &#34;\&lt;C-p&gt;&#34; : &#34;\&lt;S-Tab&gt;&#34;
+</span></span><span style="display:flex;"><span>inoremap &lt;expr&gt; &lt;CR&gt; (pumvisible() ? &#34;\&lt;c-y&gt;\&lt;cr&gt;&#34;: &#34;\&lt;CR&gt;&#34;)
+</span></span><span style="display:flex;"><span>autocmd BufEnter * call ncm2#enable_for_buffer()
+</span></span><span style="display:flex;"><span>set completeopt=noinsert,menuone,noselect
+</span></span><span style="display:flex;"><span>let ncm2#popup_delay = 5
+</span></span><span style="display:flex;"><span>let g:ncm2#matcher = &#34;substrfuzzy&#34;
+</span></span><span style="display:flex;"><span>let g:ncm2_jedi#python_version = 3
+</span></span><span style="display:flex;"><span>let g:ncm2#match_highlight = &#39;sans-serif&#39;
+</span></span></code></pre></div><h4 id="vimplugsetairlinevim">~/.vim/plugset/airline.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetairlinevim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#40a02b">&#34;if you want to enable solarized theme ,quote the snipeet
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> <span style="color:#d20f39">这段代码让</span>vim支持插件所需的色彩
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">if</span> (<span style="color:#1e66f5">empty</span>(<span style="color:#d20f39">$</span>TMUX))
+</span></span><span style="display:flex;"><span>  <span style="color:#8839ef">if</span> (<span style="color:#1e66f5">has</span>(<span style="color:#40a02b">&#34;nvim&#34;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#40a02b">&#34;For Neovim 0.1.3 and 0.1.4 &lt; https://github.com/neovim/neovim/pull/2198 &gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">  endif
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">  &#34;</span><span style="color:#8839ef">For</span> Neovim <span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#fe640b">0</span>.<span style="color:#fe640b">1</span>.<span style="color:#fe640b">5</span> <span style="color:#8839ef">and</span> Vim <span style="color:#04a5e5;font-weight:bold">&gt;</span> patch <span style="color:#fe640b">7</span>.<span style="color:#fe640b">4</span>.<span style="color:#fe640b">1799</span> <span style="color:#04a5e5;font-weight:bold">&lt;</span> https:<span style="color:#04a5e5;font-weight:bold">//</span>github.com<span style="color:#04a5e5;font-weight:bold">/</span>vim<span style="color:#04a5e5;font-weight:bold">/</span>vim<span style="color:#04a5e5;font-weight:bold">/</span>commit<span style="color:#04a5e5;font-weight:bold">/</span><span style="color:#fe640b">61</span>be73bb0f965a895bfb064ea3e55476ac175162 <span style="color:#04a5e5;font-weight:bold">&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#40a02b">&#34;Based on Vim patch 7.4.1770 (`guicolors` option) &lt; https://github.com/vim/vim/commit/8a633e3427b47286869aa4b96f2bfc1fe65b25cd &gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">  &#34;</span> <span style="color:#04a5e5;font-weight:bold">&lt;</span> https:<span style="color:#04a5e5;font-weight:bold">//</span>github.com<span style="color:#04a5e5;font-weight:bold">/</span>neovim<span style="color:#04a5e5;font-weight:bold">/</span>neovim<span style="color:#04a5e5;font-weight:bold">/</span>wiki<span style="color:#04a5e5;font-weight:bold">/</span>Following<span style="color:#04a5e5;font-weight:bold">-</span>HEAD<span style="color:#9ca0b0;font-style:italic">#20160511 &gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"></span>  <span style="color:#8839ef">if</span> (<span style="color:#1e66f5">has</span>(<span style="color:#40a02b">&#34;termguicolors&#34;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#d20f39">set</span> termguicolors
+</span></span><span style="display:flex;"><span>  endif
+</span></span><span style="display:flex;"><span>endif
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;airline setting 
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_symbols = {}
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_left_sep = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_left_alt_sep = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_right_sep = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_right_alt_sep = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_symbols.branch = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_symbols.readonly = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline_symbols.linenr = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#enabled = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#show_buffers = 0
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#show_tabs = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#fnamemod = &#39;:t&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#left_sep = &#39; &#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">let g:airline#extensions#tabline#left_alt_sep = &#39;|&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; 主题设置
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> color <span style="color:#8839ef">schema</span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;主题设置为冰山主题
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> colorscheme iceberg 
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34; let g:airline_theme=&#39;iceberg&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> let g:lightline <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#d20f39">{</span><span style="color:#40a02b">&#39;colorscheme&#39;</span>: <span style="color:#40a02b">&#39;iceberg&#39;</span><span style="color:#d20f39">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#40a02b">&#34;</span> <span style="color:#d20f39">设置主题为</span>onedark
+</span></span><span style="display:flex;"><span>colorscheme neodark
+</span></span></code></pre></div><h4 id="vimplugsetnerdcommentvim">~/.vim/plugset/nerdcomment.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetnerdcommentvim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34; comment plugin setting
+</span></span><span style="display:flex;"><span>&#34;comment followed a space
+</span></span><span style="display:flex;"><span>let g:NERDSpaceDelims=1
+</span></span></code></pre></div><h4 id="vimplugsetautopairvim">~/.vim/plugset/autopair.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetautopairvim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34; autopair setting
+</span></span><span style="display:flex;"><span>let g:AutoPairsShortcutJump = &#39;&lt;S-Tab&gt;&#39;
+</span></span><span style="display:flex;"><span>let g:AutoPairsShortcutFastWrap=&#39;&lt;C-z&gt;&#39;
+</span></span></code></pre></div><h4 id="vimplugsetnerdtreevim">~/.vim/plugset/nerdtree.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetnerdtreevim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34; T                 打开nerdree窗口，在左侧栏显示
+</span></span><span style="display:flex;"><span>map T :NERDTreeToggle&lt;CR&gt;&lt;leader&gt;l
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34;close vim if the only window left open is a NERDTree
+</span></span><span style="display:flex;"><span>autocmd bufenter * if (winnr(&#34;$&#34;) == 1 &amp;&amp; exists(&#34;b:NERDTree&#34;) &amp;&amp; b:NERDTree.isTabTree()) | q | endif
+</span></span></code></pre></div><h4 id="vimplugsetkeysoundvim">~/.vim/plugset/keysound.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetkeysoundvim">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34;launch with vim
+</span></span><span style="display:flex;"><span>let g:keysound_enable = 1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34;set default sound
+</span></span><span style="display:flex;"><span>let g:keysound_theme = &#39;default&#39;
+</span></span><span style="display:flex;"><span>&#34; let g:keysound_theme = &#39;typewriter&#39;
+</span></span><span style="display:flex;"><span>&#34; let g:keysound_theme = &#39;sword&#39;
+</span></span><span style="display:flex;"><span>&#34; let g:keysound_theme = &#39;mario&#39;
+</span></span><span style="display:flex;"><span>&#34; let g:keysound_theme = &#39;bubble&#39;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34; set python version
+</span></span><span style="display:flex;"><span>let g:keysound_py_version = 2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34;volumn setting
+</span></span><span style="display:flex;"><span>&#34; 其实设置这么大,早就超过极限了
+</span></span><span style="display:flex;"><span>let g:keysound_volumn = 100000
+</span></span></code></pre></div><h3 id="vimplugsettaglistsvim">~/.vim/plugset/taglists.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsettaglistsvim">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>map &lt;leader&gt;t :TlistToggle&lt;CR&gt; &#34;设置召唤键
+</span></span><span style="display:flex;"><span>let Tlist_WinWidth=30        &#34;设置taglist宽度
+</span></span><span style="display:flex;"><span>let Tlist_Exit_OnlyWindow=1  &#34;tagList窗口是最后一个窗口，则退出Vim
+</span></span><span style="display:flex;"><span>let Tlist_Use_Right_Window   = 0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34; 不同时显示多个文件的 tag ，只显示当前文件的
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34; let Tlist_Show_One_File=1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&#34;让当前不被编辑的文件的方法列表自动折叠起来
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>let Tlist_File_Fold_Auto_Close=1
+</span></span></code></pre></div><h3 id="vimplugsetbookmarkvim">~/.vim/plugset/bookmark.vim<a hidden class="anchor" aria-hidden="true" href="#vimplugsetbookmarkvim">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>let g:bookmark_sign = &#39;&gt;&gt;&#39;
+</span></span><span style="display:flex;"><span>let g:bookmark_highlight_lines = 1
+</span></span><span style="display:flex;"><span>&#34; unmap mp
+</span></span><span style="display:flex;"><span>nmap mN &lt;Plug&gt;BookmarkPrev
+</span></span></code></pre></div><h2 id="源码审计">源码审计<a hidden class="anchor" aria-hidden="true" href="#源码审计">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>sudo apt install ctags
+</span></span><span style="display:flex;"><span>#切到待审计文件夹下的根目录下,执行
+</span></span><span style="display:flex;"><span>ctags -R
+</span></span><span style="display:flex;"><span>生成全局的标签文件
+</span></span><span style="display:flex;"><span>然后我们进入一个代码文件,光标放在某一个函数名或者是宏上,按下Ctrl + ], vim就可以自动切换到该函数定义处,要返回只需要按下Ctrl + o  或者 Ctrl + t
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>sudo apt-get install xcape
+</span></span><span style="display:flex;"><span># make CapsLock behave like Ctrl:
+</span></span><span style="display:flex;"><span>setxkbmap -option ctrl:nocaps
+</span></span><span style="display:flex;"><span># make short-pressed Ctrl behave like Escape:
+</span></span><span style="display:flex;"><span>xcape -e &#39;Control_L=Escape&#39;
+</span></span></code></pre></div><p>see the link below:</p>
+<p><a href="http://tiborsimko.org/capslock-escape-control.html">http://tiborsimko.org/capslock-escape-control.html</a></p>
+<p>由于这样的做法会让caplock反应变慢,因此我不用这种方法,而是传统的修改keyboard文件来达到简单的esc映射效果.</p>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>使用hexo和github搭建网站</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

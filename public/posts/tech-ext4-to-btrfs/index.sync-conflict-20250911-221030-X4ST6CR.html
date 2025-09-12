@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>ext4到btrfs转换记录 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="这篇文章是对我从ext4文件系统转换到btrfs过程中的一些操作记录, 便于日后参考.
+前置准备
+
+制作arch linux 启动盘, 版本越新越好.
+备份重要文件
+我个人在转换前会把大文件(例如虚拟机文件)转移到移动硬盘里, 让转换过程更快一些
+
+转换
+进入LiveCD 系统, 对主分区进行转换
+btrfs-convert /dev/nvme0n1p2
+等待一段时间之后, 显示conversion complete就表示没有问题, 接下来还需要做三件事情才可以进入系统
+修改fstab
+首先将转换成功后的分区挂载到/mnt下
+mount /dev/nvme0n1p2 /mnt
+使用lsblk -f命令查看分区的UUID号, 拍个照片记一下
+编辑/mnt/etc/fstab, 修改这个分区类型为btrfs, 将最后的两列数字都改成0, 保存退出
+重建内存盘
+先挂载, 然后进入chroot环境
+mount -t proc none /mnt/proc
+mount -t sysfs none /mnt/sys
+mount -o bind /dev /mnt/dev
+chroot /mnt bash
+然后执行下列命令来为所有内核重建内存盘
+mkinitcpio -P
+最后重建grub引导, 按照道理应该要把引导分区/dev/nvme0n1p1挂载到/mnt/boot之后才可以, 但是我记得自己执行的时候没有挂载?
+grub-mkconfig -o /boot/grub/grub.cfg
+重建grub引导
+在上一步的chroot环境中, 执行下列命令, 记得把引导分区挂载到/mnt/boot
+grub-mkconfig -o /boot/grub/grub.cfg
+大功告成, 退出chroot, 重启电脑就可以进入你的系统了, 唯一的不同是它已经是btrfs了.">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/tech-ext4-to-btrfs/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/tech-ext4-to-btrfs/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      ext4到btrfs转换记录
+    </h1>
+    <div class="post-meta"><span title='2023-01-16 05:28:51 +0000 UTC'>January 16, 2023</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;237 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager" src="http://localhost:1313/posts/tech-ext4-to-btrfs/btrfs.jpeg" alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#前置准备">前置准备</a></li>
+    <li><a href="#转换">转换</a>
+      <ul>
+        <li><a href="#修改fstab">修改fstab</a></li>
+        <li><a href="#重建内存盘">重建内存盘</a></li>
+        <li><a href="#重建grub引导">重建grub引导</a></li>
+      </ul>
+    </li>
+    <li><a href="#子卷建立">子卷建立</a></li>
+    <li><a href="#其他">其他</a></li>
+    <li><a href="#参考">参考</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>这篇文章是对我从ext4文件系统转换到btrfs过程中的一些操作记录, 便于日后参考.</p>
+<h2 id="前置准备">前置准备<a hidden class="anchor" aria-hidden="true" href="#前置准备">#</a></h2>
+<ol>
+<li>制作arch linux 启动盘, 版本越新越好.</li>
+<li>备份重要文件</li>
+<li>我个人在转换前会把大文件(例如虚拟机文件)转移到移动硬盘里, 让转换过程更快一些</li>
+</ol>
+<h2 id="转换">转换<a hidden class="anchor" aria-hidden="true" href="#转换">#</a></h2>
+<p>进入LiveCD 系统, 对主分区进行转换</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>btrfs-convert /dev/nvme0n1p2
+</span></span></code></pre></div><p>等待一段时间之后, 显示<code>conversion complete</code>就表示没有问题, 接下来还需要做三件事情才可以进入系统</p>
+<h3 id="修改fstab">修改fstab<a hidden class="anchor" aria-hidden="true" href="#修改fstab">#</a></h3>
+<p>首先将转换成功后的分区挂载到<code>/mnt</code>下</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount /dev/nvme0n1p2 /mnt
+</span></span></code></pre></div><p>使用<code>lsblk -f</code>命令查看分区的UUID号, 拍个照片记一下</p>
+<p>编辑<code>/mnt/etc/fstab</code>, 修改这个分区类型为btrfs, 将最后的两列数字都改成0, 保存退出</p>
+<h3 id="重建内存盘">重建内存盘<a hidden class="anchor" aria-hidden="true" href="#重建内存盘">#</a></h3>
+<p>先挂载, 然后进入chroot环境</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t proc none /mnt/proc
+</span></span><span style="display:flex;"><span>mount -t sysfs none /mnt/sys
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#6639ba">bind</span> /dev /mnt/dev
+</span></span><span style="display:flex;"><span>chroot /mnt bash
+</span></span></code></pre></div><p>然后执行下列命令来为所有内核重建内存盘</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkinitcpio -P
+</span></span></code></pre></div><p>最后重建grub引导, 按照道理应该要把引导分区<code>/dev/nvme0n1p1</code>挂载到<code>/mnt/boot</code>之后才可以, 但是我记得自己执行的时候没有挂载?</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><h3 id="重建grub引导">重建grub引导<a hidden class="anchor" aria-hidden="true" href="#重建grub引导">#</a></h3>
+<p>在上一步的chroot环境中, 执行下列命令, 记得把引导分区挂载到<code>/mnt/boot</code></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>大功告成, 退出chroot, 重启电脑就可以进入你的系统了, 唯一的不同是它已经是btrfs了.</p>
+<hr>
+<h2 id="子卷建立">子卷建立<a hidden class="anchor" aria-hidden="true" href="#子卷建立">#</a></h2>
+<p>经过上述操作后, 你会得到一个没有子卷的根文件系统, 这点可以通过命令验证</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo btrfs subvol list /
+</span></span></code></pre></div><p>没有子卷就没有快照, 为了利用好btrfs的特性, 有必要新建快照,  并将数据迁移到里面. 同样, 我们需要进入 LiveCD 系统</p>
+<p>首先将btrfs分区挂载到<code>/mnt</code>下</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -o <span style="color:#953800">subvol</span><span style="color:#0550ae">=</span>/ /dev/nvme0n1p2 /mnt
+</span></span></code></pre></div><p>接下来就要开始新建子卷了, 我新建的子卷有两个, 一个叫做<code>@</code>, 一个叫做<code>@home</code>, 分别挂载根目录和家目录. 这样新建的原因是<code>timeshift</code>在使用btrfs进行备份的时候规定这样的命名.</p>
+<p>那么首先, 使用btrfs的快照功能新建<code>@</code>子卷</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>btrfs subvol snapshot /mnt /mnt/@
+</span></span></code></pre></div><p>然后建立<code>@home</code>子卷, 再将<code>@</code>子卷中<code>/home</code>的内容迁移过去</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>btrfs subvol create /mnt/@home
+</span></span><span style="display:flex;"><span>mv -v /mnt/@/home/* /mnt/@home
+</span></span></code></pre></div><p>好了, 子卷新建完毕, 接下来要让系统在启动的时候挂载子卷</p>
+<p>首先, 挂载btrfs分区到<code>/mnt</code></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># 这一步在上面如果执行过了就不需要执行了</span>
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#953800">subvol</span><span style="color:#0550ae">=</span>/ /dev/nvme0n1p2 /mnt
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 这些需要挂载</span>
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#6639ba">bind</span> /dev /mnt/dev                        
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#6639ba">bind</span> /proc /mnt/proc                      
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#6639ba">bind</span> /sys /mnt/sys
+</span></span><span style="display:flex;"><span>mount -o <span style="color:#6639ba">bind</span> /boot /mnt/boot
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 进入chroot环境</span>
+</span></span><span style="display:flex;"><span>chroot /mnt
+</span></span></code></pre></div><p>然后新建内存初始盘</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkinitcpio -P
+</span></span></code></pre></div><p>然后更新fstab, 我的如下, 里面重要的是<code>subvol</code>一项, 其他的参数中, <code>autodefrag</code>是btrfs用于应对碎片化的挂载选项, <code>compress=lzo</code>启动透明压缩</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span># /dev/nvme0n1p2
+</span></span><span style="display:flex;"><span>UUID=6dd702be-7727-447e-98ec-a79205f18df7	/         	btrfs      	defaults,noatime,autodefrag,subvol=@,compress=lzo,	0 0
+</span></span><span style="display:flex;"><span>UUID=6dd702be-7727-447e-98ec-a79205f18df7	/home         	btrfs      	defaults,noatime,autodefrag,subvol=@home,compress=lzo	0 0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># /dev/nvme0n1p1
+</span></span><span style="display:flex;"><span>UUID=8D41-41B9      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
+</span></span></code></pre></div><p>最后顺手更新一下grub (似乎没必要?)</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>重启进入系统就可以了. 接下来可以安装<code>timeshift</code>来对系统进行定时备份</p>
+<p>在一切都没有问题后, 就可以重新进入LiveCD环境, 清理掉原来的那些文件了</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -o <span style="color:#953800">subvol</span><span style="color:#0550ae">=</span>/ /dev/nvme0n1p2 /mnt
+</span></span><span style="display:flex;"><span><span style="color:#6639ba">cd</span> /mnt
+</span></span><span style="display:flex;"><span>rm -r var usr .......<span style="color:#0550ae">(</span>除了子卷外都删掉<span style="color:#0550ae">)</span>
+</span></span></code></pre></div><p>最后剩下这些</p>
+<p><img alt="image-20230116063914754" loading="lazy" src="/posts/tech-ext4-to-btrfs/image-20230116063914754.png"></p>
+<p>清理完毕, 收工</p>
+<h2 id="其他">其他<a hidden class="anchor" aria-hidden="true" href="#其他">#</a></h2>
+<p>去除已有文件的碎片化</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo btrfs filesystem defragment -r /
+</span></span></code></pre></div><p>回收分配但未使用的数据, 对节约空间有帮助</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo btrfs balance start /
+</span></span><span style="display:flex;"><span>sudo btrfs balance status /
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<p><a href="https://coda.world/btrfs-move-to-subvolume/">https://coda.world/btrfs-move-to-subvolume/</a></p>
+<p><a href="https://blog.samchu.cn/posts/linux-ext4-to-btrfs/">https://blog.samchu.cn/posts/linux-ext4-to-btrfs/</a></p>
+<p><a href="https://www.jwillikers.com/btrfs-mount-options">https://www.jwillikers.com/btrfs-mount-options</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/tech-openwrt-rasp/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>树莓派搭载clash作为旁路由</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/tech-translation-under-wayland/">
+    <span class="title">Next »</span>
+    <br>
+    <span>wayland下的划词翻译解决方案</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

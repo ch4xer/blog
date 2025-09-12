@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>使用hexo和github搭建网站 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="基础修改
+修改 _config.yml，写上网站的标题
+title:
+subtitle:
+description:
+选择主题
+theme: next
+hexo 插件
+字数统计和阅读时长统计
+https://github.com/theme-next/hexo-symbols-count-time
+在 _config.yml 中添加
+symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+  exclude_codeblock: false
+  awl: 4
+  wpm: 275
+  suffix: &#34;mins.&#34;
+在Next主题中的 _config.yml中添加
+symbols_count_time:
+  separated_meta: true
+  item_text_post: true
+  item_text_total: true
+git 部署
+在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。
+首先生成个人公私钥
+cd
+ssh-keygen -t rsa -C &#34;your_email@example.com&#34;
+然后将公钥粘贴进github账户的个人设置里面
+ssh -T git@github.com
+git config --global user.name &#34;username&#34;
+git config --global user.email &#34;email&#34;
+在博客目录下下载：
+npm install hexo-deployer-git --save
+修改网站根目录下的_config.yml文件
+deploy:
+  - type: git#注意git的前面要加空格否则不生效
+  	repo: https://github.com/example/example.github.io.git
+  	branch: master
+保存退出后执行命令：">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="使用hexo和github搭建网站">
+  <meta property="og:description" content="基础修改 修改 _config.yml，写上网站的标题
+title: subtitle: description: 选择主题
+theme: next hexo 插件 字数统计和阅读时长统计 https://github.com/theme-next/hexo-symbols-count-time
+在 _config.yml 中添加
+symbols_count_time: symbols: true time: true total_symbols: true total_time: true exclude_codeblock: false awl: 4 wpm: 275 suffix: &#34;mins.&#34; 在Next主题中的 _config.yml中添加
+symbols_count_time: separated_meta: true item_text_post: true item_text_total: true git 部署 在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。
+首先生成个人公私钥
+cd ssh-keygen -t rsa -C &#34;your_email@example.com&#34; 然后将公钥粘贴进github账户的个人设置里面 ssh -T git@github.com git config --global user.name &#34;username&#34; git config --global user.email &#34;email&#34; 在博客目录下下载：
+npm install hexo-deployer-git --save 修改网站根目录下的_config.yml文件
+deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://github.com/example/example.github.io.git branch: master 保存退出后执行命令：">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2019-04-22T03:12:31+00:00">
+    <meta property="article:modified_time" content="2019-04-22T03:12:31+00:00">
+    <meta property="og:image" content="https://dragonbox.top/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dragonbox.top/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png">
+<meta name="twitter:title" content="使用hexo和github搭建网站">
+<meta name="twitter:description" content="基础修改
+修改 _config.yml，写上网站的标题
+title:
+subtitle:
+description:
+选择主题
+theme: next
+hexo 插件
+字数统计和阅读时长统计
+https://github.com/theme-next/hexo-symbols-count-time
+在 _config.yml 中添加
+symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+  exclude_codeblock: false
+  awl: 4
+  wpm: 275
+  suffix: &#34;mins.&#34;
+在Next主题中的 _config.yml中添加
+symbols_count_time:
+  separated_meta: true
+  item_text_post: true
+  item_text_total: true
+git 部署
+在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。
+首先生成个人公私钥
+cd
+ssh-keygen -t rsa -C &#34;your_email@example.com&#34;
+然后将公钥粘贴进github账户的个人设置里面
+ssh -T git@github.com
+git config --global user.name &#34;username&#34;
+git config --global user.email &#34;email&#34;
+在博客目录下下载：
+npm install hexo-deployer-git --save
+修改网站根目录下的_config.yml文件
+deploy:
+  - type: git#注意git的前面要加空格否则不生效
+  	repo: https://github.com/example/example.github.io.git
+  	branch: master
+保存退出后执行命令：">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "使用hexo和github搭建网站",
+      "item": "https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "使用hexo和github搭建网站",
+  "name": "使用hexo和github搭建网站",
+  "description": "基础修改 修改 _config.yml，写上网站的标题\ntitle: subtitle: description: 选择主题\ntheme: next hexo 插件 字数统计和阅读时长统计 https://github.com/theme-next/hexo-symbols-count-time\n在 _config.yml 中添加\nsymbols_count_time: symbols: true time: true total_symbols: true total_time: true exclude_codeblock: false awl: 4 wpm: 275 suffix: \u0026#34;mins.\u0026#34; 在Next主题中的 _config.yml中添加\nsymbols_count_time: separated_meta: true item_text_post: true item_text_total: true git 部署 在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。\n首先生成个人公私钥\ncd ssh-keygen -t rsa -C \u0026#34;your_email@example.com\u0026#34; 然后将公钥粘贴进github账户的个人设置里面 ssh -T git@github.com git config --global user.name \u0026#34;username\u0026#34; git config --global user.email \u0026#34;email\u0026#34; 在博客目录下下载：\nnpm install hexo-deployer-git --save 修改网站根目录下的_config.yml文件\ndeploy: - type: git#注意git的前面要加空格否则不生效 repo: https://github.com/example/example.github.io.git branch: master 保存退出后执行命令：\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "基础修改 修改 _config.yml，写上网站的标题\ntitle: subtitle: description: 选择主题\ntheme: next hexo 插件 字数统计和阅读时长统计 https://github.com/theme-next/hexo-symbols-count-time\n在 _config.yml 中添加\nsymbols_count_time: symbols: true time: true total_symbols: true total_time: true exclude_codeblock: false awl: 4 wpm: 275 suffix: \"mins.\" 在Next主题中的 _config.yml中添加\nsymbols_count_time: separated_meta: true item_text_post: true item_text_total: true git 部署 在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。\n首先生成个人公私钥\ncd ssh-keygen -t rsa -C \"your_email@example.com\" 然后将公钥粘贴进github账户的个人设置里面 ssh -T git@github.com git config --global user.name \"username\" git config --global user.email \"email\" 在博客目录下下载：\nnpm install hexo-deployer-git --save 修改网站根目录下的_config.yml文件\ndeploy: - type: git#注意git的前面要加空格否则不生效 repo: https://github.com/example/example.github.io.git branch: master 保存退出后执行命令：\ngit config --global user.email \"you@example.com\" git config --global user.name \"Your Name\" hexo d #部署 也可以部署到个人网站上面，需要用到git hook，可以去参考别的博客\ndeploy: - type: git repo: root@xxx.xxx.xxx.xxx:blog.git branch: master - type: git repo: git@github.com:xxx/xxx.github.io.git branch: master Next 主题定制 主页：https://github.com/theme-next/hexo-theme-next\n主题选择 进入hexo-theme-next目录下的_config.yml文件，依据个人偏好修改风格：\n# Schemes # scheme: Muse # scheme: Mist # scheme: Pisces # scheme: Gemini # 选择一个喜欢的，去掉#即可 启动下面的darkmode，这样网页会随着浏览器\n友链 在主题的_config.yml文件里面的link项目里面设置即可。\n顶部加载条 主页 https://github.com/theme-next/theme-next-pace\ngit clone https://github.com/theme-next/theme-next-pace source/lib/pace 然后_config.yml中选择\n# Progress bar in the top during page loading. # Dependencies: https://github.com/theme-next/theme-next-pace # For more information: https://github.com/HubSpot/pace pace: enable: true # Themes list: # big-counter | bounce | barber-shop | center-atom | center-circle | center-radar | center-simple # corner-indicator | fill-left | flat-top | flash | loading-bar | mac-osx | material | minimal theme: corner-indicator 自定义图标 https://www.easyicon.net/language.en/iconsearch\n下载32的,然后放在主题文件中的images文件中,在配置中搜索favicon并修改\n头像 将喜欢的头像放在images里面然后在配置中搜索avatar并修改\n社交链接 social: GitHub: https://github.com/ch4ser-go || fab fa-github E-Mail: mailto:ch4ser.go@gmail.com || fa fa-envelope Telegram: https://t.me/darkch4ser || fab fa-telegram RSS: /atom.xml || fa fa-rss 暗黑模式持久化 修改 themes/next/source/css/_colors.styl\nif (hexo-config('darkmode')) { :root { --body-bg-color: $body-bg-color-dark; --content-bg-color: $content-bg-color-dark; --card-bg-color: $card-bg-color-dark; --text-color: $text-color-dark; --blockquote-color: $blockquote-color-dark; --link-color: $link-color-dark; --link-hover-color: $link-hover-color-dark; --brand-color: $brand-color-dark; --brand-hover-color: $brand-hover-color-dark; --table-row-odd-bg-color: $table-row-odd-bg-color-dark; --table-row-hover-bg-color: $table-row-hover-bg-color-dark; --menu-item-bg-color: $menu-item-bg-color-dark; --btn-default-bg: $btn-default-bg-dark; --btn-default-color: $btn-default-color-dark; --btn-default-border-color: $btn-default-border-color-dark; --btn-default-hover-bg: $btn-default-hover-bg-dark; --btn-default-hover-color: $btn-default-hover-color-dark; --btn-default-hover-border-color: $btn-default-hover-border-color-dark; } img { opacity: .75; \u0026:hover { opacity: .9; } } } 修改主题配置文件，修改codeblock\ncodeblock: # Code Highlight theme # Available values: normal | night | night eighties | night blue | night bright | solarized | solarized dark | galactic # See: https://github.com/chriskempson/tomorrow-theme highlight_theme: night eighties # Add copy button on codeblock copy_button: enable: true # Show text copy result. show_result: true # Available values: default | flat | mac style: license 添加 修改next主题配置文件\n# Creative Commons 4.0 International License. # See: https://creativecommons.org/share-your-work/licensing-types-examples # Available values of license: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | zero # You can set a language value if you prefer a translated version of CC license, e.g. deed.zh # CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org creative_commons: license: by-nc-sa sidebar: false post: true language: 然后修改博客目录下的_config.yml，加上自己的url\nurl: http://www.ch4ser.top 图床问题 以前都是用github的图床, 现在直接放在本地了\n我是在source下面新建了一个images文件夹, 然后在所有文章的开头都加上typora-root-url: ../, 同时在偏好里面设置图片存储位置为../images/${filename} , 这样子typora在插入图片的时候就会把他放在/source/images下面的对应文章文件夹下面了, 同时勾选使用相对路径。再也不用图床啦.\n",
+  "wordCount" : "431",
+  "inLanguage": "en",
+  "image":"https://dragonbox.top/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png","datePublished": "2019-04-22T03:12:31Z",
+  "dateModified": "2019-04-22T03:12:31Z",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      使用hexo和github搭建网站
+    </h1>
+    <div class="post-meta"><span title='2019-04-22 03:12:31 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;431 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager"
+                srcset='https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_4835ddcd09e3ffa9.png 360w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_266ea03bcbab5f48.png 480w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5859ff098602700a.png 720w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_737d145440ab555e.png 1080w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_718a1aac5aa71e2a.png 1500w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png 1600w'
+                src="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1600" height="900"
+                alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#基础修改">基础修改</a></li>
+    <li><a href="#hexo-插件">hexo 插件</a>
+      <ul>
+        <li><a href="#字数统计和阅读时长统计">字数统计和阅读时长统计</a></li>
+        <li><a href="#git-部署">git 部署</a></li>
+      </ul>
+    </li>
+    <li><a href="#next-主题定制">Next 主题定制</a>
+      <ul>
+        <li><a href="#主题选择">主题选择</a></li>
+        <li><a href="#友链">友链</a></li>
+        <li><a href="#顶部加载条">顶部加载条</a></li>
+        <li><a href="#自定义图标">自定义图标</a></li>
+        <li><a href="#头像">头像</a></li>
+        <li><a href="#社交链接">社交链接</a></li>
+        <li><a href="#暗黑模式持久化">暗黑模式持久化</a></li>
+        <li><a href="#license-添加">license 添加</a></li>
+      </ul>
+    </li>
+    <li><a href="#图床问题">图床问题</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="基础修改">基础修改<a hidden class="anchor" aria-hidden="true" href="#基础修改">#</a></h2>
+<p>修改 _config.yml，写上网站的标题</p>
+<pre tabindex="0"><code>title:
+subtitle:
+description:
+</code></pre><p>选择主题</p>
+<pre tabindex="0"><code>theme: next
+</code></pre><h2 id="hexo-插件">hexo 插件<a hidden class="anchor" aria-hidden="true" href="#hexo-插件">#</a></h2>
+<h3 id="字数统计和阅读时长统计">字数统计和阅读时长统计<a hidden class="anchor" aria-hidden="true" href="#字数统计和阅读时长统计">#</a></h3>
+<p><a href="https://github.com/theme-next/hexo-symbols-count-time">https://github.com/theme-next/hexo-symbols-count-time</a></p>
+<p>在 _config.yml 中添加</p>
+<pre tabindex="0"><code>symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+  exclude_codeblock: false
+  awl: 4
+  wpm: 275
+  suffix: &#34;mins.&#34;
+</code></pre><p>在Next主题中的 _config.yml中添加</p>
+<pre tabindex="0"><code>symbols_count_time:
+  separated_meta: true
+  item_text_post: true
+  item_text_total: true
+</code></pre><h3 id="git-部署">git 部署<a hidden class="anchor" aria-hidden="true" href="#git-部署">#</a></h3>
+<p>在你的github账户上创建仓库<code>yourusername.github.io</code>，必须是用户名开头命名，否则<code>github page</code>不会生效。</p>
+<p>首先生成个人公私钥</p>
+<pre tabindex="0"><code>cd
+ssh-keygen -t rsa -C &#34;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e47514b4c615b535f57527e5b465f534e525b105d5153">[email&#160;protected]</a>&#34;
+然后将公钥粘贴进github账户的个人设置里面
+ssh -T <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="13747a6753747a677b66713d707c7e">[email&#160;protected]</a>
+git config --global user.name &#34;username&#34;
+git config --global user.email &#34;email&#34;
+</code></pre><p>在博客目录下下载：</p>
+<pre tabindex="0"><code>npm install hexo-deployer-git --save
+</code></pre><p>修改网站根目录下的_config.yml文件</p>
+<pre tabindex="0"><code>deploy:
+  - type: git#注意git的前面要加空格否则不生效
+  	repo: https://github.com/example/example.github.io.git
+  	branch: master
+</code></pre><p>保存退出后执行命令：</p>
+<pre tabindex="0"><code>git config --global user.email &#34;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b3cadcc6f3d6cbd2dec3dfd69dd0dcde">[email&#160;protected]</a>&#34;
+git config --global user.name &#34;Your Name&#34;
+hexo d #部署
+</code></pre><p>也可以部署到个人网站上面，需要用到git hook，可以去参考别的博客</p>
+<pre tabindex="0"><code>deploy:
+  - type: git
+    repo: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bbc9d4d4cffbc3c3c395c3c3c395c3c3c395c3c3c3">[email&#160;protected]</a>:blog.git
+    branch: master
+  - type: git
+    repo: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="41262835012628352934236f222e2c">[email&#160;protected]</a>:xxx/xxx.github.io.git
+    branch: master
+</code></pre><h2 id="next-主题定制">Next 主题定制<a hidden class="anchor" aria-hidden="true" href="#next-主题定制">#</a></h2>
+<p>主页：https://github.com/theme-next/hexo-theme-next</p>
+<h3 id="主题选择">主题选择<a hidden class="anchor" aria-hidden="true" href="#主题选择">#</a></h3>
+<p>进入hexo-theme-next目录下的<code>_config.yml</code>文件，依据个人偏好修改风格：</p>
+<pre tabindex="0"><code># Schemes
+# scheme: Muse
+# scheme: Mist
+# scheme: Pisces
+# scheme: Gemini
+# 选择一个喜欢的，去掉#即可
+</code></pre><p>启动下面的<code>darkmode</code>，这样网页会随着浏览器</p>
+<h3 id="友链">友链<a hidden class="anchor" aria-hidden="true" href="#友链">#</a></h3>
+<p>在主题的<code>_config.yml</code>文件里面的link项目里面设置即可。</p>
+<h3 id="顶部加载条">顶部加载条<a hidden class="anchor" aria-hidden="true" href="#顶部加载条">#</a></h3>
+<p>主页 <a href="https://github.com/theme-next/theme-next-pace">https://github.com/theme-next/theme-next-pace</a></p>
+<pre tabindex="0"><code>git clone https://github.com/theme-next/theme-next-pace source/lib/pace  
+</code></pre><p>然后_config.yml中选择</p>
+<pre tabindex="0"><code># Progress bar in the top during page loading.
+# Dependencies: https://github.com/theme-next/theme-next-pace
+# For more information: https://github.com/HubSpot/pace
+pace:
+  enable: true
+  # Themes list:
+  # big-counter | bounce | barber-shop | center-atom | center-circle | center-radar | center-simple
+  # corner-indicator | fill-left | flat-top | flash | loading-bar | mac-osx | material | minimal
+  theme: corner-indicator
+</code></pre><h3 id="自定义图标">自定义图标<a hidden class="anchor" aria-hidden="true" href="#自定义图标">#</a></h3>
+<p><a href="https://www.easyicon.net/language.en/iconsearch">https://www.easyicon.net/language.en/iconsearch</a></p>
+<p>下载32的,然后放在主题文件中的images文件中,在配置中搜索favicon并修改</p>
+<h3 id="头像">头像<a hidden class="anchor" aria-hidden="true" href="#头像">#</a></h3>
+<p>将喜欢的头像放在images里面然后在配置中搜索avatar并修改</p>
+<h3 id="社交链接">社交链接<a hidden class="anchor" aria-hidden="true" href="#社交链接">#</a></h3>
+<pre tabindex="0"><code>social:
+  GitHub: https://github.com/ch4ser-go || fab fa-github
+  E-Mail: mailto:<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bad9d28ec9dfc894ddd5faddd7dbd3d694d9d5d7">[email&#160;protected]</a> || fa fa-envelope
+  Telegram: https://t.me/darkch4ser || fab fa-telegram
+  RSS: /atom.xml || fa fa-rss
+</code></pre><h3 id="暗黑模式持久化">暗黑模式持久化<a hidden class="anchor" aria-hidden="true" href="#暗黑模式持久化">#</a></h3>
+<p>修改 <code>themes/next/source/css/_colors.styl</code></p>
+<pre tabindex="0"><code>if (hexo-config(&#39;darkmode&#39;)) {
+    :root {
+      --body-bg-color: $body-bg-color-dark;
+      --content-bg-color: $content-bg-color-dark;
+      --card-bg-color: $card-bg-color-dark;
+      --text-color: $text-color-dark;
+      --blockquote-color: $blockquote-color-dark;
+      --link-color: $link-color-dark;
+      --link-hover-color: $link-hover-color-dark;
+      --brand-color: $brand-color-dark;
+      --brand-hover-color: $brand-hover-color-dark;
+      --table-row-odd-bg-color: $table-row-odd-bg-color-dark;
+      --table-row-hover-bg-color: $table-row-hover-bg-color-dark;
+      --menu-item-bg-color: $menu-item-bg-color-dark;
+      --btn-default-bg: $btn-default-bg-dark;
+      --btn-default-color: $btn-default-color-dark;
+      --btn-default-border-color: $btn-default-border-color-dark;
+      --btn-default-hover-bg: $btn-default-hover-bg-dark;
+      --btn-default-hover-color: $btn-default-hover-color-dark;
+      --btn-default-hover-border-color: $btn-default-hover-border-color-dark;
+    }
+
+    img {
+      opacity: .75;
+
+      &amp;:hover {
+        opacity: .9;
+      }
+    }
+}
+</code></pre><p>修改主题配置文件，修改codeblock</p>
+<pre tabindex="0"><code>codeblock:
+  # Code Highlight theme
+  # Available values: normal | night | night eighties | night blue | night bright | solarized | solarized dark | galactic
+  # See: https://github.com/chriskempson/tomorrow-theme
+  highlight_theme: night eighties
+  # Add copy button on codeblock
+  copy_button:
+    enable: true
+    # Show text copy result.
+    show_result: true
+    # Available values: default | flat | mac
+    style:
+</code></pre><h3 id="license-添加">license 添加<a hidden class="anchor" aria-hidden="true" href="#license-添加">#</a></h3>
+<p>修改next主题配置文件</p>
+<pre tabindex="0"><code># Creative Commons 4.0 International License.
+# See: https://creativecommons.org/share-your-work/licensing-types-examples
+# Available values of license: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | zero
+# You can set a language value if you prefer a translated version of CC license, e.g. deed.zh
+# CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org
+creative_commons:
+  license: by-nc-sa
+  sidebar: false
+  post: true
+  language:
+</code></pre><p>然后修改博客目录下的_config.yml，加上自己的url</p>
+<pre tabindex="0"><code>url: http://www.ch4ser.top
+</code></pre><h2 id="图床问题">图床问题<a hidden class="anchor" aria-hidden="true" href="#图床问题">#</a></h2>
+<p>以前都是用github的图床, 现在直接放在本地了</p>
+<p>我是在source下面新建了一个images文件夹, 然后在所有文章的开头都加上<code>typora-root-url: ../</code>, 同时在偏好里面设置图片存储位置为<code>../images/${filename}</code> , 这样子<code>typora</code>在插入图片的时候就会把他放在/source/images下面的对应文章文件夹下面了, 同时勾选使用相对路径。再也不用图床啦.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/ctf-bugku-writeup/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>bugku writeup</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/tech-ch4ser-vim/">
+    <span class="title">Next »</span>
+    <br>
+    <span>ch4ser 的 vim</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const sel

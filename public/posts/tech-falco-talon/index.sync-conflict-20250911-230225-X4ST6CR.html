@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Falco Talon 学习 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="Falco Talon
+介绍
+Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+
+
+falco通过规则匹配发现危险行为
+发现危险行为的事件通过falcosidekick或者直接发送给falco-talon
+falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为
+将输出和通知发送给其他组件
+
+举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners
+Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod
+  actionner: kubernetes:download
+  parameters:
+    tail_lines: 200
+  output:
+    target: local:file
+    parameters:
+      destination: /var/logs/falco-talon/
+上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+
+kubernetes
+
+kubernetes:terminate
+kubernetes:label
+kubernetes:annotation
+kubernetes:networkpolicy
+kubernetes:exec
+kubernetes:script
+kubernetes:log
+kubernetes:download
+kubernetes:tcpdump
+kubernetes:delete
+kubernetes:cordon
+kubernetes:drain
+
+
+calico
+
+calico:networkpolicy
+
+
+cilium
+
+cilium:networkpolicy
+
+
+aws
+
+aws:lambda
+
+
+gcp
+
+gcp:function
+
+
+
+此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/tech-falco-talon/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/tech-falco-talon/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-falco-talon/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="Falco Talon 学习">
+  <meta property="og:description" content="Falco Talon 介绍 Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+falco通过规则匹配发现危险行为 发现危险行为的事件通过falcosidekick或者直接发送给falco-talon falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为 将输出和通知发送给其他组件 举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+kubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-01-01T15:33:05+08:00">
+    <meta property="article:modified_time" content="2025-01-01T15:33:05+08:00">
+    <meta property="og:image" content="https://dragonbox.top/cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dragonbox.top/cover.png">
+<meta name="twitter:title" content="Falco Talon 学习">
+<meta name="twitter:description" content="Falco Talon
+介绍
+Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+
+
+falco通过规则匹配发现危险行为
+发现危险行为的事件通过falcosidekick或者直接发送给falco-talon
+falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为
+将输出和通知发送给其他组件
+
+举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners
+Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod
+  actionner: kubernetes:download
+  parameters:
+    tail_lines: 200
+  output:
+    target: local:file
+    parameters:
+      destination: /var/logs/falco-talon/
+上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+
+kubernetes
+
+kubernetes:terminate
+kubernetes:label
+kubernetes:annotation
+kubernetes:networkpolicy
+kubernetes:exec
+kubernetes:script
+kubernetes:log
+kubernetes:download
+kubernetes:tcpdump
+kubernetes:delete
+kubernetes:cordon
+kubernetes:drain
+
+
+calico
+
+calico:networkpolicy
+
+
+cilium
+
+cilium:networkpolicy
+
+
+aws
+
+aws:lambda
+
+
+gcp
+
+gcp:function
+
+
+
+此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Falco Talon 学习",
+      "item": "https://dragonbox.top/posts/tech-falco-talon/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Falco Talon 学习",
+  "name": "Falco Talon 学习",
+  "description": "Falco Talon 介绍 Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:\nfalco通过规则匹配发现危险行为 发现危险行为的事件通过falcosidekick或者直接发送给falco-talon falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为 将输出和通知发送给其他组件 举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.\n对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers\nActionners Actionners就是行为响应组件, 以一个规则为例:\n- action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .\n目前, falco-talon支持以下平台的多种Actionners:\nkubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "Falco Talon 介绍 Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:\nfalco通过规则匹配发现危险行为 发现危险行为的事件通过falcosidekick或者直接发送给falco-talon falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为 将输出和通知发送给其他组件 举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.\n对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers\nActionners Actionners就是行为响应组件, 以一个规则为例:\n- action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .\n目前, falco-talon支持以下平台的多种Actionners:\nkubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:\nlocal:file aws:s3 gcp:gcs minio:s3 Notifiers falco-talon可以将actionner执行后的结果通过Notifiers发布, 目前支持以下几种发布方式:\nk8sevents slack loki Elasticsearch smtp webhook 环境搭建 首先, 建立一个k8s集群, 由于需要安装falco, driver应该选择virtualbox或者kvm2.\nminikube start --driver=kvm2 接下来安装falco-talon, 首先克隆charts仓库,修改falco-talon目录下的values.yaml.\nrulesOverride: | - action: Terminate Pod actionner: kubernetes:terminate parameters: grace_period_seconds: 5 ignore_standalone_pods: true - rule: Terminal shell in container match: rules: - Terminal shell in container output_fields: - k8s.ns.name!=kube-system, k8s.ns.name!=falco actions: - action: Terminate Pod 上述规则规则的用处是在接收到Terminal shell in container事件的时候将目标pod删除, 因为falco默认规则中就有Terminal shell in container这样一条规则, 因此无需对falco的规则进行修改.\n接下来通过helm部署:\nhelm repo add falcosecurity https://falcosecurity.github.io/charts helm repo update falcosecurity helm upgrade --install falco-talon falcosecurity/falco-talon --namespace falco --create-namespace -f values.yaml helm install falco falcosecurity/falco --namespace falco \\ --create-namespace \\ --set tty=true \\ --set falcosidekick.enabled=true \\ --set falcosidekick.config.talon.address=http://falco-talon:2803 使用 创建一个测试pod\napiVersion: v1 kind: Pod metadata: name: ubuntu spec: containers: - name: ubuntu image: ubuntu:latest command: [\"/bin/bash\", \"-c\"] args: [\"sleep 365d\"] imagePullPolicy: IfNotPresent 使用kubectl创建shell连接\nkubectl exec -it ubuntu -- /bin/bash 就会发现actionner被执行了, 但是我在测试的时候发现falco存在bug, 传来的信息存在缺失, 导致falco talon执行actionner失败了.\n源码阅读 直接看cmd/server.go中Run下面的函数.\n加载配置和规则, RarseRules的部分挺多的, 有需求的可以细看:\nconfigFile, _ := cmd.Flags().GetString(\"config\") config := configuration.CreateConfiguration(configFile) utils.SetLogFormat(config.LogFormat) rulesFiles, _ := cmd.Flags().GetStringArray(\"rules\") if len(rulesFiles) != 0 { config.RulesFiles = rulesFiles } rules := ruleengine.ParseRules(config.RulesFiles) 接下来获取内置的Actionners和Outputs, 用于对规则进行验证\ndefaultActionners := actionners.ListDefaultActionners() defaultOutputs := outputs.ListDefaultOutputs() ListDefaultActionners会返回内部支持的Actionners, Outputs也是类似:\nfunc ListDefaultActionners() *Actionners { if len(*defaultActionners) == 0 { defaultActionners.Add( k8sTerminate.Register(), k8sLabel.Register(), k8sAnnotation.Register(), k8sNetworkpolicy.Register(), k8sExec.Register(), k8sScript.Register(), k8sLog.Register(), k8sDelete.Register(), k8sCordon.Register(), k8sDrain.Register(), k8sDownload.Register(), k8sTcpdump.Register(), lambdaInvoke.Register(), gcpFunctionCall.Register(), calicoNetworkpolicy.Register(), ciliumNetworkpolicy.Register(), ) } return defaultActionners } 挑其中的k8sTerminate看看, 代码位置在actionners/kubernetes/terminal/terminal.go中.\ntype Actionner struct{} func Register() *Actionner { return new(Actionner) } 好嘟, 看起来这些都是Actionner结构体实例.\n接下来在for循环中对每一条规则的有效性进行验证.\nactionner := defaultActionners.FindActionner(j.GetActionner()) if actionner == nil { utils.PrintLog(\"error\", utils.LogLine{Error: \"unknown actionner\", Rule: i.GetName(), Action: j.GetName(), Actionner: j.GetActionner(), Message: \"rules\"}) valid = false } else { if err := actionner.CheckParameters(j); err != nil { utils.PrintLog(\"error\", utils.LogLine{Error: err.Error(), Rule: i.GetName(), Action: j.GetName(), Actionner: j.GetActionner(), Message: \"rules\"}) valid = false } } if actionner != nil { o := j.GetOutput() if o == nil \u0026\u0026 actionner.Information().RequireOutput { utils.PrintLog(\"error\", utils.LogLine{Error: \"an output is required\", Rule: i.GetName(), Action: j.GetName(), Actionner: j.GetActionner(), Message: \"rules\"}) valid = false } if o != nil { output := defaultOutputs.FindOutput(o.GetTarget()) if output == nil { utils.PrintLog(\"error\", utils.LogLine{Error: \"unknown target\", Rule: i.GetName(), Action: j.GetName(), OutputTarget: o.GetTarget(), Message: \"rules\"}) valid = false } else if len(o.Parameters) == 0 { utils.PrintLog(\"error\", utils.LogLine{Error: \"missing parameters for the output\", Rule: i.GetName(), Action: j.GetName(), OutputTarget: o.GetTarget(), Message: \"rules\"}) valid = false } else { if err := output.CheckParameters(o); err != nil { utils.PrintLog(\"error\", utils.LogLine{Error: err.Error(), Rule: i.GetName(), Action: j.GetName(), OutputTarget: o.GetTarget(), Message: \"rules\"}) valid = false } } } } 获取action部分, 检查actionner是否存在以及是否存在于内置actionners中 检查参数是否合法, 因为不同的actionners可能需要参数 获取output部分, 并检查其output的目标是否存在于内置outputs中 检查output中的参数类型是否合法 验证通过后开始初始化actionners和outputs, 点开actionners.Init看看:\nfunc Init() error { rules := rules.GetRules() categories := map[string]bool{} enabledCategories := map[string]bool{} // 只要有一个rule, 就会输出化该rule对应类别的actionner // list actionner categories to init for _, i := range *rules { for _, j := range i.Actions { categories[j.GetActionnerCategory()] = true } } for category := range categories { for _, actionner := range *defaultActionners { if category == actionner.Information().Category { if err := actionner.Init(); err != nil { utils.PrintLog(\"error\", utils.LogLine{Message: \"init\", Error: err.Error(), Category: actionner.Information().Category, Status: utils.FailureStr}) return err } enabledCategories[category] = true } } } for i := range enabledCategories { for _, j := range *defaultActionners { if i == j.Information().Category { enabledActionners.Add(j) } } } return nil } 获取了所有规则, 然后根据规则的类别分别初始化actionner, 最后添加到enabledActionners全局变量中, 那么以kubernetes:delete为例子看看.\nfunc (a Actionner) Init() error { return k8s.Init() } Init中对k8s的client进行了初始化, 这里就不贴了.\n然后是对outputs的初始化和notifier的初始化, 和actionner的初始化代码是类似的.\n接下来创建了一个httpserver\nsrv := http.Server{ Addr: fmt.Sprintf(\"%s:%d\", config.ListenAddress, config.ListenPort), ReadTimeout: 2 * time.Second, WriteTimeout: 2 * time.Second, Handler: newHTTPHandler(), } 这是要做什么? 其实这就是falco talon用于接收来自falcosidekick事件信号用的, 点进去这个newHTTPHandler看一看\nfunc newHTTPHandler() http.Handler { mux := http.NewServeMux() mux.Handle(\"/metrics\", metrics.Handler()) handleFunc := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) { otelHandler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc)) mux.Handle(pattern, otelHandler) } handleFunc(\"/\", handler.MainHandler) handleFunc(\"/healthz\", handler.HealthHandler) otelHandler := otelhttp.NewHandler( mux, \"/\", otelhttp.WithFilter(func(req *http.Request) bool { return req.URL.Path == \"/\" })) return otelHandler } 跟进MainHandler:\nfunc MainHandler(w http.ResponseWriter, r *http.Request) { // ... event, err := events.DecodeEvent(r.Body) // ... tracer := traces.GetTracer() ctx, span := tracer.Start(rctx, \"event\", trace.WithAttributes(attribute.String(\"event.rule\", event.Rule)), trace.WithAttributes(attribute.String(\"event.source\", event.Source)), trace.WithAttributes(attribute.String(\"event.priority\", event.Priority)), trace.WithAttributes(attribute.String(\"event.output\", event.Output)), trace.WithAttributes(attribute.String(\"event.tags\", strings.ReplaceAll(strings.Trim(fmt.Sprint(event.Tags), \"[]\"), \" \", \", \"))), trace.WithAttributes(attribute.StringSlice(\"event.tags\", tags)), ) // ... hasher := md5.New() //nolint:gosec hasher.Write([]byte(event.Output)) // NOTE: Publish the event to NATS err = nats.GetPublisher().PublishMsg(ctx, hex.EncodeToString(hasher.Sum(nil)), event.String()) if err != nil { http.Error(w, \"Internal Server Error\", http.StatusInternalServerError) } } 这个函数里面用到了两个没见过的库, 一个是otel/trace, 是 OpenTelemetry 库的一部分, 它用于支持应用程序的分布式追踪功能.\n另一个是nats-io/nats.go, 这个就有意思了, 它用于集成NATS消息系统, 什么是NATS消息系统? 根据官网的解释:\nNATS 是一种允许以消息形式进行数据交换的基础设施。我们称之为“面向消息的中间件”。\n而代码中的nats.GetPublisher.PublishMsg就是将事件消息推送出去, 给其他客户端消费, 而在server.go中nats.GetConsumer().ConsumeMsg()就启动了一个消费者, 因此这边的nats的作用是在多个falco-talon实例之间传递消息.\n回到 server.go, 对于设置了watch_rules的情况, 程序启动了一个goroutine来监听和更新规则, 其中的内容和初始化是差不多的.\n下面, 在启动了nats server之后, 如果设置了LeaderElection:\nif config.Deduplication.LeaderElection { go func() { err2 := k8s.Init() if err2 != nil { utils.PrintLog(\"fatal\", utils.LogLine{Error: err2.Error(), Message: \"lease\"}) } c, err2 := k8s.GetClient().GetLeaseHolder() if err2 != nil { utils.PrintLog(\"fatal\", utils.LogLine{Error: err2.Error(), Message: \"lease\"}) } for { s := \u003c-c if s == *utils.GetLocalIP() { s = \"127.0.0.1\" } utils.PrintLog(\"info\", utils.LogLine{Result: fmt.Sprintf(\"new leader detected '%v'\", s), Message: \"nats\"}) err2 = nats.GetPublisher().SetJetStreamContext(\"nats://\" + s + \":4222\") if err2 != nil { utils.PrintLog(\"error\", utils.LogLine{Error: err2.Error(), Message: \"nats\"}) } } }() } 由Deduplication.LeaderElection这个选项不难猜测, 上面的代码是为了处理多实例备份的情况, 主要做了这样的事情:\n通过k8s.GetClient().GetLeaseHolder()获取k8s中的租约, 有关租约可以看文档 通过租约确定领导者, 进而确定nats的发布渠道 之后也是最关键的一步, 获取消费者chan, 并提供给actionners进行消费, actionners会从chan接收事件并根据规则进行威胁响应.\nc, err := nats.GetConsumer().ConsumeMsg() if err != nil { utils.PrintLog(\"fatal\", utils.LogLine{Error: err.Error(), Message: \"nats\"}) } go actionners.StartConsumer(c) 所以来看看StartConsumer函数.\nfunc StartConsumer(eventsC \u003c-chan nats.MessageWithContext) { config := configuration.GetConfiguration() for { // ... for _, i := range triggeredRules { // ... for _, a := range i.GetActions() { // ... err := runAction(mctx, i, a, e) if err != nil \u0026\u0026 a.IgnoreErrors != trueStr { break } } if i.Continue == falseStr { break } } } } 这里遍历了触发的规则和对应的action, 分别执行, 进入runAction可以看到\nfunc runAction(mctx context.Context, rule *rules.Rule, action *rules.Action, event *events.Event) (err error) { // ... result, data, err := actionner.Run(event, action) // ... output := action.GetOutput() // ... go notifiers.Notify(actx, rule, action, event, log) // ... if actionner.Information().AllowOutput \u0026\u0026 output != nil \u0026\u0026 data != nil { // ... target := output.GetTarget() o := outputs.GetOutputs().FindOutput(target) // ... result, err = o.Run(output, data) // ... go notifiers.Notify(octx, rule, action, event, logO) // ... } return nil } 抛开配置项中的代码不谈, 这里做的事情是执行actionner并获取输出, 之后通过o.Run来将输出存储到合适的位置(可以选择的有file aws gcs 和 minio), 最后将结果以Notify函数发送出去(可选的notifier有 elasticsearch http k8sevents loki slack smtp 和 webhook).\n以file这个output为例子, 其将输出存储到本地文件中:\nfunc (o Output) Run(output *rules.Output, data *models.Data) (utils.LogLine, error) { // ... var key string switch { case data.Objects[\"namespace\"] != \"\" \u0026\u0026 data.Objects[\"pod\"] != \"\": key = fmt.Sprintf(\"%v_%v_%v_%v\", time.Now().Format(\"2006-01-02T15-04-05Z\"), data.Objects[\"namespace\"], data.Objects[\"pod\"], strings.ReplaceAll(data.Name, \"/\", \"_\")) case data.Objects[\"hostname\"] != \"\": key = fmt.Sprintf(\"%v_%v_%v\", time.Now().Format(\"2006-01-02T15-04-05Z\"), data.Objects[\"hostname\"], strings.ReplaceAll(data.Name, \"/\", \"_\")) default: var s string for i, j := range data.Objects { if i != \"file\" { s += j + \"_\" } } key = fmt.Sprintf(\"%v_%v%v\", time.Now().Format(\"2006-01-02T15-04-05Z\"), s, strings.ReplaceAll(data.Name, \"/\", \"_\")) } dstfile := fmt.Sprintf(\"%v/%v\", strings.TrimSuffix(parameters.Destination, \"/\"), key) objects := map[string]string{ \"file\": data.Name, \"destination\": dstfile, } if err := os.WriteFile(dstfile, data.Bytes, 0600); err != nil { return utils.LogLine{ Objects: objects, Error: err.Error(), Status: utils.FailureStr, }, err } // ... } server.go最后将会启动srv, 通过上面代码分析可知srv就是一个负责转发消息事件的东西,因此, 当一个实例上的falco-talon接收到事件的时候, 事件会被转发传播到集群内的其他所有falco-talon实例中.\n至此对falco-talon代码的粗浅阅读完毕.\n",
+  "wordCount" : "1153",
+  "inLanguage": "en",
+  "image":"https://dragonbox.top/cover.png","datePublished": "2025-01-01T15:33:05+08:00",
+  "dateModified": "2025-01-01T15:33:05+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/tech-falco-talon/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Falco Talon 学习
+    </h1>
+    <div class="post-meta"><span title='2025-01-01 15:33:05 +0800 CST'>January 1, 2025</span>&nbsp;·&nbsp;6 min&nbsp;·&nbsp;1153 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager"
+                srcset='https://dragonbox.top/posts/tech-falco-talon/cover_hu_2d0e228d1e9cf7f8.png 360w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_d885ed59e3f1dc12.png 480w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_408abcb8c7bb0f95.png 720w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_33e3534a1fa107a6.png 1080w,https://dragonbox.top/posts/tech-falco-talon/cover.png 1284w'
+                src="https://dragonbox.top/posts/tech-falco-talon/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1284" height="666"
+                alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#介绍">介绍</a>
+      <ul>
+        <li><a href="#actionners">Actionners</a></li>
+        <li><a href="#notifiers">Notifiers</a></li>
+      </ul>
+    </li>
+    <li><a href="#环境搭建">环境搭建</a></li>
+    <li><a href="#使用">使用</a></li>
+    <li><a href="#源码阅读">源码阅读</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="falco-talon">Falco Talon<a hidden class="anchor" aria-hidden="true" href="#falco-talon">#</a></h1>
+<h2 id="介绍">介绍<a hidden class="anchor" aria-hidden="true" href="#介绍">#</a></h2>
+<p>Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:</p>
+<p><img alt="flow" loading="lazy" src="/posts/tech-falco-talon/flow.png"></p>
+<ol>
+<li>falco通过规则匹配发现危险行为</li>
+<li>发现危险行为的事件通过falcosidekick或者直接发送给falco-talon</li>
+<li>falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为</li>
+<li>将输出和通知发送给其他组件</li>
+</ol>
+<p>举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.</p>
+<p>对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers</p>
+<h3 id="actionners">Actionners<a hidden class="anchor" aria-hidden="true" href="#actionners">#</a></h3>
+<p>Actionners就是行为响应组件, 以一个规则为例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>- <span style="color:#f92672">action</span>: <span style="color:#ae81ff">Get logs of the pod</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">actionner</span>: <span style="color:#ae81ff">kubernetes:download</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">parameters</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">tail_lines</span>: <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">output</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">target</span>: <span style="color:#ae81ff">local:file</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">parameters</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">destination</span>: <span style="color:#ae81ff">/var/logs/falco-talon/</span>
+</span></span></code></pre></div><p>上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .</p>
+<p>目前, falco-talon支持以下平台的多种Actionners:</p>
+<ul>
+<li>kubernetes
+<ul>
+<li>kubernetes:terminate</li>
+<li>kubernetes:label</li>
+<li>kubernetes:annotation</li>
+<li>kubernetes:networkpolicy</li>
+<li>kubernetes:exec</li>
+<li>kubernetes:script</li>
+<li>kubernetes:log</li>
+<li>kubernetes:download</li>
+<li>kubernetes:tcpdump</li>
+<li>kubernetes:delete</li>
+<li>kubernetes:cordon</li>
+<li>kubernetes:drain</li>
+</ul>
+</li>
+<li>calico
+<ul>
+<li>calico:networkpolicy</li>
+</ul>
+</li>
+<li>cilium
+<ul>
+<li>cilium:networkpolicy</li>
+</ul>
+</li>
+<li>aws
+<ul>
+<li>aws:lambda</li>
+</ul>
+</li>
+<li>gcp
+<ul>
+<li>gcp:function</li>
+</ul>
+</li>
+</ul>
+<p>此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:</p>
+<ul>
+<li>local:file</li>
+<li>aws:s3</li>
+<li>gcp:gcs</li>
+<li>minio:s3</li>
+</ul>
+<h3 id="notifiers">Notifiers<a hidden class="anchor" aria-hidden="true" href="#notifiers">#</a></h3>
+<p>falco-talon可以将actionner执行后的结果通过Notifiers发布, 目前支持以下几种发布方式:</p>
+<ul>
+<li>k8sevents</li>
+<li>slack</li>
+<li>loki</li>
+<li>Elasticsearch</li>
+<li>smtp</li>
+<li>webhook</li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>首先, 建立一个k8s集群, 由于需要安装falco, driver应该选择virtualbox或者kvm2.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>minikube start --driver<span style="color:#f92672">=</span>kvm2
+</span></span></code></pre></div><p>接下来安装falco-talon, 首先克隆<a href="https://github.com/falcosecurity/charts">charts仓库</a>,修改falco-talon目录下的values.yaml.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">rulesOverride</span>: |<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - action: Terminate Pod
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    actionner: kubernetes:terminate
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    parameters:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      grace_period_seconds: 5
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      ignore_standalone_pods: true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - rule: Terminal shell in container
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    match:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        - Terminal shell in container
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      output_fields:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        - k8s.ns.name!=kube-system, k8s.ns.name!=falco
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    actions:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      - action: Terminate Pod</span>
+</span></span></code></pre></div><p>上述规则规则的用处是在接收到Terminal shell in container事件的时候将目标pod删除, 因为falco默认规则中就有Terminal shell in container这样一条规则, 因此无需对falco的规则进行修改.</p>
+<p>接下来通过helm部署:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>helm repo add falcosecurity https://falcosecurity.github.io/charts
+</span></span><span style="display:flex;"><span>helm repo update falcosecurity
+</span></span><span style="display:flex;"><span>helm upgrade --install falco-talon falcosecurity/falco-talon --namespace falco --create-namespace -f values.yaml
+</span></span><span style="display:flex;"><span>helm install falco falcosecurity/falco --namespace falco <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --create-namespace <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --set tty<span style="color:#f92672">=</span>true <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --set falcosidekick.enabled<span style="color:#f92672">=</span>true <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --set falcosidekick.config.talon.address<span style="color:#f92672">=</span>http://falco-talon:2803
+</span></span></code></pre></div><h2 id="使用">使用<a hidden class="anchor" aria-hidden="true" href="#使用">#</a></h2>
+<p>创建一个测试pod</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ubuntu</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ubuntu</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">ubuntu:latest</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">command</span>: [<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>]
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">args</span>: [<span style="color:#e6db74">&#34;sleep 365d&#34;</span>]
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">imagePullPolicy</span>: <span style="color:#ae81ff">IfNotPresent</span>
+</span></span></code></pre></div><p>使用kubectl创建shell连接</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>kubectl exec -it ubuntu -- /bin/bash
+</span></span></code></pre></div><p>就会发现actionner被执行了, 但是我在测试的时候发现falco存在bug, 传来的信息存在缺失, 导致falco talon执行actionner失败了.</p>
+<p><img alt="fail" loading="lazy" src="/posts/tech-falco-talon/fail.png"></p>
+<h2 id="源码阅读">源码阅读<a hidden class="anchor" aria-hidden="true" href="#源码阅读">#</a></h2>
+<p>直接看<code>cmd/server.go</code>中<code>Run</code>下面的函数.</p>
+<p>加载配置和规则, <code>RarseRules</code>的部分挺多的, 有需求的可以细看:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">configFile</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">GetString</span>(<span style="color:#e6db74">&#34;config&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">config</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">configuration</span>.<span style="color:#a6e22e">CreateConfiguration</span>(<span style="color:#a6e22e">configFile</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">SetLogFormat</span>(<span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">LogFormat</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rulesFiles</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">GetStringArray</span>(<span style="color:#e6db74">&#34;rules&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">rulesFiles</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">RulesFiles</span> = <span style="color:#a6e22e">rulesFiles</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rules</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ruleengine</span>.<span style="color:#a6e22e">ParseRules</span>(<span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">RulesFiles</span>)
+</span></span></code></pre></div><p>接下来获取内置的Actionners和Outputs, 用于对规则进行验证</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">defaultActionners</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">actionners</span>.<span style="color:#a6e22e">ListDefaultActionners</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">defaultOutputs</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">outputs</span>.<span style="color:#a6e22e">ListDefaultOutputs</span>()
+</span></span></code></pre></div><p><code>ListDefaultActionners</code>会返回内部支持的Actionners, Outputs也是类似:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ListDefaultActionners</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">Actionners</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#f92672">*</span><span style="color:#a6e22e">defaultActionners</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">defaultActionners</span>.<span style="color:#a6e22e">Add</span>(
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sTerminate</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sLabel</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sAnnotation</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sNetworkpolicy</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sExec</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sScript</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sLog</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sDelete</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sCordon</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sDrain</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sDownload</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">k8sTcpdump</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lambdaInvoke</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">gcpFunctionCall</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">calicoNetworkpolicy</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">ciliumNetworkpolicy</span>.<span style="color:#a6e22e">Register</span>(),
+</span></span><span style="display:flex;"><span>		)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">defaultActionners</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>挑其中的<code>k8sTerminate</code>看看, 代码位置在<code>actionners/kubernetes/terminal/terminal.go</code>中.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Actionner</span> <span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Register</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">Actionner</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> new(<span style="color:#a6e22e">Actionner</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>好嘟, 看起来这些都是Actionner结构体实例.</p>
+<p>接下来在for循环中对每一条规则的有效性进行验证.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">actionner</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">defaultActionners</span>.<span style="color:#a6e22e">FindActionner</span>(<span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetActionner</span>())
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">actionner</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#e6db74">&#34;unknown actionner&#34;</span>, <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Actionner</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetActionner</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">CheckParameters</span>(<span style="color:#a6e22e">j</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Actionner</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetActionner</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">actionner</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">o</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetOutput</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Information</span>().<span style="color:#a6e22e">RequireOutput</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#e6db74">&#34;an output is required&#34;</span>, <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Actionner</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetActionner</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">output</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">defaultOutputs</span>.<span style="color:#a6e22e">FindOutput</span>(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">GetTarget</span>())
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">output</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#e6db74">&#34;unknown target&#34;</span>, <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">OutputTarget</span>: <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">GetTarget</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Parameters</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#e6db74">&#34;missing parameters for the output&#34;</span>, <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">OutputTarget</span>: <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">GetTarget</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">CheckParameters</span>(<span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Rule</span>: <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">Action</span>: <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetName</span>(), <span style="color:#a6e22e">OutputTarget</span>: <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">GetTarget</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;rules&#34;</span>})
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">valid</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol>
+<li>获取action部分, 检查actionner是否存在以及是否存在于内置actionners中</li>
+<li>检查参数是否合法, 因为不同的actionners可能需要参数</li>
+<li>获取output部分, 并检查其output的目标是否存在于内置outputs中</li>
+<li>检查output中的参数类型是否合法</li>
+</ol>
+<p>验证通过后开始初始化actionners和outputs, 点开<code>actionners.Init</code>看看:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Init</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rules</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">GetRules</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">categories</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">bool</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">enabledCategories</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">bool</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 只要有一个rule, 就会输出化该rule对应类别的actionner</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// list actionner categories to init</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rules</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">Actions</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">categories</span>[<span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">GetActionnerCategory</span>()] = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">category</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">categories</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">actionner</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">defaultActionners</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">category</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Information</span>().<span style="color:#a6e22e">Category</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Init</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;init&#34;</span>, <span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Category</span>: <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Information</span>().<span style="color:#a6e22e">Category</span>, <span style="color:#a6e22e">Status</span>: <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">FailureStr</span>})
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>				}
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">enabledCategories</span>[<span style="color:#a6e22e">category</span>] = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">enabledCategories</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">defaultActionners</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">j</span>.<span style="color:#a6e22e">Information</span>().<span style="color:#a6e22e">Category</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">enabledActionners</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">j</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>获取了所有规则, 然后根据规则的类别分别初始化actionner, 最后添加到enabledActionners全局变量中, 那么以kubernetes:delete为例子看看.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#a6e22e">Actionner</span>) <span style="color:#a6e22e">Init</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">k8s</span>.<span style="color:#a6e22e">Init</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>Init</code>中对k8s的client进行了初始化, 这里就不贴了.</p>
+<p>然后是对outputs的初始化和notifier的初始化, 和actionner的初始化代码是类似的.</p>
+<p>接下来创建了一个httpserver</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">srv</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Server</span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Addr</span>:         <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%d&#34;</span>, <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ListenAddress</span>, <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ListenPort</span>),
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">ReadTimeout</span>:  <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WriteTimeout</span>: <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Handler</span>:      <span style="color:#a6e22e">newHTTPHandler</span>(),
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这是要做什么? 其实这就是falco talon用于接收来自falcosidekick事件信号用的, 点进去这个<code>newHTTPHandler</code>看一看</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newHTTPHandler</span>() <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mux</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewServeMux</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mux</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/metrics&#34;</span>, <span style="color:#a6e22e">metrics</span>.<span style="color:#a6e22e">Handler</span>())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">handleFunc</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">pattern</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">handlerFunc</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">otelHandler</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">otelhttp</span>.<span style="color:#a6e22e">WithRouteTag</span>(<span style="color:#a6e22e">pattern</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">handlerFunc</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mux</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#a6e22e">pattern</span>, <span style="color:#a6e22e">otelHandler</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">handleFunc</span>(<span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#a6e22e">handler</span>.<span style="color:#a6e22e">MainHandler</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">handleFunc</span>(<span style="color:#e6db74">&#34;/healthz&#34;</span>, <span style="color:#a6e22e">handler</span>.<span style="color:#a6e22e">HealthHandler</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">otelHandler</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">otelhttp</span>.<span style="color:#a6e22e">NewHandler</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mux</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;/&#34;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">otelhttp</span>.<span style="color:#a6e22e">WithFilter</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">req</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">Path</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;/&#34;</span>
+</span></span><span style="display:flex;"><span>		}))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">otelHandler</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>跟进<code>MainHandler</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">MainHandler</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">DecodeEvent</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">tracer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">traces</span>.<span style="color:#a6e22e">GetTracer</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">span</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tracer</span>.<span style="color:#a6e22e">Start</span>(<span style="color:#a6e22e">rctx</span>, <span style="color:#e6db74">&#34;event&#34;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;event.rule&#34;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Rule</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;event.source&#34;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Source</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;event.priority&#34;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Priority</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;event.output&#34;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Output</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;event.tags&#34;</span>, <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">ReplaceAll</span>(<span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Trim</span>(<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprint</span>(<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Tags</span>), <span style="color:#e6db74">&#34;[]&#34;</span>), <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#e6db74">&#34;, &#34;</span>))),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">WithAttributes</span>(<span style="color:#a6e22e">attribute</span>.<span style="color:#a6e22e">StringSlice</span>(<span style="color:#e6db74">&#34;event.tags&#34;</span>, <span style="color:#a6e22e">tags</span>)),
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hasher</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">md5</span>.<span style="color:#a6e22e">New</span>() <span style="color:#75715e">//nolint:gosec</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hasher</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">Output</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// NOTE: Publish the event to NATS</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">nats</span>.<span style="color:#a6e22e">GetPublisher</span>().<span style="color:#a6e22e">PublishMsg</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">hex</span>.<span style="color:#a6e22e">EncodeToString</span>(<span style="color:#a6e22e">hasher</span>.<span style="color:#a6e22e">Sum</span>(<span style="color:#66d9ef">nil</span>)), <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">String</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;Internal Server Error&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusInternalServerError</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这个函数里面用到了两个没见过的库, 一个是<code>otel/trace</code>, 是 OpenTelemetry 库的一部分, 它用于支持应用程序的分布式追踪功能.</p>
+<p>另一个是<code>nats-io/nats.go</code>, 这个就有意思了, 它用于集成NATS消息系统, 什么是NATS消息系统? 根据官网的解释:</p>
+<blockquote>
+<p>NATS 是一种允许以消息形式进行数据交换的基础设施。我们称之为“面向消息的中间件”。</p></blockquote>
+<p>而代码中的<code>nats.GetPublisher.PublishMsg</code>就是将事件消息推送出去, 给其他客户端消费, 而在<code>server.go</code>中<code>nats.GetConsumer().ConsumeMsg()</code>就启动了一个消费者, 因此这边的nats的作用是在多个falco-talon实例之间传递消息.</p>
+<p>回到 <code>server.go</code>, 对于设置了<code>watch_rules</code>的情况, 程序启动了一个goroutine来监听和更新规则, 其中的内容和初始化是差不多的.</p>
+<p>下面, 在启动了nats server之后, 如果设置了LeaderElection:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Deduplication</span>.<span style="color:#a6e22e">LeaderElection</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">err2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">k8s</span>.<span style="color:#a6e22e">Init</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err2</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;fatal&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err2</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;lease&#34;</span>})
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">err2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">k8s</span>.<span style="color:#a6e22e">GetClient</span>().<span style="color:#a6e22e">GetLeaseHolder</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err2</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;fatal&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err2</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;lease&#34;</span>})
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">==</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">GetLocalIP</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span> = <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;info&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Result</span>: <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;new leader detected &#39;%v&#39;&#34;</span>, <span style="color:#a6e22e">s</span>), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;nats&#34;</span>})
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">err2</span> = <span style="color:#a6e22e">nats</span>.<span style="color:#a6e22e">GetPublisher</span>().<span style="color:#a6e22e">SetJetStreamContext</span>(<span style="color:#e6db74">&#34;nats://&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:4222&#34;</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err2</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;error&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err2</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;nats&#34;</span>})
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>由<code>Deduplication.LeaderElection</code>这个选项不难猜测, 上面的代码是为了处理多实例备份的情况, 主要做了这样的事情:</p>
+<ul>
+<li>通过<code>k8s.GetClient().GetLeaseHolder()</code>获取k8s中的租约, 有关租约可以看<a href="https://kubernetes.io/zh-cn/docs/concepts/architecture/leases/">文档</a></li>
+<li>通过租约确定领导者, 进而确定nats的发布渠道</li>
+</ul>
+<p>之后也是最关键的一步, 获取消费者chan, 并提供给actionners进行消费, actionners会从chan接收事件并根据规则进行威胁响应.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">nats</span>.<span style="color:#a6e22e">GetConsumer</span>().<span style="color:#a6e22e">ConsumeMsg</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">PrintLog</span>(<span style="color:#e6db74">&#34;fatal&#34;</span>, <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{<span style="color:#a6e22e">Error</span>: <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>(), <span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;nats&#34;</span>})
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#a6e22e">actionners</span>.<span style="color:#a6e22e">StartConsumer</span>(<span style="color:#a6e22e">c</span>)
+</span></span></code></pre></div><p>所以来看看StartConsumer函数.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">StartConsumer</span>(<span style="color:#a6e22e">eventsC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">nats</span>.<span style="color:#a6e22e">MessageWithContext</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">config</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">configuration</span>.<span style="color:#a6e22e">GetConfiguration</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">triggeredRules</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">GetActions</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">runAction</span>(<span style="color:#a6e22e">mctx</span>, <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">e</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">IgnoreErrors</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">trueStr</span> {
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>				}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">Continue</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">falseStr</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里遍历了触发的规则和对应的action, 分别执行, 进入runAction可以看到</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">runAction</span>(<span style="color:#a6e22e">mctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">rule</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">Rule</span>, <span style="color:#a6e22e">action</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">Action</span>, <span style="color:#a6e22e">event</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">Event</span>) (<span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">action</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">output</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">action</span>.<span style="color:#a6e22e">GetOutput</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">notifiers</span>.<span style="color:#a6e22e">Notify</span>(<span style="color:#a6e22e">actx</span>, <span style="color:#a6e22e">rule</span>, <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">log</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">actionner</span>.<span style="color:#a6e22e">Information</span>().<span style="color:#a6e22e">AllowOutput</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">output</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">target</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">GetTarget</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">o</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">outputs</span>.<span style="color:#a6e22e">GetOutputs</span>().<span style="color:#a6e22e">FindOutput</span>(<span style="color:#a6e22e">target</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">result</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#a6e22e">output</span>, <span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">notifiers</span>.<span style="color:#a6e22e">Notify</span>(<span style="color:#a6e22e">octx</span>, <span style="color:#a6e22e">rule</span>, <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">logO</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>抛开配置项中的代码不谈, 这里做的事情是执行actionner并获取输出, 之后通过<code>o.Run</code>来将输出存储到合适的位置(可以选择的有<code>file</code> <code>aws</code> <code>gcs</code> 和 <code>minio</code>), 最后将结果以Notify函数发送出去(可选的notifier有 <code>elasticsearch</code> <code>http</code> <code>k8sevents</code> <code>loki</code> <code>slack</code> <code>smtp</code> 和 <code>webhook</code>).</p>
+<p>以file这个output为例子, 其将输出存储到本地文件中:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Output</span>) <span style="color:#a6e22e">Run</span>(<span style="color:#a6e22e">output</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">Output</span>, <span style="color:#a6e22e">data</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">models</span>.<span style="color:#a6e22e">Data</span>) (<span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;namespace&#34;</span>] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;pod&#34;</span>] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">key</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v_%v_%v_%v&#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Format</span>(<span style="color:#e6db74">&#34;2006-01-02T15-04-05Z&#34;</span>), <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;namespace&#34;</span>], <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;pod&#34;</span>], <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">ReplaceAll</span>(<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#e6db74">&#34;_&#34;</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;hostname&#34;</span>] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">key</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v_%v_%v&#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Format</span>(<span style="color:#e6db74">&#34;2006-01-02T15-04-05Z&#34;</span>), <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span>[<span style="color:#e6db74">&#34;hostname&#34;</span>], <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">ReplaceAll</span>(<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#e6db74">&#34;_&#34;</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Objects</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;file&#34;</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">s</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;_&#34;</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">key</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v_%v%v&#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Format</span>(<span style="color:#e6db74">&#34;2006-01-02T15-04-05Z&#34;</span>), <span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">ReplaceAll</span>(<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#e6db74">&#34;_&#34;</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dstfile</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v/%v&#34;</span>, <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">TrimSuffix</span>(<span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">Destination</span>, <span style="color:#e6db74">&#34;/&#34;</span>), <span style="color:#a6e22e">key</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">objects</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;file&#34;</span>:        <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Name</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;destination&#34;</span>: <span style="color:#a6e22e">dstfile</span>,
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">WriteFile</span>(<span style="color:#a6e22e">dstfile</span>, <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Bytes</span>, <span style="color:#ae81ff">0600</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">LogLine</span>{
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Objects</span>: <span style="color:#a6e22e">objects</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Error</span>:   <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>(),
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Status</span>:  <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">FailureStr</span>,
+</span></span><span style="display:flex;"><span>		}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>server.go</code>最后将会启动srv, 通过上面代码分析可知srv就是一个负责转发消息事件的东西,因此, 当一个实例上的falco-talon接收到事件的时候, 事件会被转发传播到集群内的其他所有falco-talon实例中.</p>
+<p>至此对falco-talon代码的粗浅阅读完毕.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/tech-kubernetes-scheduler/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>创建一个简单的自定义K8s Scheduler</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/tech-domain/">
+    <span class="title">Next »</span>
+    <br>
+    <span>域名配合隧道穿透服务(Godaddy&#43;Cloudflare&#43;Cpolar/Cloudflared)</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

