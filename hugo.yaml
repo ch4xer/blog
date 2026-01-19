@@ -47,6 +47,10 @@ menu:
       name: categories
       url: /categories/
       weight: 10
+    - identifier: friends
+      name: friends
+      url: /friends/
+      weight: 30
     - identifier: about
       name: about
       url: /about/

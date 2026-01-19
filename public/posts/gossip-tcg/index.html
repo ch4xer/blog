@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -27,7 +27,7 @@
 纵观众多TCG, 万智牌受限于底层费用机制似乎在这方面相对来说做得好一些, 然而问题在于, 作为一个商业产品, 它的第一任务是给公司带来财富, 第二任务才是服务于玩家, 尽管二者在有些时候, 尤其是游戏发展的早期是不冲突的. 从玩家来说, 游戏本体的运营发展存在两个方向, 一是玩法的扩张, 二是强度的迭代, 前者更灵巧更得人心, 后者则由于对已有卡牌的淘汰而常常备受争议. 一般来说, 有经验的卡牌运营商并不着急于强度迭代, 而是优先致力于玩法的扩张, 间或夹杂必要的强度提升, 可惜的是, 近乎固化的底层规则框架决定了玩法的扩张是有边际效应的, 当扩张玩法的边际效应变得越来越低时, 说明TCG的生命周期已经步入了后半段, 然而这与商业产品的第一使命相互冲突, 随之而来的是强度的无限扩张和争议的发生, 在没有新玩法的情况下, 可以预见的是无止境的强度爆炸. 在这点上, 所有商业TCG都面临着同样的问题: 有限的卡牌玩法和无限的公司贪欲与玩家需求引发的主要矛盾.">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/gossip-tcg/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -56,23 +56,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/gossip-tcg/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/gossip-tcg/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="卡牌迷思：从万智牌的衰退开始">
   <meta property="og:description" content="这几天被万智牌所吸引, 富有史诗感的画风, 复杂但不混乱的规则, 简洁的卡面语言, 丰富的卡片种类, 多样性的玩法……这些都是我在游戏王中所接触不到但怀念许久的, 在接触万智牌之前,这种怀念源自于过去的炉石传说,而在了解到万智牌后才发现,这些特质其实是万智牌所创造而让炉石继承下来的, 再加上略倾向于黑暗史诗的画风, 万智牌在很多维度上都比过去接触过的所有卡牌游戏更戳我的xp.
@@ -160,20 +175,8 @@
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -209,6 +212,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -224,7 +232,7 @@
     <h1 class="post-title entry-hint-parent">
       卡牌迷思：从万智牌的衰退开始
     </h1>
-    <div class="post-meta"><span title='2024-09-28 13:11:48 +0800 CST'>September 28, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;214 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2024-09-28 13:11:48 +0800 CST'>September 28, 2024</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>214 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> <div class="toc">
@@ -315,7 +323,7 @@
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -330,9 +338,14 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -373,11 +386,12 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

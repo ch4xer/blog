@@ -558,13 +558,7 @@ if image:
                 "type": "image_url",
                 "image_url": {"url": image_data_uri},
             },
-        ]also, does this model have function calling capabilities? I tried most of the multimodal models, they have very good performance but lack function calling capabilities. :(
-
-￼
-￼Edit
-￼Preview
-￼
-
+        ]
     )
 
     # 5. 调用模型并获取结果

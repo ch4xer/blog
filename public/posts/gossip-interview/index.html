@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>秋招0offer记录 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="真正的勇士，就要敢于直面惨淡的现实">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/gossip-interview/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/gossip-interview/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:url" content="https://dragonbox.top/posts/gossip-interview/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="秋招0offer记录">
+  <meta property="og:description" content="真正的勇士，就要敢于直面惨淡的现实">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-09-08T19:41:34+08:00">
+    <meta property="article:modified_time" content="2025-09-08T19:41:34+08:00">
+    <meta property="og:image" content="https://dragonbox.top/cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dragonbox.top/cover.png">
+<meta name="twitter:title" content="秋招0offer记录">
+<meta name="twitter:description" content="真正的勇士，就要敢于直面惨淡的现实">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "秋招0offer记录",
+      "item": "https://dragonbox.top/posts/gossip-interview/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "秋招0offer记录",
+  "name": "秋招0offer记录",
+  "description": "真正的勇士，就要敢于直面惨淡的现实\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "真正的勇士，就要敢于直面惨淡的现实\n美团 笔试分为选择题和编程题，选择题里面有很多看不懂的AI和NLP相关，编程题没刷过题没怎么做出来。然后是抽象的AI面试，问了点技术但是也没什么可以深入聊的，毕竟是AI。\n之后过了两个星期发现挂了，无所谓了。\n小红书 笔试挂\n腾讯 csig的安全技术，然而上来就问大模型Agent开发相关，这我哪会啊。问了一下他们那边是希望用大模型去看日志，然后又被问了银行家算法和桶哈希，全都不会。最后面试官说我可以去看看面经多准备准备，全程没有问一个安全相关的问题。\n滴滴 一面和二面基本都围绕简历去问的，不过轮到对面问的时候感觉他们会更加偏向开发一点，比如遇到程序错误异常怎么办，了解内存泄漏吗（我回答的时候以为要考二进制，没想到是开发相关的）。聊完感觉也还行，面试过程中面试官经常仰天45度思考我的论文，结果还是给我挂了，郁闷了，后面重新投了一下正式岗把我捞起来了。\n三面 面试之前打听了一下，听说面试主管是外号叫帮主的人，之前也是我们组的，所以在打开摄像头、看到我的面试官是一个五六十岁中老年人的时候有一点不知所措。不过面试的过程比较友好，主要是讲自己的经历，然后稍微问了一下两篇论文的工作，剩下的就是问问未来职业发展、工作地偏好、英语听说能力、能不能实习这些话。最后我问了一下才知道对方是师伯（怎么感觉和导师年级差这么多）\n华为 华为云 加上hr之后给我安排了专家聊天。\n问了下k8s内部需要关注的资产有哪些\n问了下大模型安全的内容，当时完全没有准备，一个没答上来。\n了解过云相关的漏洞吗？\n论文中的调度器是怎么实现的？\n问到蜜罐论文的时候感觉对业务的影响太大了。\n蚂蚁 一面 自我介绍完之后，先问了我用LLM修复错误配置的工作，然后问我如果错误类型是可以被枚举的那是不是也不需要用LLM，我想了一下好像确实是这样子（坏了）。\n大模型方面，问了上下文优化相关的什么问题，我回答说可以从相似度阈值、重排和上下文压缩去干。\n然后问了大模型安全相关的内容，我回答了mcp可以接触到内部敏感数据并且默认受信任，所以需要做好内部资产隔离，其次是模型是否会被投毒，这块我讲了一下神经网络后门的剪枝和重训练，也没细问。\n论文方面，看到rbaclock的时候问了一下对于性能敏感的应用怎么办，我回答k8s的调度器框架允许用户为不同的调度器插件单独设置权重。\n看到rasp论文的时候，面试官简单问了一下思路，我回答说就是hook一些java函数然后告警这样，之后问了下性能损失怎么这么高，我说实际测不出性能损失，因为论文需要数据所以在一个网络波动的环境下测的。\n问了有没有用AI去挖洞（还是审计代码？记不太清了），我给他说了EPScan的思路，然后又说了一下师兄用ai去在代码审计之后生成poc的思路，最后承认自己没用ai去做过。\n问了下k8s环境里面的脆弱面（好像是，记不太清了），我回答了镜像投毒、不安全配置、过度授权、敏感的资产（dashboard secret之类）、容器逃逸，还提到了nginx ingress的漏洞，不过对方说这个太细节了跳过（？）。\n最后面试官介绍他们正在做的工作包括可信计算和行为白名单之类的东西，刚好那几天看到一篇ndss论文的检测思路就顺便和他说了，希望能有点用。\n感觉蚂蚁这边相对来说对AI安全更看重一些。\n二面 过了一个多月才给我二面……估计是看招得差不多了就走个流程把我送走。\n面试果不其然地很关注AI安全，虽然自己准备了一些提示词注入和MCP安全的内容，但是简历上唯一和大模型沾边的也只有一个自动化错误配置修复的项目，于是面试官主要问的是那个项目，对其他的内容不是很感兴趣。\n字节 安全与监控一面 面试的时候迟到了orz，估计留下坏印象了。\n问了我LLM修复错误配置的工作，然后问企业在用大模型的时候怎么提升能力，我说可以给他挂rag，他问为什么我这个工作没有用rag，我回答因为rag适合用非结构性文档类的数据，我的这个数据都是比较结构化的json就没有必要用了，他没追问。\nssrf的原理，怎么绕过，怎么防护。我回答ssrf就是太信任用户输入导致服务端请求了非预期的资源，比如file://，phar://。防护方面，一方面是关键词过滤，比如把那些非预期的协议名称过滤了，另一方面是对内网的一些敏感资产做网络隔离。绕过方面没答上来，等回头看的时候发现自己之前记录过……\nsql注入的原理，怎么防护。这个也是太信任用户输入，导致输入中的一些关键词被拼接在了程序代码中并且被执行，防护方面可以用pdo预编译。\n然后讲了一下渗透的经历，我说了一下科学院护网的内容。面试官追问说有没有继续横向移动，我说没有。\n问打点的时候有什么点可以突破的。我回答可以从一些边缘资产，或者是扫描时候发现的一些敏感文件之类的，然后是dns历史解析记录；正面突破的话，可以看看输入框有没有sql注入，弱口令之类的。\n又问了一下对于云环境的防护思路。回答从镜像安全方面需要防止投毒和harbor漏洞，devops方面要防止凭证泄漏，然后k8s运行时又是一些东西。\n然后论文方面，问了一下论文的思路，然后问RBAClock中的风险权限是如何量化和比较的。另一篇也介绍了一下，好像没有怎么问，记不太清了。\n写了一个算法，两个有序数字怎么合并，以为很简单但是太紧张没写出来，说了一下思路后面试官也没什么问题就结束了，感觉也就是意思一下。\n快最后的时候问有什么补充的，我把中期报告时候在原有论文工作上想的但是还没有做的一个和传统机器学习相关的工作和他说了。\n后面挂了，把我推到北京的云安全岗位了。\n云安全一面 就面了30分钟，凉了\n问了SSRF的原理和防御（字节真的好喜欢SSRF）。问了一下调度算法的工作，然后问了一下逃逸出pod之后除了sa之外还有什么打点的方法，我说了一个可以看看dashboard是否可访问，以及打打看nginx ingress，然后面试官又问了下sidecar可以利用吗，我说了一下istio的sidecar可能可以突破网络隔离，然后由于共享namespace，所以可以用tcpdump监听主容器的流量。容器逃逸方面，问了下常见的容器逃逸方法，答曰特权容器、内核漏洞以及不安全的挂载，又问哪些capability可以导致容器逃逸，只说了一个sys_admin还说错了下划线前面的部分……之后又问到网络隔离用什么？答曰networkpolicy，追问，施行隔离的时候有什么思路吗？我想除了隔离kube-system以及默认隔离没有通信的namespace之外也没什么了。\n大模型安全方面，面试官对提示词注入和MCP安全比较感兴趣。提示词注入我说了 直接混淆注入和间接通过污染数据源的方式注入，他对间接注入为什么可以绕过大模型的验证感到有点好奇，我就说因为恶意步骤执行的这一步是发生在验证之后Agent执行期间了，所以可以绕过。然后面试官又问了泄漏了系统提示词之后可以有什么利用，这个问题我是第一次遇到，也没有准备过，想了想就说可能看它内部有没有什么可以闭合的东西，比如xml标签。MCP方面，问了下MCP的风险，我说了第三方下载的MCP工具在被信任后可以通过后续的供应链攻击被换成恶意的MCP工具，然后就是MCP工具本身可能接触到企业内部的资产，对这两块的防御，一个是不要信任更新后的工具，另一个就是企业内部做好网络隔离。\n后面问自己未来规划更倾向企业还是高校，我当然说企业啦。\n感觉很多问题是面试官自己想要了解和探索的，也没有什么标准答案。总体上很偏实战。问了下他们内部现在也对大模型安全非常重视，因为是要面向客户部署的。\n京东 最傻逼的一集，面试官是一个中年男人。\n一面 开局问你在学校学得最好的课程是什么，给我问懵了，我心想上次上课都已经是三年前的事情了啊，这个人在问什么东西，但还是说了一个web安全基础。然后被追问学习的方法是什么，怎么学的，我更懵逼了，说先学基础，然后找一些题目做做产生更深入的理解，最后去找一些更贴近实际的企业案例看看工业界的问题。他说不对不对，我换一个问法，像高数这样的科目你是怎么学的？\n由于事先知道这个岗位的hc只有一个，面对这样的傻逼面试官，我已经开始看时间想着早点结束吧。我和他说多做错题，多总结规律，下次面对类似的题目时候可以从题目的特征中看出相似的模式。最后他问我看没看过http的rfc，看没看过tcp/ip协议三大卷黑皮书，他说自己学习的时候那些都看过，不理解为什么我在学习的时候不去看这些，我心中无语，原来是过来炫耀来了。\n接着继续嘲讽我说觉得我做的东西太应用了，有没有看过更底层更基础的东西，直到我说自己看了kube-scheduler的源码给他讲了讲调度逻辑和我的解决方案之后才停下问我：“你觉得容器的单点应用和RBAC权限之间的区别是什么”，这俩是一个东西吗？这能比较吗？心里再次无语……然后在后续的RBAC相关的无厘头问题中我看出来了，他不懂这块的技术。\n然后又问了容器逃逸的原理是什么？我回答了错误配置和内核漏洞，被追问内核漏洞的细节，因为不熟所以只能稍微扯一点，但我知道他自己也不理解。\n继续傻逼时间，他问怎么去在集群范围内监控大量容器，我回答可以从内核态做功夫做监控，他说不可以用内核态因为可能影响用户业务，我说可以用ebpf，他还是说假如不用ebpf的话怎么监控（凭什么不用，傻逼吗？），我说流量可以用网关去监控，系统调用没什么方便的办法。\n然后问到那个蜜罐的中文垃圾论文，他特别在意为什么没有实时响应，我说了这只是一个调研属性的工作，上面的东西被打了也无所谓的，我们只想要日志，他还是揪着实时响应不放，末了来一句“我之前以为你是偏应用的，但是又感觉你和实际应用太脱节了”，再嘲讽一下说没实习过建议多出去看看。\n反问的时候我问他们在云原生防护这块有什么挑战和困难吗？他说他们没用k8s，全是kvm的……合着你们内部连个容器集群都没有啊，无语，面个屁。\n总结下来，有价值的技术问题一个都没有，本来还觉得就算去不了能在面试中学到点什么也不错，结果是纯浪费时间。\n刚结束字节就打电话过来说岗位不合适，给我推到北京这边的云安全了，连续两次打击让我开始怀疑自己了。\n阿里云 一面和二面我都在自我介绍中详细介绍了自己的三个博士研究内容，让接下来的面试提问都围绕着我这边的内容展开，所以应付得还可以，没有问到什么八股。但是在最后hr面的时候挂了，问了一下那边说是没有hc了，唉，只能说是最有希望的一集。\n天翼云 一面 一面是夏令营，两个面试官一开始就直说他们不懂安全，所以我就把论文工作尽量讲得通俗易懂一些。之后一个云计算的面试官问了下对那些违法app产生的大量流量有什么办法识别和管控吗，因为他那边遇到了这样的问题，我想了想说也没有什么很好的办法，这块可以用一些机器学习的方法去做特征建模，但是加密流量识别还是比较困难的。\n二面 主管和hr一起面的。主要问题就是围绕我做的工作，简单讲讲动机是什么、创新点在哪里，然后问了问倾向云计算方向还是网络安全方向，最后问了问期望薪资和工作地点就结束了，总共就二十分钟。\n中国移动杭州研究院 问了问AI安全相关的知识，然后问有没有围绕AI安全的学术工作，我这边只有AI for security的一点工作，最后他们坦言他们想要的是做AI本身的安全的。\n",
+  "wordCount" : "80",
+  "inLanguage": "en",
+  "image":"https://dragonbox.top/cover.png","datePublished": "2025-09-08T19:41:34+08:00",
+  "dateModified": "2025-09-08T19:41:34+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/gossip-interview/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      秋招0offer记录
+    </h1>
+    <div class="post-meta"><span title='2025-09-08 19:41:34 +0800 CST'>September 8, 2025</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;80 words&nbsp;·&nbsp;ch4ser
+
+</div>
+  </header> 
+<figure class="entry-cover">
+            <img loading="eager"
+                srcset='https://dragonbox.top/posts/gossip-interview/cover_hu_b886da54c33a360a.png 360w,https://dragonbox.top/posts/gossip-interview/cover_hu_18f87fd6a3b47e86.png 480w,https://dragonbox.top/posts/gossip-interview/cover_hu_37f7a5955504eb10.png 720w,https://dragonbox.top/posts/gossip-interview/cover_hu_65d3fb834401688e.png 1080w,https://dragonbox.top/posts/gossip-interview/cover.png 1100w'
+                src="https://dragonbox.top/posts/gossip-interview/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1100" height="529"
+                alt="">
+        
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#美团">美团</a></li>
+    <li><a href="#小红书">小红书</a></li>
+    <li><a href="#腾讯">腾讯</a></li>
+    <li><a href="#滴滴">滴滴</a>
+      <ul>
+        <li><a href="#三面">三面</a></li>
+      </ul>
+    </li>
+    <li><a href="#华为">华为</a>
+      <ul>
+        <li><a href="#华为云">华为云</a></li>
+      </ul>
+    </li>
+    <li><a href="#蚂蚁">蚂蚁</a>
+      <ul>
+        <li><a href="#一面">一面</a></li>
+        <li><a href="#二面">二面</a></li>
+      </ul>
+    </li>
+    <li><a href="#字节">字节</a>
+      <ul>
+        <li><a href="#安全与监控一面">安全与监控一面</a></li>
+        <li><a href="#云安全一面">云安全一面</a></li>
+      </ul>
+    </li>
+    <li><a href="#京东">京东</a>
+      <ul>
+        <li><a href="#一面-1">一面</a></li>
+      </ul>
+    </li>
+    <li><a href="#阿里云">阿里云</a></li>
+    <li><a href="#天翼云">天翼云</a>
+      <ul>
+        <li><a href="#一面-2">一面</a></li>
+        <li><a href="#二面-1">二面</a></li>
+      </ul>
+    </li>
+    <li><a href="#中国移动杭州研究院">中国移动杭州研究院</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>真正的勇士，就要敢于直面惨淡的现实</p>
+<h2 id="美团">美团<a hidden class="anchor" aria-hidden="true" href="#美团">#</a></h2>
+<p>笔试分为选择题和编程题，选择题里面有很多看不懂的AI和NLP相关，编程题没刷过题没怎么做出来。然后是抽象的AI面试，问了点技术但是也没什么可以深入聊的，毕竟是AI。</p>
+<p>之后过了两个星期发现挂了，无所谓了。</p>
+<h2 id="小红书">小红书<a hidden class="anchor" aria-hidden="true" href="#小红书">#</a></h2>
+<p>笔试挂</p>
+<h2 id="腾讯">腾讯<a hidden class="anchor" aria-hidden="true" href="#腾讯">#</a></h2>
+<p>csig的安全技术，然而上来就问大模型Agent开发相关，这我哪会啊。问了一下他们那边是希望用大模型去看日志，然后又被问了银行家算法和桶哈希，全都不会。最后面试官说我可以去看看面经多准备准备，<strong>全程没有问一个安全相关的问题</strong>。</p>
+<h2 id="滴滴">滴滴<a hidden class="anchor" aria-hidden="true" href="#滴滴">#</a></h2>
+<p>一面和二面基本都围绕简历去问的，不过轮到对面问的时候感觉他们会更加偏向开发一点，比如遇到程序错误异常怎么办，了解内存泄漏吗（我回答的时候以为要考二进制，没想到是开发相关的）。聊完感觉也还行，面试过程中面试官经常仰天45度思考我的论文，<del>结果还是给我挂了，郁闷了</del>，后面重新投了一下正式岗把我捞起来了。</p>
+<h3 id="三面">三面<a hidden class="anchor" aria-hidden="true" href="#三面">#</a></h3>
+<p>面试之前打听了一下，听说面试主管是外号叫帮主的人，之前也是我们组的，所以在打开摄像头、看到我的面试官是一个五六十岁中老年人的时候有一点不知所措。不过面试的过程比较友好，主要是讲自己的经历，然后稍微问了一下两篇论文的工作，剩下的就是问问未来职业发展、工作地偏好、英语听说能力、能不能实习这些话。最后我问了一下才知道对方是师伯（怎么感觉和导师年级差这么多）</p>
+<h2 id="华为">华为<a hidden class="anchor" aria-hidden="true" href="#华为">#</a></h2>
+<h3 id="华为云">华为云<a hidden class="anchor" aria-hidden="true" href="#华为云">#</a></h3>
+<p>加上hr之后给我安排了专家聊天。</p>
+<p>问了下k8s内部需要关注的资产有哪些</p>
+<p>问了下大模型安全的内容，当时完全没有准备，一个没答上来。</p>
+<p>了解过云相关的漏洞吗？</p>
+<p>论文中的调度器是怎么实现的？</p>
+<p>问到蜜罐论文的时候感觉对业务的影响太大了。</p>
+<h2 id="蚂蚁">蚂蚁<a hidden class="anchor" aria-hidden="true" href="#蚂蚁">#</a></h2>
+<h3 id="一面">一面<a hidden class="anchor" aria-hidden="true" href="#一面">#</a></h3>
+<p>自我介绍完之后，先问了我用LLM修复错误配置的工作，然后问我如果错误类型是可以被枚举的那是不是也不需要用LLM，我想了一下好像确实是这样子（坏了）。</p>
+<p>大模型方面，问了上下文优化相关的什么问题，我回答说可以从相似度阈值、重排和上下文压缩去干。</p>
+<p>然后问了大模型安全相关的内容，我回答了mcp可以接触到内部敏感数据并且默认受信任，所以需要做好内部资产隔离，其次是模型是否会被投毒，这块我讲了一下神经网络后门的剪枝和重训练，也没细问。</p>
+<p>论文方面，看到rbaclock的时候问了一下对于性能敏感的应用怎么办，我回答k8s的调度器框架允许用户为不同的调度器插件单独设置权重。</p>
+<p>看到rasp论文的时候，面试官简单问了一下思路，我回答说就是hook一些java函数然后告警这样，之后问了下性能损失怎么这么高，我说实际测不出性能损失，因为论文需要数据所以在一个网络波动的环境下测的。</p>
+<p>问了有没有用AI去挖洞（还是审计代码？记不太清了），我给他说了EPScan的思路，然后又说了一下师兄用ai去在代码审计之后生成poc的思路，最后承认自己没用ai去做过。</p>
+<p>问了下k8s环境里面的脆弱面（好像是，记不太清了），我回答了镜像投毒、不安全配置、过度授权、敏感的资产（dashboard secret之类）、容器逃逸，还提到了nginx ingress的漏洞，不过对方说这个太细节了跳过（？）。</p>
+<p>最后面试官介绍他们正在做的工作包括可信计算和行为白名单之类的东西，刚好那几天看到一篇ndss论文的检测思路就顺便和他说了，希望能有点用。</p>
+<p>感觉蚂蚁这边相对来说对AI安全更看重一些。</p>
+<h3 id="二面">二面<a hidden class="anchor" aria-hidden="true" href="#二面">#</a></h3>
+<p>过了一个多月才给我二面……估计是看招得差不多了就走个流程把我送走。</p>
+<p>面试果不其然地很关注AI安全，虽然自己准备了一些提示词注入和MCP安全的内容，但是简历上唯一和大模型沾边的也只有一个自动化错误配置修复的项目，于是面试官主要问的是那个项目，对其他的内容不是很感兴趣。</p>
+<h2 id="字节">字节<a hidden class="anchor" aria-hidden="true" href="#字节">#</a></h2>
+<h3 id="安全与监控一面">安全与监控一面<a hidden class="anchor" aria-hidden="true" href="#安全与监控一面">#</a></h3>
+<p>面试的时候迟到了orz，估计留下坏印象了。</p>
+<p>问了我LLM修复错误配置的工作，然后问企业在用大模型的时候怎么提升能力，我说可以给他挂rag，他问为什么我这个工作没有用rag，我回答因为rag适合用非结构性文档类的数据，我的这个数据都是比较结构化的json就没有必要用了，他没追问。</p>
+<p>ssrf的原理，怎么绕过，怎么防护。我回答ssrf就是太信任用户输入导致服务端请求了非预期的资源，比如file://，phar://。防护方面，一方面是关键词过滤，比如把那些非预期的协议名称过滤了，另一方面是对内网的一些敏感资产做网络隔离。绕过方面没答上来，等回头看的时候发现自己之前记录过……</p>
+<p>sql注入的原理，怎么防护。这个也是太信任用户输入，导致输入中的一些关键词被拼接在了程序代码中并且被执行，防护方面可以用pdo预编译。</p>
+<p>然后讲了一下渗透的经历，我说了一下科学院护网的内容。面试官追问说有没有继续横向移动，我说没有。</p>
+<p>问打点的时候有什么点可以突破的。我回答可以从一些边缘资产，或者是扫描时候发现的一些敏感文件之类的，然后是dns历史解析记录；正面突破的话，可以看看输入框有没有sql注入，弱口令之类的。</p>
+<p>又问了一下对于云环境的防护思路。回答从镜像安全方面需要防止投毒和harbor漏洞，devops方面要防止凭证泄漏，然后k8s运行时又是一些东西。</p>
+<p>然后论文方面，问了一下论文的思路，然后问RBAClock中的风险权限是如何量化和比较的。另一篇也介绍了一下，好像没有怎么问，记不太清了。</p>
+<p>写了一个算法，两个有序数字怎么合并，以为很简单但是太紧张没写出来，说了一下思路后面试官也没什么问题就结束了，感觉也就是意思一下。</p>
+<p>快最后的时候问有什么补充的，我把中期报告时候在原有论文工作上想的但是还没有做的一个和传统机器学习相关的工作和他说了。</p>
+<p>后面挂了，把我推到北京的云安全岗位了。</p>
+<h3 id="云安全一面">云安全一面<a hidden class="anchor" aria-hidden="true" href="#云安全一面">#</a></h3>
+<p>就面了30分钟，凉了</p>
+<p>问了SSRF的原理和防御（字节真的好喜欢SSRF）。问了一下调度算法的工作，然后问了一下逃逸出pod之后除了sa之外还有什么打点的方法，我说了一个可以看看dashboard是否可访问，以及打打看nginx ingress，然后面试官又问了下sidecar可以利用吗，我说了一下istio的sidecar可能可以突破网络隔离，然后由于共享namespace，所以可以用tcpdump监听主容器的流量。容器逃逸方面，问了下常见的容器逃逸方法，答曰特权容器、内核漏洞以及不安全的挂载，又问哪些capability可以导致容器逃逸，只说了一个sys_admin还说错了下划线前面的部分……之后又问到网络隔离用什么？答曰networkpolicy，追问，施行隔离的时候有什么思路吗？我想除了隔离kube-system以及默认隔离没有通信的namespace之外也没什么了。</p>
+<p>大模型安全方面，面试官对提示词注入和MCP安全比较感兴趣。提示词注入我说了 直接混淆注入和间接通过污染数据源的方式注入，他对间接注入为什么可以绕过大模型的验证感到有点好奇，我就说因为恶意步骤执行的这一步是发生在验证之后Agent执行期间了，所以可以绕过。然后面试官又问了泄漏了系统提示词之后可以有什么利用，这个问题我是第一次遇到，也没有准备过，想了想就说可能看它内部有没有什么可以闭合的东西，比如xml标签。MCP方面，问了下MCP的风险，我说了第三方下载的MCP工具在被信任后可以通过后续的供应链攻击被换成恶意的MCP工具，然后就是MCP工具本身可能接触到企业内部的资产，对这两块的防御，一个是不要信任更新后的工具，另一个就是企业内部做好网络隔离。</p>
+<p>后面问自己未来规划更倾向企业还是高校，我当然说企业啦。</p>
+<p>感觉很多问题是面试官自己想要了解和探索的，也没有什么标准答案。总体上很偏实战。问了下他们内部现在也对大模型安全非常重视，因为是要面向客户部署的。</p>
+<h2 id="京东">京东<a hidden class="anchor" aria-hidden="true" href="#京东">#</a></h2>
+<p>最傻逼的一集，面试官是一个中年男人。</p>
+<h3 id="一面-1">一面<a hidden class="anchor" aria-hidden="true" href="#一面-1">#</a></h3>
+<p>开局问你在学校学得最好的课程是什么，给我问懵了，我心想上次上课都已经是三年前的事情了啊，这个人在问什么东西，但还是说了一个web安全基础。然后被追问学习的方法是什么，怎么学的，我更懵逼了，说先学基础，然后找一些题目做做产生更深入的理解，最后去找一些更贴近实际的企业案例看看工业界的问题。他说不对不对，我换一个问法，像高数这样的科目你是怎么学的？</p>
+<p>由于事先知道这个岗位的hc只有一个，面对这样的傻逼面试官，我已经开始看时间想着早点结束吧。我和他说多做错题，多总结规律，下次面对类似的题目时候可以从题目的特征中看出相似的模式。最后他问我看没看过http的rfc，看没看过tcp/ip协议三大卷黑皮书，他说自己学习的时候那些都看过，不理解为什么我在学习的时候不去看这些，我心中无语，原来是过来炫耀来了。</p>
+<p>接着继续嘲讽我说觉得我做的东西太应用了，有没有看过更底层更基础的东西，直到我说自己看了kube-scheduler的源码给他讲了讲调度逻辑和我的解决方案之后才停下问我：“你觉得容器的单点应用和RBAC权限之间的区别是什么”，这俩是一个东西吗？这能比较吗？心里再次无语……然后在后续的RBAC相关的无厘头问题中我看出来了，他不懂这块的技术。</p>
+<p>然后又问了容器逃逸的原理是什么？我回答了错误配置和内核漏洞，被追问内核漏洞的细节，因为不熟所以只能稍微扯一点，但我知道他自己也不理解。</p>
+<p>继续傻逼时间，他问怎么去在集群范围内监控大量容器，我回答可以从内核态做功夫做监控，他说不可以用内核态因为可能影响用户业务，我说可以用ebpf，他还是说假如不用ebpf的话怎么监控（凭什么不用，傻逼吗？），我说流量可以用网关去监控，系统调用没什么方便的办法。</p>
+<p>然后问到那个蜜罐的中文垃圾论文，他特别在意为什么没有实时响应，我说了这只是一个调研属性的工作，上面的东西被打了也无所谓的，我们只想要日志，他还是揪着实时响应不放，末了来一句“我之前以为你是偏应用的，但是又感觉你和实际应用太脱节了”，再嘲讽一下说没实习过建议多出去看看。</p>
+<p>反问的时候我问他们在云原生防护这块有什么挑战和困难吗？他说他们没用k8s，全是kvm的……合着你们内部连个容器集群都没有啊，无语，面个屁。</p>
+<p>总结下来，有价值的技术问题一个都没有，本来还觉得就算去不了能在面试中学到点什么也不错，结果是纯浪费时间。</p>
+<p>刚结束字节就打电话过来说岗位不合适，给我推到北京这边的云安全了，连续两次打击让我开始怀疑自己了。</p>
+<h2 id="阿里云">阿里云<a hidden class="anchor" aria-hidden="true" href="#阿里云">#</a></h2>
+<p>一面和二面我都在自我介绍中详细介绍了自己的三个博士研究内容，让接下来的面试提问都围绕着我这边的内容展开，所以应付得还可以，没有问到什么八股。但是在最后hr面的时候挂了，问了一下那边说是没有hc了，唉，只能说是最有希望的一集。</p>
+<h2 id="天翼云">天翼云<a hidden class="anchor" aria-hidden="true" href="#天翼云">#</a></h2>
+<h3 id="一面-2">一面<a hidden class="anchor" aria-hidden="true" href="#一面-2">#</a></h3>
+<p>一面是夏令营，两个面试官一开始就直说他们不懂安全，所以我就把论文工作尽量讲得通俗易懂一些。之后一个云计算的面试官问了下对那些违法app产生的大量流量有什么办法识别和管控吗，因为他那边遇到了这样的问题，我想了想说也没有什么很好的办法，这块可以用一些机器学习的方法去做特征建模，但是加密流量识别还是比较困难的。</p>
+<h3 id="二面-1">二面<a hidden class="anchor" aria-hidden="true" href="#二面-1">#</a></h3>
+<p>主管和hr一起面的。主要问题就是围绕我做的工作，简单讲讲动机是什么、创新点在哪里，然后问了问倾向云计算方向还是网络安全方向，最后问了问期望薪资和工作地点就结束了，总共就二十分钟。</p>
+<h2 id="中国移动杭州研究院">中国移动杭州研究院<a hidden class="anchor" aria-hidden="true" href="#中国移动杭州研究院">#</a></h2>
+<p>问了问AI安全相关的知识，然后问有没有围绕AI安全的学术工作，我这边只有AI for security的一点工作，最后他们坦言他们想要的是做AI本身的安全的。</p>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/sec-neural-network-backdoor/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>神经网络后门攻击与防御学习</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/tech-langchain/">
+    <span class="title">Next »</span>
+    <br>
+    <span>看面经学LangChain</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+<script defer src

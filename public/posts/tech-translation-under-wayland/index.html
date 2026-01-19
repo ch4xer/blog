@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -22,7 +22,7 @@ notify-send &#34;title&#34; &#34;content&#34;
 以我的划词翻译为案例,  我在~/.config/sway/config中加入了这么一行作为划词翻译触发按键">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/tech-translation-under-wayland/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -51,23 +51,38 @@ notify-send &#34;title&#34; &#34;content&#34;
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-translation-under-wayland/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/tech-translation-under-wayland/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="wayland下的划词翻译解决方案">
   <meta property="og:description" content="对于我这种英语不好的人来说, 翻译是离不开的工具, 但是众所周知, Linux的日用软件生态相比较windows和macos来说相差甚远, 别说目前正处于发展阶段的wayland, 就连成熟透了的x11下也没有拿得出手的翻译软件. 作为一个英语不好的Linux爱好者, 缺少翻译软件必定会对日常的使用造成一定的影响, 于是开始思考怎么样解决这个问题.
@@ -154,20 +169,8 @@ notify-send &#34;title&#34; &#34;content&#34;
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -203,6 +206,11 @@ notify-send &#34;title&#34; &#34;content&#34;
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -218,13 +226,13 @@ notify-send &#34;title&#34; &#34;content&#34;
     <h1 class="post-title entry-hint-parent">
       wayland下的划词翻译解决方案
     </h1>
-    <div class="post-meta"><span title='2023-01-11 04:36:45 +0000 UTC'>January 11, 2023</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;498 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2023-01-11 04:36:45 +0000 UTC'>January 11, 2023</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>498 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_1bdbcb5f4844dc6d.jpg 360w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_98c87c041d6e5f78.jpg 480w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_cf781202a60e612d.jpg 720w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_4d799da1205c27e1.jpg 1080w,https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg 1107w'
+                srcset='https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_c1a4cc33ba271e68.jpg 360w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_e9130b653bf1a29b.jpg 480w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_a51681d2c6e822db.jpg 720w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_366c0352ff23d591.jpg 1080w,https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg 1107w'
                 src="https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1107" height="293"
@@ -321,12 +329,12 @@ notify-send &#34;title&#34; &#34;content&#34;
 </span></span><span class="line"><span class="cl">      <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&#34;data&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">        <span class="nx">data</span> <span class="o">+=</span> <span class="nx">chunk</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">      <span class="p">});</span> <span class="c1">// Ending the response
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&#34;end&#34;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span></span><span class="line"><span class="cl">      <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&#34;end&#34;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">content_list</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
 </span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="kr">final</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">        <span class="c1">// console.log(content_list)
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">index</span> <span class="o">&lt;</span> <span class="nx">content_list</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">index</span> <span class="o">&lt;</span> <span class="nx">content_list</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span><span class="nx">content_list</span><span class="p">[</span><span class="nx">index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">            <span class="kr">final</span> <span class="o">+=</span> <span class="nx">content_list</span><span class="p">[</span><span class="nx">index</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
 </span></span><span class="line"><span class="cl">          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
@@ -366,7 +374,7 @@ notify-send &#34;title&#34; &#34;content&#34;
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -381,9 +389,14 @@ notify-send &#34;title&#34; &#34;content&#34;
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -424,11 +437,12 @@ notify-send &#34;title&#34; &#34;content&#34;
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="Posts - ch4ser の 超元域">
 <meta name="author" content="">
 <link rel="canonical" href="https://dragonbox.top/posts/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="https://dragonbox.top/flash.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml">
+<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml" title="rss">
 <link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/">
 <noscript>
     <style>
@@ -40,23 +40,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="Posts">
   <meta property="og:locale" content="en-us">
@@ -81,20 +96,8 @@
 }
 </script>
 </head>
-
 <body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -130,6 +133,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -145,9 +153,79 @@
 </header>
 
 <article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2023年度总结
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 一事无成的一年, 但也算有所收获, 如果教训也算收获的话.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-02-09 22:31:25 +0000 UTC'>February 9, 2024</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>162 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 2023年度总结" href="https://dragonbox.top/posts/gossip-2023-summary/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Learning eBPF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>eBPF 是一项革命性的技术, 起源于Linux 内核, 它可以在特权上下文中(如操作系统内核)运行沙盒程序. 它用于安全有效地扩展内核的功能, 而无需通过更改内核源代码或加载内核模块的方式来实现. 从历史上看,由于内核具有监督和控制整个系统的特权,操作系统一直是实现可观测性, 安全性和网络功能的理想场所.
+对ebpf慕名许久, 正好趁寒假拜读一下Learning eBPF, 虽然是基于略过时的框架bcc, 但是在这个过程中学到的知识想必依旧可以迁移到别的框架去.
+Background and pre-knowledge bcc bcc的ebpf c代码不是真正的C, 而是bcc自己定义的一种和C类似的语言.
+limitation of ebpf program eBPF 程序必须被验证器校验通过后才能执行，且不能包含无法到达的指令； eBPF 程序不能随意调用内核函数，只能调用在 API 中定义的辅助函数； eBPF 程序栈空间最多只有 512 字节，想要更大的存储，就必须要借助映射存储； 在内核 5.2 之前，eBPF 字节码最多只支持 4096 条指令，而 5.2 内核把这个限制提高到了 100 万条； 由于内核的快速变化，在不同版本内核中运行时，需要访问内核数据结构的 eBPF 程序很可能需要调整源码，并重新编译。 tracepoint and kprobe tracepoint其实就是在Linux内核的一些关键函数中埋下的hook点,这样在tracing的时候,我们就可以在这些固定的点上挂载调试的函数,然后查看内核的信息.
+Tracepoint是在内核中固定的hook点, 并不是在所有的函数中都有tracepoint. 这时候, 我们就需要用到kprobe了. kprobe可以动态地在所有的内核函数(除了inline函数)上挂载probe函数
+eBPF virtual machine The ebpf virtual machine uses 10 general-purpose registers (0-9), and additional register 10 which was used as a stack frame pointer (can only be read but not written). As a BPF program is executed, values get stored in these registers to keep track of state.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-02-04 00:06:15 +0000 UTC'>February 4, 2024</span>&nbsp;·&nbsp;<span>9 min</span>&nbsp;·&nbsp;<span>1874 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to Learning eBPF" href="https://dragonbox.top/posts/tech-learning-ebpf/"></a>
+</article>
+
+<article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_b4446831226aefd9.png 360w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_66c34e24d3d81375.png 480w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_7eea10ed8b2d5456.png 720w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871.png 877w'
+                srcset='https://dragonbox.top/posts/gossip-rip-clash/404_hu_eb046c21a0ae0582.png 360w,https://dragonbox.top/posts/gossip-rip-clash/404_hu_95041d7efa32161.png 480w,https://dragonbox.top/posts/gossip-rip-clash/404_hu_8a9675d87e1c4555.png 720w,https://dragonbox.top/posts/gossip-rip-clash/404_hu_fa4b4ffdc3980673.png 1080w,https://dragonbox.top/posts/gossip-rip-clash/404_hu_d09ba63aac058c7d.png 1500w,https://dragonbox.top/posts/gossip-rip-clash/404.png 1825w'
+                src="https://dragonbox.top/posts/gossip-rip-clash/404.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1825" height="676"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">RIP Clash
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>2023年11初,简中互联网又发生了一出闹剧,不过于以往的过眼云烟所不同的是,这次的事件导致了一系列优秀开源软件的消亡.
+起因 事件的经过其实并不复杂.11.2,clash for windows 的作者删除了github上用于发布的仓库中的信息,并在个人telegram频道上宣布不再开发.由于cfw的操作简单,对小白友好,因此其用户数量相当之大.删库的消息出来后,网友们纷纷开始关注作者的社交账号,对是否因信息泄露导致被抓加以猜测.其实对于一个网络代理软件来说,无论是因为被请喝茶还是因为作者不想干了而删库都是一件很正常的事情.
+如果事情仅仅到这里就结束,那么大家顶多也就感慨一句过去说烂了的那些话,甚至对于开源主义者来说连感慨都没有,因为cfw本身就是一个闭源软件,而github仅仅是用来发布二进制包的.
+但是事情没有那么简单.
+clash for windows是基于开源的clash core核心代码做的图形化客户端工具,而该核心代码同样是一系列类似软件（例如clash x, clash meta）的基础组件.或许是出于对clash core作者的尊重,这些项目的名称中也都包含了clash字样.
+通常情况下,开发者并不会在意自己的软件被普通用户和其他clash相关软件搞混.而对于cfw用户,尤其是其中的小白用户来说,他们中的大部分仅仅接触过cfw,因此在口口相传中会自然而然地将clash这个有特征的词作为clash for windows的指代以节约沟通成本,cfw是clash, clash是cfw.
+因此,cfw被删库后,消息通过互联网在用户群体之间开始广泛传播开来,很快就演变为了下面这张图上的消息.
+假消息只是第一步.对于大部分cfw的用户来说,他们似乎并不知道此种软件的敏感程度和软件作者所面临的风险,他们只是在盲目地在各大社交媒体上发问,而很遗憾却也意料之中的,这其中,包括了微博.
+前面提到,cfw的低门槛为它带来了众多的用户,而现在,这些用户将成为压死所有clash相关项目的稻草.由于提问和吃瓜的人太多,相关话题的热度不断上升,该话题很快出现在了微博的热搜上.
+于是事情失控了.
+结果 11月3号,出于对自身安全的考虑,几乎所有clash相关软件作者,包括clash内核项目作者,集体将代码库删除.一个持续了数年,帮助到许多网民的软件,却因为网民们的无知,在一天之间内尽数消亡.整个过程实在太快,快得根本不像有关部门的有组织行动.因为驱使项目消亡的,仅仅只是网民们的狂欢,和开源作者们的恐惧.
+而可悲的是,在删库时间结束后,clash在微博的话题热度更高了,是的,没有人关心项目作者是否会因为这场风波而被捕入狱,他们只想四处打听,吃瓜,并迫切地希望看到血流成河. 一直到现在, 有关话题在telegram上还在被持续不断的争论中, 其中跳出了一些人来试图通过捏造事实抹黑多位作者来洗脱自身的责任.
+可笑的是,当被要求放出对应的项目时,此人开始转移话题,并且在他臆想的情况下,对作者进行了人身攻击.
+可悲的是,这种人在这场风波中并不少见,他们不仅仅是无知,更是无耻.
+教训 其实单纯责怪用户并没有什么意义,毕竟像cfw这样方便的软件,其用户群体是鱼龙混杂的,要求他们集体提升相关的意识也是不现实的,所以很遗憾,尽管我们可以斥责部分的微博用户,但是归根到底,如何改变此类软件尤其是开源软件的危险现状,作者该做出什么样的改变来更好地保护自己,才是更有现实意义的话题.
+具体来说, 对我而言, 除非开源软件合法合规,否则:
+不要做windows平台下的软件 不要在项目中包含简体中文说明 不要取朗朗上口好记的项目名 控制推广范围,就是对作者最大的保护 尽管以上措施会限制软件的使用范围,但是对于此类软件来说,开发者的人身安全才是第一位的.
+只是,这些教训,对于已经消亡的项目来说,已经太迟了.
+参考 https://github.com/net4people/bbs/issues/303 https://www.eaimty.com/2023/opensource-project-based-on-hormone/
+</p>
+  </div>
+  <footer class="entry-footer"><span title='2023-11-04 10:13:59 +0000 UTC'>November 4, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>46 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to RIP Clash" href="https://dragonbox.top/posts/gossip-rip-clash/"></a>
+</article>
+
+<article class="post-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_5c0252724d62e810.png 360w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_14d7a8d89b4f2e7b.png 480w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871_hu_9bef4831b8f8a81b.png 720w,https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871.png 877w'
                 src="https://dragonbox.top/posts/gossip-beijing-travel-2023-2/image-20231031004630871.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="877" height="505"
@@ -167,14 +245,14 @@
 来到苏州街, 我和yq沿河而行, 小心路过一间间无人的商铺. 昔日皇帝为在此重现江南风情, 仿照水镇在此地建造了买卖街, 专供宫中人游览, 即所谓&#34;宫市&#34;. 这个地方1860被列强烧毁, 一百多年后才由共和国重建, 然而我对此类皇室娱乐并不感冒, 只是紧张地一遍遍提醒不停拍照的yq小心别把手机丢进河里.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-10-30 21:35:04 +0000 UTC'>October 30, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;191 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-10-30 21:35:04 +0000 UTC'>October 30, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>191 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 2023 记北京秋游" href="https://dragonbox.top/posts/gossip-beijing-travel-2023-2/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_39473456c8ccf243.png 360w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_dd2e37934c44fdc3.png 480w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_e6192201efc14659.png 720w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png 867w'
+                srcset='https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_3644e26fe309895d.png 360w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_e739e5ac9bc03413.png 480w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_c714984701ed9b6e.png 720w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png 867w'
                 src="https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="867" height="540"
@@ -193,7 +271,7 @@
 购买机器 查看lineageos支持的设备列表, 出于对一加的偏好和对骁龙888发热的不放心, 我选择以一加8pro作为自己的新设备. 在咸鱼上逛了很久, 筛掉一大批机器贩子和低质量卖家后, 我看中了一位宝妈的二手机并下单. 机器到手后我非常满意, 因为成色实在是很好, 连维修店里给我手机换电池的工程师也赞叹保养得不错, 这1700虽然有点贵, 但还是值得的.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-08-13 21:34:53 +0000 UTC'>August 13, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;124 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-08-13 21:34:53 +0000 UTC'>August 13, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>124 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to lineageos使用体验" href="https://dragonbox.top/posts/tech-lineageos-md/"></a>
 </article>
 
@@ -206,7 +284,7 @@
     <p> 乱世之中, 唯有自我与我所爱值得珍惜
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-08-02 22:42:20 +0000 UTC'>August 2, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;16 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-08-02 22:42:20 +0000 UTC'>August 2, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>16 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 动荡时代" href="https://dragonbox.top/posts/gossip-unstable-software/"></a>
 </article>
 
@@ -219,7 +297,7 @@
     <p> 现在回头看几年前自己写的插件配置文章, 看着那些曾经用过但后来都纷纷被替代的插件, 我会莫名怀念那段因计算机和终端而兴奋不已的自己.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-06-07 09:32:57 +0000 UTC'>June 7, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;163 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-06-07 09:32:57 +0000 UTC'>June 7, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>163 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 我的neovim" href="https://dragonbox.top/posts/tech-neovim2023/"></a>
 </article>
 
@@ -232,7 +310,7 @@
     <p>难得黄小姐来一次北京, 作为肥宅的自己紧急规划了一下游玩路线, 发现北京可玩的地方相当的多, 这里仅仅记录这次游玩所经过的三个景区.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-04-26 22:54:10 +0000 UTC'>April 26, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;58 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-04-26 22:54:10 +0000 UTC'>April 26, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>58 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 2023 小游京城" href="https://dragonbox.top/posts/gossip-beijing-travel-2023/"></a>
 </article>
 
@@ -245,7 +323,7 @@
     <p> eye candy也是一种生产力!
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-04-25 21:33:47 +0000 UTC'>April 25, 2023</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;245 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-04-25 21:33:47 +0000 UTC'>April 25, 2023</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>245 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 优化neovim markdown中的treesitter高亮" href="https://dragonbox.top/posts/tech-neovim-treesitter-markdown/"></a>
 </article>
 
@@ -258,14 +336,14 @@
     <p> “一个黑暗的形体，像一个匍匐的人一般大小，但是长着长长的蜘蛛一样的肢体……黑暗中的形体以惊人的速度向他奔来。当它靠近时，他看到那蹲坐着的乌黑身体上有一张脸，在身体底部那些多节的腿之间。那张面孔用一种怀疑和质问的可憎表情凝视着他；而当这个大胆的猎人与那小而狡诈的，四周全是毛发的眼睛对视时，恐惧流遍了他的每一根血管。”
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-04-06 21:29:58 +0000 UTC'>April 6, 2023</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;280 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-04-06 21:29:58 +0000 UTC'>April 6, 2023</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>280 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 树莓派搭载clash作为旁路由" href="https://dragonbox.top/posts/tech-openwrt-rasp/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-ext4-to-btrfs/btrfs_hu_80fd3f2071199f8a.jpeg 360w,https://dragonbox.top/posts/tech-ext4-to-btrfs/btrfs.jpeg 474w'
+                srcset='https://dragonbox.top/posts/tech-ext4-to-btrfs/btrfs_hu_f1fe51c5d5ed0916.jpeg 360w,https://dragonbox.top/posts/tech-ext4-to-btrfs/btrfs.jpeg 474w'
                 src="https://dragonbox.top/posts/tech-ext4-to-btrfs/btrfs.jpeg"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="474" height="302"
@@ -289,14 +367,14 @@ grub-mkconfig -o /boot/grub/grub.cfg 重建grub引导 在上一步的chroot环�
 grub-mkconfig -o /boot/grub/grub.cfg 大功告成, 退出chroot, 重启电脑就可以进入你的系统了, 唯一的不同是它已经是btrfs了.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-01-16 05:28:51 +0000 UTC'>January 16, 2023</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;237 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-01-16 05:28:51 +0000 UTC'>January 16, 2023</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>237 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to ext4到btrfs转换记录" href="https://dragonbox.top/posts/tech-ext4-to-btrfs/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_1bdbcb5f4844dc6d.jpg 360w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_98c87c041d6e5f78.jpg 480w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_cf781202a60e612d.jpg 720w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_4d799da1205c27e1.jpg 1080w,https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg 1107w'
+                srcset='https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_c1a4cc33ba271e68.jpg 360w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_e9130b653bf1a29b.jpg 480w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_a51681d2c6e822db.jpg 720w,https://dragonbox.top/posts/tech-translation-under-wayland/1_hu_366c0352ff23d591.jpg 1080w,https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg 1107w'
                 src="https://dragonbox.top/posts/tech-translation-under-wayland/1.jpg"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1107" height="293"
@@ -315,14 +393,14 @@ notify-send &#34;title&#34; &#34;content&#34; 那么接下来的问题: 如何�
 使用剪切板获取到选中文本的内容, 可以使用wl-paste -p来获取 获取文本之后, 将换行符替换成空格 (这块可以有更好的处理方法, 简单起见就全换掉了), 使用sed 文本处理完毕后, 将文本输入进translate.js中进行翻译, (这块可以使用别的现成工具) 翻译结果出来之后, 将结果以系统通知的形式呈现出来, 当然, 系统通知必须要有, 可以是dunst, mako, swaync, 以及kde或者gnome的桌面消息通知都可以. 发送翻译结果使用命令notify-send &#34;标题&#34; &#34;翻译内容&#34; 以我的划词翻译为案例, 我在~/.config/sway/config中加入了这么一行作为划词翻译触发按键
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-01-11 04:36:45 +0000 UTC'>January 11, 2023</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;498 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-01-11 04:36:45 +0000 UTC'>January 11, 2023</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>498 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to wayland下的划词翻译解决方案" href="https://dragonbox.top/posts/tech-translation-under-wayland/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_7cacb4d67dbdd4a3.png 360w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_e354c8cbbdffb2f2.png 480w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_1de66c036b5c4a2f.png 720w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_17198733bd29b85b.png 1080w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998.png 1292w'
+                srcset='https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_2adc01ff984443b9.png 360w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_2fc38466a9c8523e.png 480w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_da74fde8b7d56a24.png 720w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998_hu_4d45878acef645d0.png 1080w,https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998.png 1292w'
                 src="https://dragonbox.top/posts/tech-arm-firefox/image-20230109230723998.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1292" height="518"
@@ -344,7 +422,7 @@ extensions.webextensions.restrictedDomains清空掉 privacy.resistFingerprinting
 # Insert your preferred key mappings here. unmapAll map H previousTab map J previousTab map L nextTab map K nextTab map &lt;c-j&gt; scrollPageDown map &lt;c-k&gt; scrollPageUp map &lt;c-o&gt; goBack map &lt;c-i&gt; goForward map o Vomnibar.activateInNewTab map b Vomnibar.activateBookmarksInNewTab map t Vomnibar.activateTabSelection map M LinkHints.activateModeToOpenInNewTab map m LinkHints.activateModeToOpenInNewForegroundTab map gi focusInput map gg scrollToTop map G scrollToBottom map j scrollDown map k scrollUp map h scrollLeft map l scrollRight map x removeTab map X restoreTab map ? showHelp map yy copyCurrentUrl map p openCopiedUrlInNewTab Tip: 如果在某次更新之后发现插件不可用了, 那么可以考虑临时切换到另一个类似的插件 Vimium C , 把相同的键位复制进去就行啦.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2023-01-09 23:04:29 +0000 UTC'>January 9, 2023</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;247 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2023-01-09 23:04:29 +0000 UTC'>January 9, 2023</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>247 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 武装火狐" href="https://dragonbox.top/posts/tech-arm-firefox/"></a>
 </article>
 
@@ -357,7 +435,7 @@ extensions.webextensions.restrictedDomains清空掉 privacy.resistFingerprinting
     <p> 2022年是一个记得被纪念的年份, 不是因为它有多好, 而是因为它有多现实
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-31 22:31:25 +0000 UTC'>December 31, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;88 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-31 22:31:25 +0000 UTC'>December 31, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>88 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 2022年度总结" href="https://dragonbox.top/posts/gossip-2022-summary/"></a>
 </article>
 
@@ -370,14 +448,14 @@ extensions.webextensions.restrictedDomains清空掉 privacy.resistFingerprinting
     <p> 生命本就如此脆弱
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-20 22:45:44 +0000 UTC'>December 20, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;46 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-20 22:45:44 +0000 UTC'>December 20, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>46 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 小阳人日记" href="https://dragonbox.top/posts/gossip-yang-diary-md/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_2db041762eb466b9.png 360w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_e7c8973c3160e33d.png 480w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_29694b55269243ae.png 720w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_5365c77e27aee527.png 1080w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_919f48bb7fef8117.png 1500w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646.png 2400w'
+                srcset='https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_bd55aafe4683e019.png 360w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_e213debe39597e49.png 480w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_202db49e370e2c60.png 720w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_8199473270c478a0.png 1080w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646_hu_ed1535dcd32af828.png 1500w,https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646.png 2400w'
                 src="https://dragonbox.top/posts/tech-arch-sway/image-20221217132544646.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="2400" height="1350"
@@ -408,7 +486,7 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
 桌面环境 SwayWM（窗口管理） waybar（信息展示栏） 终端 alacritty 浏览器 firefox-developer-edition （主力） chrome 输入法 fcitx5 代码编辑 Neovim（主力） Vscode（副手） Jetbrains 做笔记 Neovim-qt zotero 文件浏览器 ranger dolphin 看论文 zotero okular 游戏 steam（泰拉瑞亚、黑暗之魂……） waydroid（明日方舟） HMCL（minecraft） 工具替代 exa 替代 ls zoxide 替代 cd scp 替代 cp Trouble Shooting 关机的时候出现 a stoping job is running for xxx hangout 修改/etc/systemd/system.conf
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-17 14:24:23 +0000 UTC'>December 17, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;171 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-17 14:24:23 +0000 UTC'>December 17, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>171 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 使用Arch Linux &#43; Sway一年后" href="https://dragonbox.top/posts/tech-arch-sway/"></a>
 </article>
 
@@ -421,7 +499,7 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
     <p> 在消磨三年时光之后，我终于明白这个编辑器还远远称不上稳定，在道路的尽头之前，我能做的其实只有观望。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-15 12:04:12 +0000 UTC'>December 15, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;119 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-15 12:04:12 +0000 UTC'>December 15, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>119 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to vim/neovim 的问题" href="https://dragonbox.top/posts/tech-thinking-about-vim/"></a>
 </article>
 
@@ -434,7 +512,7 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
     <p> 在争取自由这个宏大命题下, 上网自由可以算得上一件&#34;小事&#34;, 然而越是小事, 越与我们的日常息息相关.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-12 20:17:03 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;46 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-12 20:17:03 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>46 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 在红米ac2100路由器上开启clash" href="https://dragonbox.top/posts/tech-clash-ac2100/"></a>
 </article>
 
@@ -447,7 +525,7 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
     <p> 超元域这个词, 出自雪崩这本书, 人们在这个虚拟世界中可以随意行事, 尽情做自己, 这也是我的初衷: 把发言权还给我
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-12 14:49:41 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;92 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-12 14:49:41 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>92 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 服务器过期之后" href="https://dragonbox.top/posts/gossip-boring-note-md/"></a>
 </article>
 
@@ -460,47 +538,8 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
     <p>环境问题, 一生之敌.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-12-12 12:17:49 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;336 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-12-12 12:17:49 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>336 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to virtualbox中搭建kubernetes集群" href="https://dragonbox.top/posts/tech-k8s-setup/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">2021年度总结
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>这是一篇拖延了很久的年度总结,在下决心写它的时候,我已经从过年开始无所事事地玩了十几天的游戏了,本来说好要在过年那天写的总结也一直到现在才开始动笔,着实是惭愧.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2022-02-09 16:12:20 +0000 UTC'>February 9, 2022</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;19 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to 2021年度总结" href="https://dragonbox.top/posts/gossip-2021-summary/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">pwnable尝试
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>尝试学pwn,放弃学pwn
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2022-01-27 17:48:33 +0000 UTC'>January 27, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;334 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to pwnable尝试" href="https://dragonbox.top/posts/sec-pwnable/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">shiro 漏洞复现
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> 记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2022-01-22 10:52:46 +0000 UTC'>January 22, 2022</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;713 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to shiro 漏洞复现" href="https://dragonbox.top/posts/sec-shiro-attack/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
@@ -514,7 +553,7 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -529,9 +568,14 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -572,11 +616,12 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

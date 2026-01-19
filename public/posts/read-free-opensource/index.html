@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,7 +14,7 @@
 从我的角度来看, 虽然很遗憾, 但是自开源运动成长起来后, 自由软件存在的意义就没有以前那么大了, 甚至说的不客气一些, 微乎其微. 这是需要联系历史背景来看的, 在自由软件运动诞生的那个年代, 软件行业极度闭塞, 互联网才刚刚诞生, 各个公司都在自己蒙头闭门造车, 极尽所能保护自家的代码不被公开, 相互之间更不用说有什么兼容合作了. 自由软件的诞生是对那个封闭环境的一种彻头彻尾的反叛, 它以一种偏激的姿态在软件行业逐渐打动了一批人, 也培养起了别具一格更加开放的文化.">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/read-free-opensource/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -43,23 +43,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/read-free-opensource/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/read-free-opensource/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="若为自由故, 软件皆可抛">
   <meta property="og:description" content="借着&#34;若为自由故&#34;这本书, 读者可以更深刻地理解开源软件与自由软件的异同之处. 由于在实际情况中, 二者都开放了源代码, 大部分情况下也都会采用互相兼容甚至相同的协议, 因此其中的区别在越来越多人眼里逐渐模糊. 如今的软件行业, 大多数人在表达相同意思时更加倾向于使用&#34;Open-source&#34;而不是&#34;Free&#34;这个词, 不仅能够直观清晰地表达信息, 也能避免&#34;Free&#34;这个单词常用的&#34;免费&#34;之意 (为了人们认识到&#34;Free software&#34;中的Free不是免费而是自由的意思, Stallman 可强调了许多次, 但很遗憾, 大部分公司在听到他的强调前就会被吓跑). 但只要了解过自由软件和开源软件的历史, 就能发现其中差距并不在技术而是在道德层面上的分歧.
@@ -135,20 +150,8 @@
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -184,6 +187,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -199,7 +207,7 @@
     <h1 class="post-title entry-hint-parent">
       若为自由故, 软件皆可抛
     </h1>
-    <div class="post-meta"><span title='2024-03-23 22:57:50 +0000 UTC'>March 23, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;123 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2024-03-23 22:57:50 +0000 UTC'>March 23, 2024</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>123 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
@@ -237,7 +245,7 @@
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -252,9 +260,14 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -295,11 +308,12 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

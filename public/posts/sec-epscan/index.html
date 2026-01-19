@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>(论文&amp;代码阅读)EPScan:Automated Detection of Excessive RBAC Permissions in Kubernetes Applications. | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="EPScan:Automated Detection of Excessive RBAC Permissions in Kubernetes Applications.
+
+遥想去年开题思考博士研究点的时候，就有分析Kubernetes RBAC过度授权的问题，那个时候刚好就看到了这篇论文，只好含恨想别的。今年复旦的团队总算把源码放出来了，于是就有了这篇阅读笔记。
+
+Paper
+Source Code
+Background
+RBAC is a critical component of Kubernetes security, but excessive permissions can lead to vulnerabilities. Currently, there is no work that identify whether the application requires all the permissions granted by the developer or, some of them are excessivly granted. This work aims to automate the detection of excessive RBAC permissions in Kubernetes applications, which can help developers and security teams to identify and mitigate potential security risks.">
+<meta name="author" content="ch4xer">
+<link rel="canonical" href="http://localhost:1313/posts/sec-epscan/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/flash.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/flash.ico">
+<link rel="mask-icon" href="http://localhost:1313/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/sec-epscan/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="http://localhost:1313/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      (论文&amp;代码阅读)EPScan:Automated Detection of Excessive RBAC Permissions in Kubernetes Applications.
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta"><span title='2025-07-31 16:20:47 +0800 CST'>July 31, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1064 words&nbsp;·&nbsp;ch4xer
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#background">Background</a></li>
+    <li><a href="#approach">Approach</a>
+      <ul>
+        <li><a href="#rbac-centered-configuration-analysis">RBAC-centered Configuration Analysis</a></li>
+        <li><a href="#llm-assisted-pod-program-matching-to-solve-c1">LLM-assisted Pod-Program Matching (to solve C1)</a></li>
+        <li><a href="#refgraph-based-program-behavior-analysis">RefGraph-based Program Behavior Analysis</a></li>
+        <li><a href="#excessive-permission-detection">Excessive permission detection</a></li>
+      </ul>
+    </li>
+    <li><a href="#evaluation">Evaluation</a></li>
+    <li><a href="#code">Code</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="epscanautomated-detection-of-excessive-rbac-permissions-in-kubernetes-applications">EPScan:Automated Detection of Excessive RBAC Permissions in Kubernetes Applications.<a hidden class="anchor" aria-hidden="true" href="#epscanautomated-detection-of-excessive-rbac-permissions-in-kubernetes-applications">#</a></h1>
+<blockquote>
+<p>遥想去年开题思考博士研究点的时候，就有分析Kubernetes RBAC过度授权的问题，那个时候刚好就看到了这篇论文，只好含恨想别的。今年复旦的团队总算把源码放出来了，于是就有了这篇阅读笔记。</p>
+</blockquote>
+<p><a href="https://ieeexplore.ieee.org/abstract/document/11023379/">Paper</a>
+<a href="https://github.com/seclab-fudan/EPScan">Source Code</a></p>
+<h2 id="background">Background<a hidden class="anchor" aria-hidden="true" href="#background">#</a></h2>
+<p>RBAC is a critical component of Kubernetes security, but excessive permissions can lead to vulnerabilities. Currently, there is no work that identify whether the application requires all the permissions granted by the developer or, some of them are excessivly granted. This work aims to automate the detection of excessive RBAC permissions in Kubernetes applications, which can help developers and security teams to identify and mitigate potential security risks.</p>
+<h2 id="approach">Approach<a hidden class="anchor" aria-hidden="true" href="#approach">#</a></h2>
+<p>Given a third-party application, EPScan (the tool developed by the authors) determines the permissions required by application pods based on source code analysis and compares them with the permissions granted by the RBAC policies to identify excessive permissions.</p>
+<p>Challenges:</p>
+<ul>
+<li>(C1) How to identify source code entry for executables running in the pod, as cloud native applications always consist of multiple pods?</li>
+<li>(C2) How to identify and model resource access behavior in the source code?</li>
+<li>(C3) How to determine the reachable resource access for each program?</li>
+</ul>
+<p><img alt="Arichitecture" loading="lazy" src="/posts/sec-epscan/architecture.png"></p>
+<h3 id="rbac-centered-configuration-analysis">RBAC-centered Configuration Analysis<a hidden class="anchor" aria-hidden="true" href="#rbac-centered-configuration-analysis">#</a></h3>
+<p>This step extracts and formats the RBAC permissions from configuration files.</p>
+<h3 id="llm-assisted-pod-program-matching-to-solve-c1">LLM-assisted Pod-Program Matching (to solve C1)<a hidden class="anchor" aria-hidden="true" href="#llm-assisted-pod-program-matching-to-solve-c1">#</a></h3>
+<ol>
+<li>download the image of the application pod</li>
+<li>generates a prompt based on the contents of the startup commands and scripts collected from the container image</li>
+<li>use LLM to identify the executable files in the image (use few-shot learning to format the output from LLM), and extracts them from it.</li>
+<li>locate the code entry of these executables in source code repository via runtime information within the executable files, such as <strong>the file path of the function&rsquo;s source code</strong>, then identify the <code>main</code> function in the code entry.</li>
+</ol>
+<h3 id="refgraph-based-program-behavior-analysis">RefGraph-based Program Behavior Analysis<a hidden class="anchor" aria-hidden="true" href="#refgraph-based-program-behavior-analysis">#</a></h3>
+<p>After finding the source code entry, it&rsquo;s time to dig the program behaviors where RBAC permissions involved.</p>
+<ol>
+<li>locates the call sites for all resource access APIs</li>
+<li>constructs the RefGraph of the application and determine the reachability of call sites.</li>
+</ol>
+<h4 id="call-sites-locating">Call sites locating<a hidden class="anchor" aria-hidden="true" href="#call-sites-locating">#</a></h4>
+<p>Kubernetes provides two libraries for resource access: client-go and controller-runtime</p>
+<ul>
+<li>client-go: most common used library for resource access.</li>
+<li>controller-runtime: library for building K8s controllers and operators.</li>
+</ul>
+<p>This paper analyse the api usages of these two libraries, and summarize the following types of call sites:</p>
+<ol>
+<li>
+<p>the resource is the receiver of api call, EPScan captures the type of the receiver to represent the resource type.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">dep</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">clientset</span><span class="p">.</span><span class="nf">AppsV1</span><span class="p">().</span><span class="nf">Deployments</span><span class="p">(</span><span class="nx">ns</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">dep</span><span class="p">.</span><span class="nf">Delete</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;demo-deployment&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div></li>
+<li>
+<p>the resource is the parameter of api call, EPScan locates the first place on the data flow where the object exists as a non-common interface type and treats that type as the resource type.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">obj</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">appsv1</span><span class="p">.</span><span class="nx">Deployment</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="o">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">client</span><span class="p">.</span><span class="nf">Delete</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">obj</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div></li>
+<li>
+<p>the resource is collected by watching from other places , and filterd with certain conditions. EPScan models these APIs by performing data flow analysis on the parameters to verify if the input parameters are constant strings, collecting these constant strings to represent the resource type.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">lw</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nf">NewListWatchFromClient</span><span class="p">(</span><span class="nx">client</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;deployments&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">ns</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div></li>
+</ol>
+<h4 id="refgraph-construction">RefGraph Construction<a hidden class="anchor" aria-hidden="true" href="#refgraph-construction">#</a></h4>
+<p>After identifying the resource access behavior, an accurate reachability analysis is required to identify the resource access reachable from each main entry. However, the traditional call graph construction method is ineffective on third-party applications, cause</p>
+<ul>
+<li>most function call chains are very deep, containing a large number of external library functions, whch affect the accuracy of traditional call-graph analysis.</li>
+<li>Second, third-party applications sometimes use callback and function pointers, whch are not well supported by call graph analysis.</li>
+</ul>
+<p>So, The differences between Call Graph and RefGraph?</p>
+<p>A Call graph is a straightforward concept:</p>
+<ul>
+<li>Nodes: Represent individual functions or methods</li>
+<li>Edges: Represent a direct call from one function to another.</li>
+</ul>
+<p>A Reference Graph is created by the author, <strong>which extends the scope of tracking</strong>. Each edge of RefGraph represents one of the following types of relationship between function, global variable of type.</p>
+<p>The RefGraph is constructed using CodeQL.</p>
+<h5 id="function-call">Function call<a hidden class="anchor" aria-hidden="true" href="#function-call">#</a></h5>
+<p>function A contains a direct call to function B</p>
+<pre tabindex="0"><code>predicate cgEdge(Function a, Function b) { b.getACall().getRoot().(FuncDecl).getFunction() = a }
+</code></pre><h5 id="function-reference-in-another-function">Function reference in another function<a hidden class="anchor" aria-hidden="true" href="#function-reference-in-another-function">#</a></h5>
+<p>function A contains a reference of function B</p>
+<blockquote>
+<p><strong>Reference is different from being called</strong>. A reference means its name is used, for example, to assign it to a variable or pass it as an argument.</p>
+</blockquote>
+<pre tabindex="0"><code>predicate methodRefEdge(Function a, Function b) { b.getAReference().getParent+().(FuncDecl).getFunction() = a and a != b}
+</code></pre><p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">workerTask</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">setupAndRun</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Here, &#39;workerTask&#39; is referenced and assigned to a variable.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// It is NOT directly called as workerTask().</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">taskToRun</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">workerTask</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The task is executed later via the variable.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nf">taskToRun</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h5 id="package-import">Package import<a hidden class="anchor" aria-hidden="true" href="#package-import">#</a></h5>
+<p>A package containing <code>init</code> function is imported in main package, which triggers <code>init</code> automatically.</p>
+<pre tabindex="0"><code>class EntryFunction extends Function {
+  EntryFunction() { this.hasQualifiedName(_, &#34;main&#34;) }
+}
+
+class InitFunction extends Function {
+  InitFunction() { this.getName() = &#34;init&#34; }
+
+  Package getActualPackage() {
+    exists(PackagedFile pkgFile
+      | this.getFuncDecl().getFile() = pkgFile
+      | result = pkgFile.getPackage())
+  }
+}
+
+predicate entryCallInit(Function a, Function b) {
+    initCalling(a, b)
+}
+
+predicate initCalling(EntryFunction entry, InitFunction init) {
+  packageImports*(entry.getPackage(), init.getActualPackage())
+}
+</code></pre><h5 id="global-variable-usage-in-function">Global variable usage in function<a hidden class="anchor" aria-hidden="true" href="#global-variable-usage-in-function">#</a></h5>
+<pre tabindex="0"><code>predicate functionUseGv(Function f, GlobalVar gv) {
+  f.getBody() = gv.getAReference().getParent+()
+}
+</code></pre><h5 id="type-reference-in-function">Type reference in function<a hidden class="anchor" aria-hidden="true" href="#type-reference-in-function">#</a></h5>
+<p>A struct type is refered in function.</p>
+<pre tabindex="0"><code>predicate typeRefInFunction(Function f, Type typ) {
+  isNamedStructType(typ) and
+  typ.getEntity().getAReference().getParent*() = f.getBody()
+}
+</code></pre><p>Example:</p>
+<pre tabindex="0"><code>type Pod struct {
+  ApiVersion string
+  Kind       string
+}
+
+// This function references the &#39;Pod&#39; type.
+func createPodObject() Pod {
+  // A reference to the &#39;Pod&#39; type is used here to declare the variable &#39;p&#39;.
+  p := Pod{ApiVersion: &#34;v1&#34;, Kind: &#34;Pod&#34;}
+  return p
+}
+</code></pre><h5 id="global-variablegv-declaration-contains-another-gv">Global variable(gv) declaration contains another gv<a hidden class="anchor" aria-hidden="true" href="#global-variablegv-declaration-contains-another-gv">#</a></h5>
+<pre tabindex="0"><code>class GlobalVar extends ValueEntity {
+    GlobalVar() {
+        this.getDeclaration().getParent().getParent().getParent() instanceof File
+    }
+
+    GlobalVarAssign getDeclAssign() {
+        result = this.getDeclaration().getParent()
+    }
+}
+
+predicate gvDefByGv(GlobalVar gv, GlobalVar gvUsed) { gv.getDeclAssign().getAUsedVar() = gvUsed }
+</code></pre><h5 id="global-variable-declaration-contains-function">Global variable declaration contains function<a hidden class="anchor" aria-hidden="true" href="#global-variable-declaration-contains-function">#</a></h5>
+<pre tabindex="0"><code>predicate gvDefByFunction(GlobalVar gv, Function f) {
+  gv.getDeclAssign() = f.getAReference().getParent+().(GlobalVarAssign)
+}
+</code></pre><h5 id="call-method-on-receiver-of-specific-type">Call method on receiver of specific type<a hidden class="anchor" aria-hidden="true" href="#call-method-on-receiver-of-specific-type">#</a></h5>
+<pre tabindex="0"><code>predicate methodToReceiverType(Type typ, Function f) {
+  f.getFuncDecl()
+    .getAChild()
+    .(ReceiverDecl)
+    .getAChild*()
+    .(TypeName)
+    .getType() = typ
+}
+</code></pre><h4 id="reachability-approximation">Reachability Approximation<a hidden class="anchor" aria-hidden="true" href="#reachability-approximation">#</a></h4>
+<p>After RefGraph construction, EPscan can utilize the RefGraph to approximate the reachability <strong>from resource access API call sites to code entry points</strong>, thus filtering out unreachable API call sites.</p>
+<pre tabindex="0"><code>predicate edges(RefGraph::PathNode pred, RefGraph::PathNode succ) {
+    RefGraph::edges(pred, succ)
+}
+
+
+class EntryFunction extends Function {
+  EntryFunction() { this.hasQualifiedName(_, &#34;main&#34;) }
+}
+
+
+from
+    RefGraph::PathNode start,
+    RefGraph::PathNode end,
+    EntryFunction entryPoint,
+    K8sApiCall apiCall
+where
+    edges+(start, end)
+    and start.asFunction() = entryPoint
+    and end.asFunction() = getParentFunction(apiCall.getCall())
+select
+    // Entrypoint, Callsite Parent, Resource Type, Verb, Callsite Loc
+    entryPoint.getDeclaration().getLocation().getFile(),
+    end.asFunction().getQualifiedName(),
+    apiCall.getResourceName(),
+    apiCall.getVerbName(),
+    apiCall.getLocation().toString()
+</code></pre><h3 id="excessive-permission-detection">Excessive permission detection<a hidden class="anchor" aria-hidden="true" href="#excessive-permission-detection">#</a></h3>
+<h2 id="evaluation">Evaluation<a hidden class="anchor" aria-hidden="true" href="#evaluation">#</a></h2>
+<h2 id="code">Code<a hidden class="anchor" aria-hidden="true" href="#code">#</a></h2>
+<pre tabindex="0"><code>
+```
+
+```
+</code></pre>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/tech-rclone-webdav/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>使用rclone挂载alist目录到本地磁盘(webdav)</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/tech-kubernetes-scheduler/">
+    <span class="title">Next »</span>
+    <br>
+    <span>创建一个简单的自定义K8s Scheduler</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

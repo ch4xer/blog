@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,10 +8,11 @@
 <title>动荡时代 | ch4ser の 超元域</title>
 <meta name="keywords" content="">
 <meta name="description" content="
-乱世之中, 唯有自我与我所爱值得珍惜">
+乱世之中, 唯有自我与我所爱值得珍惜
+">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/gossip-unstable-software/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -40,23 +41,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/gossip-unstable-software/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/gossip-unstable-software/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="动荡时代">
   <meta property="og:description" content=" 乱世之中, 唯有自我与我所爱值得珍惜">
@@ -68,7 +84,8 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="动荡时代">
 <meta name="twitter:description" content="
-乱世之中, 唯有自我与我所爱值得珍惜">
+乱世之中, 唯有自我与我所爱值得珍惜
+">
 
 
 <script type="application/ld+json">
@@ -125,20 +142,8 @@
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -174,6 +179,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -189,13 +199,14 @@
     <h1 class="post-title entry-hint-parent">
       动荡时代
     </h1>
-    <div class="post-meta"><span title='2023-08-02 22:42:20 +0000 UTC'>August 2, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;16 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2023-08-02 22:42:20 +0000 UTC'>August 2, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>16 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 
   <div class="post-content"><blockquote>
-<p>乱世之中, 唯有自我与我所爱值得珍惜</p></blockquote>
+<p>乱世之中, 唯有自我与我所爱值得珍惜</p>
+</blockquote>
 <p>很久以来我一直在思考一个问题,为什么对于别的技术型职业,例如医生,教师,高级技工,裁缝,厨师,从业者的从业时间越长越吃香,而唯独中国程序员深陷于35岁魔咒之中.抛去国内劳动力市场扭曲的供求关系,还有一个经常为人所忽视的原因是<strong>最佳技术选型尚处于迭代之中</strong>.</p>
 <p>与其他行业漫长的发展历史相比,计算机行业是一个&quot;小年轻&quot;,而其下属的软件行业更是初生牛犊.理工农医,文史哲艺,经管法教,每一门学科都发展了百年以上,其中一些的历史更是与人类文明史一般漫长.反观计算机行业,现代计算机的理念是由图灵在1936年提出的,而第一台可编程通用计算机则是在1945年出现的.这仅仅只是一个开始,由于行业的特殊性,直到1978年x86架构出现以及1973年C语言出现,软件行业才算是开始发展.如此算来,当代如日中天人人羡艳的程序员行业,仅仅只有五十多岁,比我们的爷爷奶奶辈都要年轻不少.如此年轻的行业,势必还有很大的提升空间.</p>
 <p>另外,软件行业的发展也随时受硬件发展的影响,20年前寸土寸金的内存在今天已经不再成为用户使用的瓶颈,那些为了充分利用内存而想出的奇思妙想也不再为人所津津乐道.硬件成了绝大部分软件开发任务中最低廉的成本,而人力成本占的比重则越来越高,这也是为什么诸如Electron之类的框架能够大行其道.这只是硬件影响软件的案例中影响比较小的案例,其他的硬件变革,例如苹果Arm架构对传统x86架构的冲击,苹果共享内存在人工智能领域对英伟达的优势,乃至于可能出现的量子计算机,都正在对软件行业产生持续性的影响,而这些影响所能带来什么样的改变,目前还说不好,毕竟计算机是一个相当年轻的行业,连硬件都没有达到公认最优的状态(架构,指令集,容量,寿命等等),更何况是在此基础上的软件行业呢?</p>
@@ -228,7 +239,7 @@
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -243,9 +254,14 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -286,11 +302,12 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

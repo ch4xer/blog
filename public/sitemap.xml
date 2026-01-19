@@ -3,10 +3,19 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://dragonbox.top/</loc>
-    <lastmod>2025-09-09T16:26:29+08:00</lastmod>
+    <lastmod>2025-10-26T13:25:46+08:00</lastmod>
   </url><url>
     <loc>https://dragonbox.top/posts/</loc>
-    <lastmod>2025-09-09T16:26:29+08:00</lastmod>
+    <lastmod>2025-10-26T13:25:46+08:00</lastmod>
+  </url><url>
+    <loc>https://dragonbox.top/posts/gossip-raid2025/</loc>
+    <lastmod>2025-10-26T13:25:46+08:00</lastmod>
+  </url><url>
+    <loc>https://dragonbox.top/posts/tech-fcitx5-electron-problem/</loc>
+    <lastmod>2025-10-13T17:10:55+08:00</lastmod>
+  </url><url>
+    <loc>https://dragonbox.top/posts/gossip-gansu-travel/</loc>
+    <lastmod>2025-10-08T16:14:10+08:00</lastmod>
   </url><url>
     <loc>https://dragonbox.top/posts/sec-neural-network-backdoor/</loc>
     <lastmod>2025-09-09T16:26:29+08:00</lastmod>
@@ -233,5 +242,7 @@
     <loc>https://dragonbox.top/search/</loc>
   </url><url>
     <loc>https://dragonbox.top/tags/</loc>
+  </url><url>
+    <loc>https://dragonbox.top/friends/</loc>
   </url>
 </urlset>

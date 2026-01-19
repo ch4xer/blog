@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -44,7 +44,7 @@ kubectl apply -f scheduler-profile.yaml
 下面展示一个简单的调度器，先看看目录结构:">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/tech-kubernetes-scheduler/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -73,23 +73,38 @@ kubectl apply -f scheduler-profile.yaml
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-kubernetes-scheduler/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/tech-kubernetes-scheduler/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="创建一个简单的自定义K8s Scheduler">
   <meta property="og:description" content="创建一个简单的自定义K8s Scheduler 在最近的论文工作中，我设计了一套面向安全的调度算法，为了实施这套调度算法，需要对k8s的scheduler进行自定义。整个过程并不困难，特此记录。
@@ -198,20 +213,8 @@ kubectl apply -f scheduler-profile.yaml
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -247,6 +250,11 @@ kubectl apply -f scheduler-profile.yaml
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -262,13 +270,13 @@ kubectl apply -f scheduler-profile.yaml
     <h1 class="post-title entry-hint-parent">
       创建一个简单的自定义K8s Scheduler
     </h1>
-    <div class="post-meta"><span title='2025-04-27 16:22:05 +0800 CST'>April 27, 2025</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;285 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2025-04-27 16:22:05 +0800 CST'>April 27, 2025</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>285 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_9ac9037aba1eb0d1.png 360w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_b788dfadc401f16d.png 480w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_a30544e62433a9b5.png 720w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_e710c00bec8739dd.png 1080w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_7d0f4a0aa97b9a1a.png 1500w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png 1621w'
+                srcset='https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_6b74944735d59184.png 360w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_373d72ff7d3ffecd.png 480w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_a6f3e9d0f771250d.png 720w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_4d3157b02d8a0976.png 1080w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_bcf3b8d30328b4cc.png 1500w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png 1621w'
                 src="https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1621" height="668"
@@ -310,8 +318,8 @@ kubectl apply -f scheduler-profile.yaml
 <p><img alt="scheduler framework" loading="lazy" src="/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png"></p>
 <p>使用scheduler profile 禁用和启用特定的插件, 并为不同的插件的打分函数设置权重:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yml" data-lang="yml"><span class="line"><span class="cl"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">kubescheduler.config.k8s.io/v1</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">KubeSchedulerConfiguration</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">profiles</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">KubeSchedulerConfiguration</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">profiles</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">plugins</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">score</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">disabled</span><span class="p">:</span><span class="w">
@@ -337,7 +345,7 @@ kubectl apply -f scheduler-profile.yaml
 </code></pre><p><code>main.go</code> 是入口文件, 它创建了一个调度器，包含了普通Kubernetes调度器的所有功能，同时还加载了一个自定义的调度插件。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;os&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">plugin</span><span class="w"> </span><span class="s">&#34;scheduler/pkg/plugin&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
@@ -345,9 +353,9 @@ kubectl apply -f scheduler-profile.yaml
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;k8s.io/klog/v2&#34;</span><span class="w"> </span><span class="c1">// Add klog import</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;k8s.io/kubernetes/cmd/kube-scheduler/app&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">klog</span><span class="p">.</span><span class="nf">InitFlags</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">klog</span><span class="p">.</span><span class="nf">Flush</span><span class="p">()</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
@@ -359,11 +367,11 @@ kubectl apply -f scheduler-profile.yaml
 </span></span></span><span class="line"><span class="cl"><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">code</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cli</span><span class="p">.</span><span class="nf">Run</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">os</span><span class="p">.</span><span class="nf">Exit</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span></code></pre></div><p>再来看看<code>plugin.go</code>, 这里实现了一个调度器插件，以Score阶段为例子，通过实现自定义的Score函数，我们可以在打分环节自定义打分逻辑：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">plugin</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;context&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;math/rand&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
@@ -371,45 +379,45 @@ kubectl apply -f scheduler-profile.yaml
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;k8s.io/apimachinery/pkg/runtime&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="w"> </span><span class="s">&#34;k8s.io/klog/v2&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="s">&#34;k8s.io/kubernetes/pkg/scheduler/framework&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">const</span><span class="w"> </span><span class="nx">Name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;ExamplePlugin&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">const</span><span class="w"> </span><span class="nx">Name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;ExamplePlugin&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">type</span><span class="w"> </span><span class="nx">ExamplePlugin</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">ExamplePlugin</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// 确保 ExamplePlugin 类型实现了 ScorePlugin 接口</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">var</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">ScorePlugin</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">ExamplePlugin</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 确保 ExamplePlugin 类型实现了 ScorePlugin 接口</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">ScorePlugin</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">ExamplePlugin</span><span class="p">{}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Name</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Name</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">Name</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Score</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">CycleState</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="w"> </span><span class="o">*</span><span class="nx">v1</span><span class="p">.</span><span class="nx">Pod</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">int64</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">Status</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Score</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">CycleState</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="w"> </span><span class="o">*</span><span class="nx">v1</span><span class="p">.</span><span class="nx">Pod</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">int64</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">Status</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// 使用随机数作为每一个节点的得分</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nb">int64</span><span class="p">(</span><span class="nx">rand</span><span class="p">.</span><span class="nf">Intn</span><span class="p">(</span><span class="mi">100</span><span class="p">)),</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nf">NewStatus</span><span class="p">(</span><span class="nx">framework</span><span class="p">.</span><span class="nx">Success</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">PostBind</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">CycleState</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="w"> </span><span class="o">*</span><span class="nx">v1</span><span class="p">.</span><span class="nx">Pod</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">PostBind</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">*</span><span class="nx">framework</span><span class="p">.</span><span class="nx">CycleState</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="w"> </span><span class="o">*</span><span class="nx">v1</span><span class="p">.</span><span class="nx">Pod</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c1">// 在绑定Pod和Node之后，打印出最终的调度决策</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Infof</span><span class="p">(</span><span class="s">&#34;Decision: %s/%s =&gt; %s&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="p">.</span><span class="nx">Namespace</span><span class="p">,</span><span class="w"> </span><span class="nx">pod</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeName</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// ScoreExtensions returns the ScoreExtensions interface.</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">ScoreExtensions</span><span class="p">()</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">ScoreExtensions</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// ScoreExtensions returns the ScoreExtensions interface.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">ExamplePlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">ScoreExtensions</span><span class="p">()</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">ScoreExtensions</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">New</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">runtime</span><span class="p">.</span><span class="nx">Object</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">Handle</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">framework</span><span class="p">.</span><span class="nx">Plugin</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">New</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">runtime</span><span class="p">.</span><span class="nx">Object</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">framework</span><span class="p">.</span><span class="nx">Handle</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">framework</span><span class="p">.</span><span class="nx">Plugin</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">ExamplePlugin</span><span class="p">{},</span><span class="w"> </span><span class="kc">nil</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span></code></pre></div><p>最后,就是运行调度器了，首先编译它</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">go build -o scheduler main.go
 </span></span></code></pre></div><p>然后运行该调度器，为了让调度器能够在运行的时候加载自定义的插件，我们需要创建scheduler profile。这里使用clientConnection并让调度器使用一个高权限的凭证连接到集群，确保有足够的权限。然后给调度器起一个名字, 并在指定的阶段执行插件中对应的函数。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">kubescheduler.config.k8s.io/v1</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">KubeSchedulerConfiguration</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">clientConnection</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">KubeSchedulerConfiguration</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">clientConnection</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">kubeconfig</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;/home/ch4ser/Projects/rbaclock/experiment/environment/debian-minikube/data/config&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">profiles</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">profiles</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">schedulerName</span><span class="p">:</span><span class="w"> </span><span class="l">example</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">plugins</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">score</span><span class="p">:</span><span class="w">
@@ -422,10 +430,10 @@ kubectl apply -f scheduler-profile.yaml
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">./scheduler --config scheduler-profile.yaml
 </span></span></code></pre></div><p>完成！最后使用一个简单的yaml文件创建一个pod, 让我们的调度器而不是默认调度器来调度它测试一下就可以观察效果了，日志信息可以通过vscode的k8s插件来看.</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">v1</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Pod</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Pod</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">metadata</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">example-pod</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">spec</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">spec</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">schedulerName</span><span class="p">:</span><span class="w"> </span><span class="l">example</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">containers</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">nginx</span><span class="w">
@@ -455,7 +463,7 @@ kubectl apply -f scheduler-profile.yaml
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -470,9 +478,14 @@ kubectl apply -f scheduler-profile.yaml
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -513,11 +526,12 @@ kubectl apply -f scheduler-profile.yaml
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

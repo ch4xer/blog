@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,10 +8,11 @@
 <title>流量分析 | ch4ser の 超元域</title>
 <meta name="keywords" content="">
 <meta name="description" content="
-bugku 中的部分misc题目">
+bugku 中的部分misc题目
+">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -40,23 +41,38 @@ bugku 中的部分misc题目">
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="流量分析">
   <meta property="og:description" content=" bugku 中的部分misc题目">
@@ -68,7 +84,8 @@ bugku 中的部分misc题目">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="流量分析">
 <meta name="twitter:description" content="
-bugku 中的部分misc题目">
+bugku 中的部分misc题目
+">
 
 
 <script type="application/ld+json">
@@ -125,20 +142,8 @@ bugku 中的部分misc题目">
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -174,6 +179,11 @@ bugku 中的部分misc题目">
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -189,7 +199,7 @@ bugku 中的部分misc题目">
     <h1 class="post-title entry-hint-parent">
       流量分析
     </h1>
-    <div class="post-meta"><span title='2019-04-22 04:16:47 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;278 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2019-04-22 04:16:47 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>278 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> <div class="toc">
@@ -218,7 +228,8 @@ bugku 中的部分misc题目">
 </div>
 
   <div class="post-content"><blockquote>
-<p>bugku 中的部分misc题目</p></blockquote>
+<p>bugku 中的部分misc题目</p>
+</blockquote>
 <h3 id="中国菜刀">中国菜刀<a hidden class="anchor" aria-hidden="true" href="#中国菜刀">#</a></h3>
 <p>下载流量包之后追踪tcp流量或者http流量可以在目录中看见flag.tar.gz字段</p>
 <p>思路1：binwalk</p>
@@ -231,16 +242,16 @@ cd _caidao.pcapng.extracted/
 cat 1E43
 </code></pre><p>思路2：wireshark数据包追踪，把一串base64拎出来</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sql" data-lang="sql"><span class="line"><span class="cl"><span class="o">@</span><span class="n">ini_set</span><span class="p">(</span><span class="s2">&#34;display_errors&#34;</span><span class="p">,</span><span class="s2">&#34;0&#34;</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="o">@</span><span class="n">set_time_limit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="p">(</span><span class="n">PHP_VERSION</span><span class="o">&lt;</span><span class="s1">&#39;5.3.0&#39;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="err">{</span><span class="o">@</span><span class="n">set_magic_quotes_runtime</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="err">}</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;X@Y&#34;</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="err">$</span><span class="n">D</span><span class="o">=</span><span class="s1">&#39;C:\\wwwroot\\&#39;</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="err">$</span><span class="n">F</span><span class="o">=@</span><span class="n">opendir</span><span class="p">(</span><span class="err">$</span><span class="n">D</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">if</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="o">==</span><span class="k">NULL</span><span class="p">)</span><span class="err">{</span><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;ERROR:// Path Not Found Or No Permission!&#34;</span><span class="p">);</span><span class="err">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">else</span><span class="err">{$</span><span class="n">M</span><span class="o">=</span><span class="k">NULL</span><span class="p">;</span><span class="err">$</span><span class="n">L</span><span class="o">=</span><span class="k">NULL</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">while</span><span class="p">(</span><span class="err">$</span><span class="n">N</span><span class="o">=@</span><span class="n">readdir</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="p">))</span><span class="err">{$</span><span class="n">P</span><span class="o">=</span><span class="err">$</span><span class="n">D</span><span class="p">.</span><span class="s1">&#39;/&#39;</span><span class="p">.</span><span class="err">$</span><span class="n">N</span><span class="p">;</span><span class="err">$</span><span class="n">T</span><span class="o">=@</span><span class="nb">date</span><span class="p">(</span><span class="s2">&#34;Y-m-d H:i:s&#34;</span><span class="p">,</span><span class="o">@</span><span class="n">filemtime</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">));</span><span class="o">@</span><span class="err">$</span><span class="n">E</span><span class="o">=</span><span class="n">substr</span><span class="p">(</span><span class="n">base_convert</span><span class="p">(</span><span class="o">@</span><span class="n">fileperms</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">),</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="o">-</span><span class="mi">4</span><span class="p">);</span><span class="err">$</span><span class="n">R</span><span class="o">=</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">T</span><span class="p">.</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="o">@</span><span class="n">filesize</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">).</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">E</span><span class="p">.</span><span class="s2">&#34;\n&#34;</span><span class="p">;</span><span class="k">if</span><span class="p">(</span><span class="o">@</span><span class="n">is_dir</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">))</span><span class="err">$</span><span class="n">M</span><span class="p">.</span><span class="o">=</span><span class="err">$</span><span class="n">N</span><span class="p">.</span><span class="s2">&#34;/&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">R</span><span class="p">;</span><span class="k">else</span><span class="w"> </span><span class="err">$</span><span class="n">L</span><span class="p">.</span><span class="o">=</span><span class="err">$</span><span class="n">N</span><span class="p">.</span><span class="err">$</span><span class="n">R</span><span class="p">;</span><span class="err">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">echo</span><span class="w"> </span><span class="err">$</span><span class="n">M</span><span class="p">.</span><span class="err">$</span><span class="n">L</span><span class="p">;</span><span class="o">@</span><span class="n">closedir</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="p">);</span><span class="err">}</span><span class="p">;</span><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;X@Y&#34;</span><span class="p">);</span><span class="n">die</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="o">@</span><span class="n">set_time_limit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="n">PHP_VERSION</span><span class="o">&lt;</span><span class="s1">&#39;5.3.0&#39;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="err">{</span><span class="o">@</span><span class="n">set_magic_quotes_runtime</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="err">}</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;X@Y&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="err">$</span><span class="n">D</span><span class="o">=</span><span class="s1">&#39;C:\\wwwroot\\&#39;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="err">$</span><span class="n">F</span><span class="o">=@</span><span class="n">opendir</span><span class="p">(</span><span class="err">$</span><span class="n">D</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="o">==</span><span class="k">NULL</span><span class="p">)</span><span class="err">{</span><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;ERROR:// Path Not Found Or No Permission!&#34;</span><span class="p">);</span><span class="err">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">else</span><span class="err">{$</span><span class="n">M</span><span class="o">=</span><span class="k">NULL</span><span class="p">;</span><span class="err">$</span><span class="n">L</span><span class="o">=</span><span class="k">NULL</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">while</span><span class="p">(</span><span class="err">$</span><span class="n">N</span><span class="o">=@</span><span class="n">readdir</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="p">))</span><span class="err">{$</span><span class="n">P</span><span class="o">=</span><span class="err">$</span><span class="n">D</span><span class="p">.</span><span class="s1">&#39;/&#39;</span><span class="p">.</span><span class="err">$</span><span class="n">N</span><span class="p">;</span><span class="err">$</span><span class="n">T</span><span class="o">=@</span><span class="nb">date</span><span class="p">(</span><span class="s2">&#34;Y-m-d H:i:s&#34;</span><span class="p">,</span><span class="o">@</span><span class="n">filemtime</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">));</span><span class="o">@</span><span class="err">$</span><span class="n">E</span><span class="o">=</span><span class="n">substr</span><span class="p">(</span><span class="n">base_convert</span><span class="p">(</span><span class="o">@</span><span class="n">fileperms</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">),</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="o">-</span><span class="mi">4</span><span class="p">);</span><span class="err">$</span><span class="n">R</span><span class="o">=</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">T</span><span class="p">.</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="o">@</span><span class="n">filesize</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">).</span><span class="s2">&#34;\t&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">E</span><span class="p">.</span><span class="s2">&#34;\n&#34;</span><span class="p">;</span><span class="k">if</span><span class="p">(</span><span class="o">@</span><span class="n">is_dir</span><span class="p">(</span><span class="err">$</span><span class="n">P</span><span class="p">))</span><span class="err">$</span><span class="n">M</span><span class="p">.</span><span class="o">=</span><span class="err">$</span><span class="n">N</span><span class="p">.</span><span class="s2">&#34;/&#34;</span><span class="p">.</span><span class="err">$</span><span class="n">R</span><span class="p">;</span><span class="k">else</span><span class="w"> </span><span class="err">$</span><span class="n">L</span><span class="p">.</span><span class="o">=</span><span class="err">$</span><span class="n">N</span><span class="p">.</span><span class="err">$</span><span class="n">R</span><span class="p">;</span><span class="err">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">echo</span><span class="w"> </span><span class="err">$</span><span class="n">M</span><span class="p">.</span><span class="err">$</span><span class="n">L</span><span class="p">;</span><span class="o">@</span><span class="n">closedir</span><span class="p">(</span><span class="err">$</span><span class="n">F</span><span class="p">);</span><span class="err">}</span><span class="p">;</span><span class="n">echo</span><span class="p">(</span><span class="s2">&#34;X@Y&#34;</span><span class="p">);</span><span class="n">die</span><span class="p">();</span><span class="w">
 </span></span></span></code></pre></div><p>当然这没啥用。。</p>
 <p>数据包的数据都是在line-based text data里面的</p>
 <p>点击line-based text data,右击，点击显示show packet bytes
@@ -373,7 +384,7 @@ foremost -v -i flag.txt -o outputfile
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -388,9 +399,14 @@ foremost -v -i flag.txt -o outputfile
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -431,11 +447,12 @@ foremost -v -i flag.txt -o outputfile
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

@@ -1,0 +1,60 @@
+{{ define "main" }}
+<main class="main-content" id="main-content">
+  <article class="post-single">
+    <header class="post-header">
+     
+
+      <h1 class="post-title">{{ .Title }}</h1>
+      {{ with .Params.summary }}
+        <p class="post-description">{{ . }}</p>
+      {{ end }}
+    </header>
+<style>
+.friend-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+.friend-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--entry);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.25s ease;
+}
+.friend-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.friend-card img {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  margin-right: 1rem;
+}
+.friend-card .text-gray-600 {
+  color: var(--secondary);
+}
+</style>
+
+    <div class="post-content">
+      {{ .Content }}
+
+      <div class="friend-links grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+        {{ range .Site.Data.friends }}
+          <a href="{{ .url }}" target="_blank" rel="noopener" class="friend-card flex items-center p-4 rounded-xl shadow-sm hover:shadow-md transition">
+            <img src="{{ .avatar }}" alt="{{ .name }}" class="w-12 h-12 rounded-full mr-4">
+            <div>
+              <div class="font-semibold">{{ .name }}</div>
+              <div class="text-sm text-gray-600">{{ .desc }}</div>
+            </div>
+          </a>
+        {{ end }}
+      </div>
+    </div>
+  </article>
+</main>
+{{ end }}

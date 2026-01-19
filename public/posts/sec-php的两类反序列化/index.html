@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="php中的反序列化分为两类: 一种是常规ctf题目中的直接传入并反序列化, 另一种和session有关:">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -39,23 +39,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="php session反序列化">
   <meta property="og:description" content="php中的反序列化分为两类: 一种是常规ctf题目中的直接传入并反序列化, 另一种和session有关:">
@@ -123,20 +138,8 @@
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -172,6 +175,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -187,7 +195,7 @@
     <h1 class="post-title entry-hint-parent">
       php session反序列化
     </h1>
-    <div class="post-meta"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;369 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>369 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> <div class="toc">
@@ -231,12 +239,14 @@ php_serialize: 序列化字符串
 </code></pre><p>在没有对session进行配置的情况下, 默认使用php序列化处理模式.</p>
 <p>如果以php_serialize 方式存取但是又用php处理器去处理, 那么只要传入的字符串中有 | 就可以导致php处理器将 | 前的东东解释成键, 而将后面的东西解释称值, 而后面的东西一般就是要反序列化的字符串了.</p>
 <blockquote>
-<p>php5.6.13版本以前是第一个变量解析错误注销第一个变量，然后解析第二个变量，但是5.6.13以后如果第一个变量错误，直接销毁整个session, 所以这个洞要看版本</p></blockquote>
+<p>php5.6.13版本以前是第一个变量解析错误注销第一个变量，然后解析第二个变量，但是5.6.13以后如果第一个变量错误，直接销毁整个session, 所以这个洞要看版本</p>
+</blockquote>
 <p>将payload传入session的方式有两种, 一种是对面开放本地可控的数据, 另一种是因为配置不当造成session可控</p>
 <blockquote>
 <p>当session.upload_progress.enabled打开时，php会记录上传文件的进度，在上传时会将其信息保存在$<em>SESSION中。</em></p>
 <p>_当一个上传在处理中，同时POST一个与INI中设置的session.upload_progress.name同名变量时，
-当PHP检测到这种POST请求时，它会在$_SESSION中添加一组数据。所以可以通过Session Upload Progress来设置session。</p></blockquote>
+当PHP检测到这种POST请求时，它会在$_SESSION中添加一组数据。所以可以通过Session Upload Progress来设置session。</p>
+</blockquote>
 <p>上传表单</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">form</span> <span class="na">action</span><span class="o">=</span><span class="s">&#34;http://web.jarvisoj.com:32784/index.php&#34;</span> <span class="na">method</span><span class="o">=</span><span class="s">&#34;POST&#34;</span> <span class="na">enctype</span><span class="o">=</span><span class="s">&#34;multipart/form-data&#34;</span><span class="p">&gt;</span>
 </span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&#34;hidden&#34;</span> <span class="na">name</span><span class="o">=</span><span class="s">&#34;PHP_SESSION_UPLOAD_PROGRESS&#34;</span> <span class="na">value</span><span class="o">=</span><span class="s">&#34;123&#34;</span> <span class="p">/&gt;</span>
@@ -410,7 +420,8 @@ php_serialize: 序列化字符串
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="k">echo</span> <span class="nx">serialize</span><span class="p">(</span><span class="nv">$first</span><span class="p">);</span>
 </span></span></code></pre></div><blockquote>
-<p>PHPSESSID随便指定写一个比如kk默认情况下会生成sess_kk session文件</p></blockquote>
+<p>PHPSESSID随便指定写一个比如kk默认情况下会生成sess_kk session文件</p>
+</blockquote>
 <p><img alt="image-20211114141933229" loading="lazy" src="/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/image-20211114141933229.png"></p>
 <p><img alt="image-20211114141940499" loading="lazy" src="/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/image-20211114141940499.png"></p>
 <p>参考</p>
@@ -443,7 +454,7 @@ php_serialize: 序列化字符串
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -458,9 +469,14 @@ php_serialize: 序列化字符串
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -501,11 +517,12 @@ php_serialize: 序列化字符串
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

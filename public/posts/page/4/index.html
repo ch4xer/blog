@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="Posts - ch4ser の 超元域">
 <meta name="author" content="">
 <link rel="canonical" href="https://dragonbox.top/posts/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="https://dragonbox.top/flash.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml">
+<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml" title="rss">
 <link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/">
 <noscript>
     <style>
@@ -40,23 +40,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="Posts">
   <meta property="og:locale" content="en-us">
@@ -81,20 +96,8 @@
 }
 </script>
 </head>
-
 <body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -130,6 +133,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -145,6 +153,69 @@
 </header>
 
 <article class="post-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_efd7233a733393b.png 360w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_59ce8ace42c0f1d.png 480w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_5c969afb777549f9.png 720w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png 917w'
+                src="https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="917" height="577"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">bytectf2019
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>boring code source code
+&lt;?php function is_valid_url($url) { if (filter_var($url, FILTER_VALIDATE_URL)) { if (preg_match(&#39;/data:\/\//i&#39;, $url)) { return false; } return true; } return false; } if (isset($_POST[&#39;url&#39;])){ $url = $_POST[&#39;url&#39;]; if (is_valid_url($url)) { $r = parse_url($url); if (preg_match(&#39;/baidu\.com$/&#39;, $r[&#39;host&#39;])) { $code = file_get_contents($url); if (&#39;;&#39; === preg_replace(&#39;/[a-z]&#43;\((?R)?\)/&#39;, NULL, $code)) { if (preg_match(&#39;/et|na|nt|strlen|info|path|rand|dec|bin|hex|oct|pi|exp|log/i&#39;, $code)) { echo &#39;bye~&#39;; } else { eval($code); } } } else { echo &#34;error: host not allowed&#34;; } } else { echo &#34;error: invalid url&#34;; } }else{ highlight_file(__FILE__); } 思路: 注册一个xxxxbaidu.com 形式的域名.绑定到服务器上后放上自己的代码,payload
+if(chdir(next(scandir(chr(ord(strrev(crypt(serialize(array())))))))))readfile(end(scandir(chr(ord(strrev(crypt(serialize(array())))))))); echo(readfile(end(scandir(chr(pos(localtime(time(chdir(next(scandir(current(localeconv())))))))))))); 这两个payload都很精彩, 涉及的知识点如下:
+crypt 函数没有key的时候随机生成key进行加密, 如果多尝试几次加密的话就会发现有几次的加密结果中的末尾有点号.
+ord函数传入字符串的时候, 只返回第一个字符的ascii码
+localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&#34;小数点字符&#34;, 也就是点号
+php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; string(1) &#34;.&#34; [&#34;thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;int_curr_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;currency_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_decimal_point&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;positive_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;negative_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;int_frac_digits&#34;]=&gt; int(127) [&#34;frac_digits&#34;]=&gt; int(127) [&#34;p_cs_precedes&#34;]=&gt; int(127) [&#34;p_sep_by_space&#34;]=&gt; int(127) [&#34;n_cs_precedes&#34;]=&gt; int(127) [&#34;n_sep_by_space&#34;]=&gt; int(127) [&#34;p_sign_posn&#34;]=&gt; int(127) [&#34;n_sign_posn&#34;]=&gt; int(127) [&#34;grouping&#34;]=&gt; array(0) { } [&#34;mon_grouping&#34;]=&gt; array(0) { } } php &gt; pos() 函数是current函数的别名
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-09-09 08:18:25 +0000 UTC'>September 9, 2019</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>787 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to bytectf2019" href="https://dragonbox.top/posts/ctf-bytectf2019/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">php session反序列化
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>php中的反序列化分为两类: 一种是常规ctf题目中的直接传入并反序列化, 另一种和session有关:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>369 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to php session反序列化" href="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">证书相关
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 来看看互联网世界的基石
+通信过程的简化模型 第一阶段: 服务器向CA发起证书签名请求 服务器组织生成一个私钥
+openssl genrsa -out target.key 1024 从私钥文件中得到公钥, 这个公钥会被用于给CA签名
+openssl rsa -in target.key -pubout -out target_pub.key 使用私钥生成一个证书签名请求, 在生成过程中需要填写证书申请人的一些信息
+openssl req -new -key target.key -out target.csr 生成完成后, 可以运行下面命令看看这个证书签名请求文件里都有什么
+openssl req -text -in target.csr -verify 例如:
+可以看到公钥也在里面.
+接下来把证书签名请求文件提交给CA, CA审核通过后对该文件进行签名
+openssl x509 -in target.csr -out target.crt -req -signkey ca.key -days 365 target.crt就是签名成功后的证书. 对于常见的自签名场景来说, ca.key就是target.key, 用自己的密钥去签名自己的证书请求, 自签名请求命令就是
+openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 然后CA将target.crt以及由Root CA签名的CA证书一同返回给申请人. 如下图所示:
+Root CA的证书就那么几个, 内置在操作系统里, 受到所有程序的信任, 因此申请人得到由Root CA签名的CA证书后, 就可以信任该CA组织, 进而可以信任该CA组织签发给自己的证书. 对于其他的客户端而言也是这样.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-09-01 15:23:10 +0000 UTC'>September 1, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>574 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 证书相关" href="https://dragonbox.top/posts/tech-openssl/"></a>
+</article>
+
+<article class="post-entry"> 
   <header class="entry-header">
     <h2 class="entry-hint-parent">Google_Game
     </h2>
@@ -152,14 +223,14 @@
   <div class="entry-content">
     <p>Google Xss game...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-06-12 19:41:56 +0000 UTC'>June 12, 2019</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;161 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-06-12 19:41:56 +0000 UTC'>June 12, 2019</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>161 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to Google_Game" href="https://dragonbox.top/posts/ctf-google-game/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_66dc7d2cb122717f.png 360w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_b9059b7fd1b1dd47.png 480w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_e467aba095fb2fb7.png 720w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_5224e31d9758dd6f.png 1080w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png 1381w'
+                srcset='https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_ea41f949a68a93e7.png 360w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_aeddfb9d6831de63.png 480w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_530e78b2b23af34f.png 720w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_56f55879addce295.png 1080w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png 1381w'
                 src="https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1381" height="591"
@@ -176,7 +247,7 @@ web 签到题 点击，扫描，发现除了index.php 之外其他都需要登�
 &lt;?php Class Application { var $path = &#39;&#39;; public function response($data, $errMsg = &#39;success&#39;) { $ret = [&#39;errMsg&#39; =&gt; $errMsg, &#39;data&#39; =&gt; $data]; $ret = json_encode($ret); header(&#39;Content-type: application/json&#39;); echo $ret; } public function auth() { $DIDICTF_ADMIN = &#39;admin&#39;; if(!empty($_SERVER[&#39;HTTP_DIDICTF_USERNAME&#39;]) &amp;&amp; $_SERVER[&#39;HTTP_DIDICTF_USERNAME&#39;] == $DIDICTF_ADMIN) { $this-&gt;response(&#39;您当前当前权限为管理员----请访问:app/fL2XID2i0Cdh.php&#39;); return TRUE; }else{ $this-&gt;response(&#39;抱歉，您没有登陆权限，请获取权限后访问-----&#39;,&#39;error&#39;); exit(); } } private function sanitizepath($path) { $path = trim($path);//去掉空格 $path=str_replace(&#39;../&#39;,&#39;&#39;,$path);//过滤第一 $path=str_replace(&#39;..\\&#39;,&#39;&#39;,$path);//过滤第二 return $path; }// public function __destruct() { if(empty($this-&gt;path)) { exit(); }else{ $path = $this-&gt;sanitizepath($this-&gt;path);// ....//config/flag.php if(strlen($path) !== 18) {//../config/flag.php exit(); } $this-&gt;response($data=file_get_contents($path),&#39;Congratulations&#39;); } exit(); } } ?&gt; &lt;?php include &#39;Application.php&#39;; class Session extends Application { //key建议为8位字符串 var $eancrykey = &#39;&#39;; var $cookie_expiration	= 7200; var $cookie_name = &#39;ddctf_id&#39;; var $cookie_path	= &#39;&#39;; var $cookie_domain	= &#39;&#39;; var $cookie_secure	= FALSE; var $activity = &#34;DiDiCTF&#34;; public function index() { if(parent::auth()) { $this-&gt;get_key(); if($this-&gt;session_read()) { $data = &#39;DiDI Welcome you %s&#39;; $data = sprintf($data,$_SERVER[&#39;HTTP_USER_AGENT&#39;]); parent::response($data,&#39;sucess&#39;); }else{ $this-&gt;session_create(); $data = &#39;DiDI Welcome you&#39;; parent::response($data,&#39;sucess&#39;); } } } private function get_key() { //eancrykey and flag under the folder $this-&gt;eancrykey = file_get_contents(&#39;../config/key.txt&#39;); } public function session_read() {//target1: 绕过所有false if(empty($_COOKIE)) { return FALSE; }//cookie not empty $session = $_COOKIE[$this-&gt;cookie_name]; if(!isset($session)) { parent::response(&#34;session not found&#34;,&#39;error&#39;); return FALSE; }//ddctf_id 不能为空 $hash = substr($session,strlen($session)-32);//长度要大于32? 32位之后的内容 $session = substr($session,0,strlen($session)-32);//一直截断到倒数第32位 if($hash !== md5($this-&gt;eancrykey.$session)) {//key.txt 内容和 ddctf_id 内容片段拼接 再md5 等于ddctf_id32位之后的内容 parent::response(&#34;the cookie data not match&#34;,&#39;error&#39;); return FALSE; } $session = unserialize($session);//ddctf_id 反序列化 if(!is_array($session) OR !isset($session[&#39;session_id&#39;]) OR !isset($session[&#39;ip_address&#39;]) OR !isset($session[&#39;user_agent&#39;])){ return FALSE; }//ddctf_id 反序列化之后的内容要有 session_id ip_address user_agent 再来个path?? if(!empty($_POST[&#34;nickname&#34;])) { $arr = array($_POST[&#34;nickname&#34;],$this-&gt;eancrykey); $data = &#34;Welcome my friend %s&#34;; foreach ($arr as $k =&gt; $v) { $data = sprintf($data,$v); } parent::response($data,&#34;Welcome&#34;); }//sprint格式化打印函数利用，通过传递进参数nickname = %S 让它可以读取key。 if($session[&#39;ip_address&#39;] != $_SERVER[&#39;REMOTE_ADDR&#39;]) { parent::response(&#39;the ip addree not match&#39;.&#39;error&#39;); return FALSE; }//ip_address 要写自己的ip if($session[&#39;user_agent&#39;] != $_SERVER[&#39;HTTP_USER_AGENT&#39;]) { parent::response(&#39;the user agent not match&#39;,&#39;error&#39;); return FALSE; }//user_agent 内容要和 http_user_agent的匹配 return TRUE; }//看起来可以动手脚的只有session_id? private function session_create() { $sessionid = &#39;&#39;; while(strlen($sessionid) &lt; 32) { $sessionid .= mt_rand(0,mt_getrandmax()); } $userdata = array( &#39;session_id&#39; =&gt; md5(uniqid($sessionid,TRUE)), &#39;ip_address&#39; =&gt; $_SERVER[&#39;REMOTE_ADDR&#39;], &#39;user_agent&#39; =&gt; $_SERVER[&#39;HTTP_USER_AGENT&#39;], &#39;user_data&#39; =&gt; &#39;&#39;, ); $cookiedata = serialize($ ); $cookiedata = $cookiedata.md5($this-&gt;eancrykey.$cookiedata); $expire = $this-&gt;cookie_expiration &#43; time(); setcookie( $this-&gt;cookie_name, $cookiedata, $expire, $this-&gt;cookie_path, $this-&gt;cookie_domain, $this-&gt;cookie_secure ); } } $ddctf = new Session(); $ddctf-&gt;index(); ?&gt; 得到key之后构造ddctfid:
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-05-11 13:58:05 +0000 UTC'>May 11, 2019</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;1385 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-05-11 13:58:05 +0000 UTC'>May 11, 2019</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>1385 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 2019 DDCTF web" href="https://dragonbox.top/posts/ctf-2019-ddctf-web/"></a>
 </article>
 
@@ -189,7 +260,7 @@ web 签到题 点击，扫描，发现除了index.php 之外其他都需要登�
     <p> bugku 中的部分misc题目
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-04-22 04:16:47 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;278 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-04-22 04:16:47 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>278 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 流量分析" href="https://dragonbox.top/posts/sec-%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"></a>
 </article>
 
@@ -202,7 +273,7 @@ web 签到题 点击，扫描，发现除了index.php 之外其他都需要登�
     <p> 记录密码学刷过的题目
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-04-22 04:14:20 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1043 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-04-22 04:14:20 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>1043 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 密码学题目" href="https://dragonbox.top/posts/ctf-crypto/"></a>
 </article>
 
@@ -243,14 +314,14 @@ web4 查看源代码，发现一串url编码的东西， Eval函数会将里面�
 import urllib a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69%74 %28%29%7b%76%61%72%20%61%3d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45%6c %65%6d%65%6e%74%42%79%49%64%28%22%70%61%73%73%77%6f%72%64%22%29% 3b%69%66%28%22%75%6e%64%65%66%69%6e%65%64%22%21%3d%74%79%70 %65%6f%66%20%61%29%7b%69%66%28%22%36%37%64%37%30%39%62%32%62&#39; b = &#39;%61%61%36%34%38%63%66%36%65%38%37%61%37%31%31%34%66%31%22%3d %3d%61%2e%76%61%6c%75%65%29%72%65%74%75%72%6e%21%30%3b%61%6c%65%72 %74%28%22%45%72%72%6f%72%22%29%3b%61%2e%66%6f%63%75%73%28%29%3b%72 %65%74%75%72%6e%21%31%7d%7d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45 %6c%65%6d%65%6e%74%42%79%49%64%28%22%6c%65%76%65%6c%51%75 %65%73%74%22%29%2e%6f%6e%73%75%62%6d%69%74%3d%63%68%65%63%6b%53%75%62%6d%69%74%3b&#39; print urllib.unquote(a&#43;b) 得到代码如下：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-04-22 04:13:30 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1011 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-04-22 04:13:30 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>1011 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to bugku writeup" href="https://dragonbox.top/posts/ctf-bugku-writeup/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_4835ddcd09e3ffa9.png 360w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_266ea03bcbab5f48.png 480w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5859ff098602700a.png 720w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_737d145440ab555e.png 1080w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_718a1aac5aa71e2a.png 1500w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png 1600w'
+                srcset='https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5c600de04a0b69b2.png 360w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_62628dd64fa3270.png 480w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5b959c9974432918.png 720w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_f66c199620ced641.png 1080w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_4962a37760c7527d.png 1500w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png 1600w'
                 src="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1600" height="900"
@@ -273,7 +344,7 @@ npm install hexo-deployer-git --save 修改网站根目录下的_config.yml文�
 deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://github.com/example/example.github.io.git branch: master 保存退出后执行命令：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-04-22 03:12:31 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;431 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-04-22 03:12:31 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>431 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 使用hexo和github搭建网站" href="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/"></a>
 </article>
 
@@ -287,7 +358,7 @@ deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://
 《程序员修炼之道》中有一句话:最好是精通一种编辑器，并将其用于所有编辑任务。如果不坚持使用一种编辑器，可能会面临现代的巴别特大混乱。 ，实质今日，深以为然。而自从接触vim之后我一直都保持着有空折腾折腾的好习惯，它的简洁和高度自由让人着迷，围绕着vim衍生出的插件数不胜数。奈何插件繁多的同时也意味着选择的困难和配置的繁琐。为了准备以后可能出现的突发情况比如配置丢失或者重新安装，特在此以实现特定功能为主题，记录自己配置vim的过程。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-04-22 02:05:35 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;728 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-04-22 02:05:35 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>728 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to ch4ser 的 vim" href="https://dragonbox.top/posts/tech-ch4ser-vim/"></a>
 </article>
 <footer class="page-footer">
@@ -300,7 +371,7 @@ deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -315,9 +386,14 @@ deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -358,11 +434,12 @@ deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

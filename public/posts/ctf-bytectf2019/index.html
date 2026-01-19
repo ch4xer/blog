@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -104,7 +104,7 @@ php &gt;
 pos() 函数是current函数的别名">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/ctf-bytectf2019/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -133,23 +133,38 @@ pos() 函数是current函数的别名">
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/ctf-bytectf2019/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/ctf-bytectf2019/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="bytectf2019">
   <meta property="og:description" content="boring code source code
@@ -319,20 +334,8 @@ pos() 函数是current函数的别名">
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -368,6 +371,11 @@ pos() 函数是current函数的别名">
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -383,13 +391,13 @@ pos() 函数是current函数的别名">
     <h1 class="post-title entry-hint-parent">
       bytectf2019
     </h1>
-    <div class="post-meta"><span title='2019-09-09 08:18:25 +0000 UTC'>September 9, 2019</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;787 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2019-09-09 08:18:25 +0000 UTC'>September 9, 2019</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>787 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_3cf4b2ecb9d83fc5.png 360w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_2ddcc30ddc7de9c8.png 480w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_80a933c8286c7283.png 720w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png 917w'
+                srcset='https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_efd7233a733393b.png 360w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_59ce8ace42c0f1d.png 480w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041_hu_5c969afb777549f9.png 720w,https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png 917w'
                 src="https://dragonbox.top/posts/ctf-bytectf2019/image-20211114141103041.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="917" height="577"
@@ -743,7 +751,8 @@ echo file_get_contents(&#39;/flag&#39;);
 <blockquote>
 <p>What is RSS?</p>
 <p>It is a format to share data, defined in the <a href="https://www.xul.fr/en-xml.php">1.0 version</a> of XML. You can deliver information in this format et one can get this information, and information from other various sources, in this format. Information provided by a website in an XML file is called an RSS feed.
-Recent browsers can read directly RSS files, but a special <strong>RSS reader</strong> or <strong>aggregator</strong> may be used too.</p></blockquote>
+Recent browsers can read directly RSS files, but a special <strong>RSS reader</strong> or <strong>aggregator</strong> may be used too.</p>
+</blockquote>
 <p>所以所谓的rss就是xml.</p>
 <p>尝试测试</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
@@ -816,7 +825,7 @@ Recent browsers can read directly RSS files, but a special <strong>RSS reader</s
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -831,9 +840,14 @@ Recent browsers can read directly RSS files, but a special <strong>RSS reader</s
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -874,11 +888,12 @@ Recent browsers can read directly RSS files, but a special <strong>RSS reader</s
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

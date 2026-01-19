@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -179,7 +179,7 @@ $ddctf-&gt;index();
 得到key之后构造ddctfid:">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/ctf-2019-ddctf-web/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -208,23 +208,38 @@ $ddctf-&gt;index();
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/ctf-2019-ddctf-web/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/ctf-2019-ddctf-web/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="2019 DDCTF web">
   <meta property="og:description" content="考试周结束，有时间来复现了。。。然鹅好像有题目崩了，java又没学过。。。只能复现一部分了。
@@ -466,20 +481,8 @@ $ddctf-&gt;index();
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -515,6 +518,11 @@ $ddctf-&gt;index();
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -530,13 +538,13 @@ $ddctf-&gt;index();
     <h1 class="post-title entry-hint-parent">
       2019 DDCTF web
     </h1>
-    <div class="post-meta"><span title='2019-05-11 13:58:05 +0000 UTC'>May 11, 2019</span>&nbsp;·&nbsp;7 min&nbsp;·&nbsp;1385 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2019-05-11 13:58:05 +0000 UTC'>May 11, 2019</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>1385 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_66dc7d2cb122717f.png 360w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_b9059b7fd1b1dd47.png 480w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_e467aba095fb2fb7.png 720w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_5224e31d9758dd6f.png 1080w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png 1381w'
+                srcset='https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_ea41f949a68a93e7.png 360w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_aeddfb9d6831de63.png 480w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_530e78b2b23af34f.png 720w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083_hu_56f55879addce295.png 1080w,https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png 1381w'
                 src="https://dragonbox.top/posts/ctf-2019-ddctf-web/image-20211114142123083.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="1381" height="591"
@@ -595,18 +603,18 @@ $ddctf-&gt;index();
 </span></span><span class="line"><span class="cl">  <span class="p">}</span>
 </span></span><span class="line"><span class="cl">  <span class="k">private</span> <span class="k">function</span> <span class="nf">sanitizepath</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">  <span class="nv">$path</span> <span class="o">=</span> <span class="nx">trim</span><span class="p">(</span><span class="nv">$path</span><span class="p">);</span><span class="c1">//去掉空格
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nv">$path</span><span class="o">=</span><span class="nx">str_replace</span><span class="p">(</span><span class="s1">&#39;../&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="nv">$path</span><span class="p">);</span><span class="c1">//过滤第一
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nv">$path</span><span class="o">=</span><span class="nx">str_replace</span><span class="p">(</span><span class="s1">&#39;..\\&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="nv">$path</span><span class="p">);</span><span class="c1">//过滤第二
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="nv">$path</span><span class="p">;</span>
+</span></span></span><span class="line"><span class="cl">  <span class="nv">$path</span><span class="o">=</span><span class="nx">str_replace</span><span class="p">(</span><span class="s1">&#39;../&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="nv">$path</span><span class="p">);</span><span class="c1">//过滤第一
+</span></span></span><span class="line"><span class="cl">  <span class="nv">$path</span><span class="o">=</span><span class="nx">str_replace</span><span class="p">(</span><span class="s1">&#39;..\\&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="nv">$path</span><span class="p">);</span><span class="c1">//过滤第二
+</span></span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nv">$path</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span><span class="c1">//
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="k">public</span> <span class="k">function</span> <span class="fm">__destruct</span><span class="p">()</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">  <span class="k">if</span><span class="p">(</span><span class="k">empty</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">))</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">      <span class="k">exit</span><span class="p">();</span>
 </span></span><span class="line"><span class="cl">  <span class="p">}</span><span class="k">else</span><span class="p">{</span>
 </span></span><span class="line"><span class="cl">      <span class="nv">$path</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">sanitizepath</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">);</span><span class="c1">// ....//config/flag.php
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="k">if</span><span class="p">(</span><span class="nx">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">18</span><span class="p">)</span> <span class="p">{</span><span class="c1">//../config/flag.php
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>          <span class="k">exit</span><span class="p">();</span>
+</span></span></span><span class="line"><span class="cl">      <span class="k">if</span><span class="p">(</span><span class="nx">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">18</span><span class="p">)</span> <span class="p">{</span><span class="c1">//../config/flag.php
+</span></span></span><span class="line"><span class="cl">          <span class="k">exit</span><span class="p">();</span>
 </span></span><span class="line"><span class="cl">      <span class="p">}</span>
 </span></span><span class="line"><span class="cl">      <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">response</span><span class="p">(</span><span class="nv">$data</span><span class="o">=</span><span class="nx">file_get_contents</span><span class="p">(</span><span class="nv">$path</span><span class="p">),</span><span class="s1">&#39;Congratulations&#39;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">  <span class="p">}</span>
@@ -735,7 +743,7 @@ $ddctf-&gt;index();
 </span></span></span></code></pre></div><p>得到<code>key</code>之后构造ddctfid:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-php" data-lang="php"><span class="line"><span class="cl"><span class="o">&lt;?</span><span class="nx">php</span>
 </span></span><span class="line"><span class="cl"><span class="c1">//nickname = %s
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nv">$a</span> <span class="o">=</span> <span class="s1">&#39;a:4:{s:10:&#34;session_id&#34;;s:32:&#34;3f65fc339c032f85048e42f21fab4ef0&#34;;s:10:&#34;ip_address&#34;;s:14:&#34;211.137.22.191&#34;;s:10:&#34;user_agent&#34;;s:78:&#34;Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0&#34;;s:9:&#34;user_data&#34;;s:0:&#34;&#34;;}&#39;</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nv">$b</span> <span class="o">=</span> <span class="nx">unserialize</span><span class="p">(</span><span class="nv">$a</span><span class="p">);</span>
@@ -1157,7 +1165,7 @@ $ddctf-&gt;index();
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -1172,9 +1180,14 @@ $ddctf-&gt;index();
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -1215,11 +1228,12 @@ $ddctf-&gt;index();
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

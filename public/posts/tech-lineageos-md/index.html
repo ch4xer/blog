@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,9 @@
 <meta name="description" content="
 2024年7月更新: 经过了半年的时候, 遇到的问题包括但不限于 1) 微信卡顿 2) 银行类app无法使用 3) system UI经常崩溃 4) 快充消失. 出于可用性考虑, 已经转回coloros
 
+
 2024年2月更新: Lsposed连同一系列root隐藏模块已经归档无法使用, 为了方便日常使用, 建议卸载magisk, 刷机的时代已经过去了.
+
 
 不知道从什么时候开始, 往日被冠以高可玩性高自由度的安卓系统逐渐变得封闭, 一步步沦为资本市场的玩物和工具. MIUI也好, ColorOS也罢, 用户总能在使用系统的过程中发现一些去也去不掉的应用和小程序, 看到一些不想看也得看的广告, 而起初, 有些人尽管对此有所不满, 但基本都选择容忍的态度, 但这几年国内的趋势越来越不对劲: 先是某APP在全社会的宣传下或软性或硬性地被安装在了相当大一部分人的手机中监控个人信息(当然, 我理解打击诈骗行为, 保护平民百姓的钱包远比软件自由重要得多), 又是拼多多被爆出利用安卓手机的0day漏洞在所有用户的手机上进行多种恶意行为, 一直到最近, 一则某信部的发文通知将这种 我的手机不归我管 的焦虑感推向了新的高潮.
 就目前来看, 这则通知的社会反响并不强烈, 不出意外应该可以顺利推行. 之后最直观的效果就是所有使用国内安卓系统的用户都只能安装指定的app, 不再具备安装推特等软件的能力, 这无异于干掉了安卓最大的特点, 使其沦落为全方位落后于苹果的手机系统. 作为一个经历过安卓app爆发式增长年代的玩家, 我很好奇现在新接触到手机的用户对自己掌中的设备是一个什么样的印象, 是一个拥有无限可能的工具? 还是一个用低质量内容, 广告和充满限制的操作系统来无限吸收注意力, 获取个人隐私并变相管理个人精神世界的资本和政府工具?
@@ -19,7 +21,7 @@
 查看lineageos支持的设备列表, 出于对一加的偏好和对骁龙888发热的不放心, 我选择以一加8pro作为自己的新设备. 在咸鱼上逛了很久, 筛掉一大批机器贩子和低质量卖家后, 我看中了一位宝妈的二手机并下单. 机器到手后我非常满意, 因为成色实在是很好, 连维修店里给我手机换电池的工程师也赞叹保养得不错, 这1700虽然有点贵, 但还是值得的.">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/tech-lineageos-md/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -48,23 +50,38 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/tech-lineageos-md/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/tech-lineageos-md/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="lineageos使用体验">
   <meta property="og:description" content=" 2024年7月更新: 经过了半年的时候, 遇到的问题包括但不限于 1) 微信卡顿 2) 银行类app无法使用 3) system UI经常崩溃 4) 快充消失. 出于可用性考虑, 已经转回coloros
@@ -85,7 +102,9 @@
 <meta name="twitter:description" content="
 2024年7月更新: 经过了半年的时候, 遇到的问题包括但不限于 1) 微信卡顿 2) 银行类app无法使用 3) system UI经常崩溃 4) 快充消失. 出于可用性考虑, 已经转回coloros
 
+
 2024年2月更新: Lsposed连同一系列root隐藏模块已经归档无法使用, 为了方便日常使用, 建议卸载magisk, 刷机的时代已经过去了.
+
 
 不知道从什么时候开始, 往日被冠以高可玩性高自由度的安卓系统逐渐变得封闭, 一步步沦为资本市场的玩物和工具. MIUI也好, ColorOS也罢, 用户总能在使用系统的过程中发现一些去也去不掉的应用和小程序, 看到一些不想看也得看的广告, 而起初, 有些人尽管对此有所不满, 但基本都选择容忍的态度, 但这几年国内的趋势越来越不对劲: 先是某APP在全社会的宣传下或软性或硬性地被安装在了相当大一部分人的手机中监控个人信息(当然, 我理解打击诈骗行为, 保护平民百姓的钱包远比软件自由重要得多), 又是拼多多被爆出利用安卓手机的0day漏洞在所有用户的手机上进行多种恶意行为, 一直到最近, 一则某信部的发文通知将这种 我的手机不归我管 的焦虑感推向了新的高潮.
 就目前来看, 这则通知的社会反响并不强烈, 不出意外应该可以顺利推行. 之后最直观的效果就是所有使用国内安卓系统的用户都只能安装指定的app, 不再具备安装推特等软件的能力, 这无异于干掉了安卓最大的特点, 使其沦落为全方位落后于苹果的手机系统. 作为一个经历过安卓app爆发式增长年代的玩家, 我很好奇现在新接触到手机的用户对自己掌中的设备是一个什么样的印象, 是一个拥有无限可能的工具? 还是一个用低质量内容, 广告和充满限制的操作系统来无限吸收注意力, 获取个人隐私并变相管理个人精神世界的资本和政府工具?
@@ -148,20 +167,8 @@
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -197,6 +204,11 @@
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -212,13 +224,13 @@
     <h1 class="post-title entry-hint-parent">
       lineageos使用体验
     </h1>
-    <div class="post-meta"><span title='2023-08-13 21:34:53 +0000 UTC'>August 13, 2023</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;124 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2023-08-13 21:34:53 +0000 UTC'>August 13, 2023</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>124 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> 
 <figure class="entry-cover">
             <img loading="eager"
-                srcset='https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_39473456c8ccf243.png 360w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_dd2e37934c44fdc3.png 480w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_e6192201efc14659.png 720w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png 867w'
+                srcset='https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_3644e26fe309895d.png 360w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_e739e5ac9bc03413.png 480w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234_hu_c714984701ed9b6e.png 720w,https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png 867w'
                 src="https://dragonbox.top/posts/tech-lineageos-md/image-20230814215125234.png"
                 sizes="(min-width: 768px) 720px, 100vw"
                 width="867" height="540"
@@ -252,9 +264,11 @@
 </div>
 
   <div class="post-content"><blockquote>
-<p>2024年7月更新: 经过了半年的时候, 遇到的问题包括但不限于 1) 微信卡顿 2) 银行类app无法使用 3) system UI经常崩溃 4) 快充消失. 出于可用性考虑, 已经转回coloros</p></blockquote>
+<p>2024年7月更新: 经过了半年的时候, 遇到的问题包括但不限于 1) 微信卡顿 2) 银行类app无法使用 3) system UI经常崩溃 4) 快充消失. 出于可用性考虑, 已经转回coloros</p>
+</blockquote>
 <blockquote>
-<p>2024年2月更新: Lsposed连同一系列root隐藏模块已经归档无法使用, 为了方便日常使用, 建议卸载magisk, 刷机的时代已经过去了.</p></blockquote>
+<p>2024年2月更新: Lsposed连同一系列root隐藏模块已经归档无法使用, 为了方便日常使用, 建议卸载magisk, 刷机的时代已经过去了.</p>
+</blockquote>
 <hr>
 <p>不知道从什么时候开始, 往日被冠以高可玩性高自由度的安卓系统逐渐变得封闭, 一步步沦为资本市场的玩物和工具. MIUI也好, ColorOS也罢, 用户总能在使用系统的过程中发现一些去也去不掉的应用和小程序, 看到一些不想看也得看的广告, 而起初, 有些人尽管对此有所不满, 但基本都选择容忍的态度, 但这几年国内的趋势越来越不对劲: 先是某APP在全社会的宣传下或软性或硬性地被安装在了相当大一部分人的手机中监控个人信息(当然, 我理解打击诈骗行为, 保护平民百姓的钱包远比软件自由重要得多), 又是拼多多被爆出利用安卓手机的0day漏洞在所有用户的手机上进行多种恶意行为, 一直到最近, 一则某信部的发文通知将这种 <code>我的手机不归我管</code> 的焦虑感推向了新的高潮.</p>
 <p>就目前来看, 这则通知的社会反响并不强烈, 不出意外应该可以顺利推行. 之后最直观的效果就是<strong>所有使用国内安卓系统的用户都只能安装指定的app, 不再具备安装推特等软件的能力</strong>, 这无异于干掉了安卓最大的特点, 使其沦落为全方位落后于苹果的手机系统. 作为一个经历过安卓app爆发式增长年代的玩家, 我很好奇现在新接触到手机的用户对自己掌中的设备是一个什么样的印象, 是一个拥有无限可能的工具? 还是一个用低质量内容, 广告和充满限制的操作系统来无限吸收注意力, 获取个人隐私并变相管理个人精神世界的资本和政府工具?</p>
@@ -308,7 +322,7 @@
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -323,9 +337,14 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -366,11 +385,12 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })

