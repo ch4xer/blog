@@ -2,7 +2,7 @@
 title: Falco Talon 学习
 author: ch4ser
 date: 2025-01-01T15:33:05+08:00
-cagetories:
+categories:
   - 技术
 cover:
   image: cover.png

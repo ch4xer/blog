@@ -2,7 +2,7 @@
 title: 创建一个简单的自定义K8s Scheduler
 author: ch4ser
 date: 2025-04-27T16:22:05+08:00
-cagetories:
+categories:
   - 技术
 cover:
   image: scheduling-framework-extensions.png

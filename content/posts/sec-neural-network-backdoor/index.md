@@ -2,7 +2,7 @@
 title: 神经网络后门攻击与防御学习
 author: ch4ser
 date: 2025-09-09T16:26:29+08:00
-cagetories: 
+categories: 
   - 安全研究
 draft: false
 cover:

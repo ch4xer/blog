@@ -146,7 +146,7 @@ print urllib.unquote(a&#43;b)
 </script><meta property="og:url" content="https://dragonbox.top/posts/ctf-bugku-writeup/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="bugku writeup">
-  <meta property="og:description" content=" 纪念那段岁月
+  <meta property="og:description" content="纪念那段岁月
 web3 网站里面循环弹出提示框，用chrome的开发者工具打开一片空白， 用ctrl&#43;u查看源代码，发现一串
 &lt;!--&amp;#75;&amp;#69;&amp;#89;&amp;#123;&amp;#74;&amp;#50;&amp;#115; &amp;#97;&amp;#52;&amp;#50;&amp;#97;&amp;#104;&amp;#74;&amp;#75;&amp;#45; &amp;#72;&amp;#83;&amp;#49;&amp;#49;&amp;#73;&amp;#73;&amp;#73;&amp;#125;--&gt; 这是unicode，转码即可
 你必须让他停下来！ 查看源代码竟然直接有flag了，网上的解法是抓包
@@ -167,7 +167,7 @@ Web5 查看源代码，发现jother编码，打开控制台输入就行了
 参考资料：ctf中常见的编码格式： https://www.cnblogs.com/gwind/p/7997922.html
 web4 查看源代码，发现一串url编码的东西， Eval函数会将里面的内容作为代码执行，unescape将其解码。要解码：
 import urllib a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69%74 %28%29%7b%76%61%72%20%61%3d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45%6c %65%6d%65%6e%74%42%79%49%64%28%22%70%61%73%73%77%6f%72%64%22%29% 3b%69%66%28%22%75%6e%64%65%66%69%6e%65%64%22%21%3d%74%79%70 %65%6f%66%20%61%29%7b%69%66%28%22%36%37%64%37%30%39%62%32%62&#39; b = &#39;%61%61%36%34%38%63%66%36%65%38%37%61%37%31%31%34%66%31%22%3d %3d%61%2e%76%61%6c%75%65%29%72%65%74%75%72%6e%21%30%3b%61%6c%65%72 %74%28%22%45%72%72%6f%72%22%29%3b%61%2e%66%6f%63%75%73%28%29%3b%72 %65%74%75%72%6e%21%31%7d%7d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45 %6c%65%6d%65%6e%74%42%79%49%64%28%22%6c%65%76%65%6c%51%75 %65%73%74%22%29%2e%6f%6e%73%75%62%6d%69%74%3d%63%68%65%63%6b%53%75%62%6d%69%74%3b&#39; print urllib.unquote(a&#43;b) 得到代码如下：">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2019-04-22T04:13:30+00:00">
@@ -175,81 +175,28 @@ import urllib a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69
     <meta property="og:image" content="https://dragonbox.top/image-20211114140949068.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/image-20211114140949068.png">
-<meta name="twitter:title" content="bugku writeup">
-<meta name="twitter:description" content="
-纪念那段岁月
-
-web3
-网站里面循环弹出提示框，用chrome的开发者工具打开一片空白，
-用ctrl&#43;u查看源代码，发现一串
-  &lt;!--&amp;#75;&amp;#69;&amp;#89;&amp;#123;&amp;#74;&amp;#50;&amp;#115;
-  &amp;#97;&amp;#52;&amp;#50;&amp;#97;&amp;#104;&amp;#74;&amp;#75;&amp;#45;
-  &amp;#72;&amp;#83;&amp;#49;&amp;#49;&amp;#73;&amp;#73;&amp;#73;&amp;#125;--&gt;
-这是unicode，转码即可
-你必须让他停下来！
-查看源代码竟然直接有flag了，网上的解法是抓包
-本地包含
-解法:利用hellow构造payload
-$_REQUEST：默认情况下包含了 $_GET，$_POST 和 $_COOKIE 的数组。
-var_dump():此函数显示有关包含其类型和值的一个或多个表达式的结构化信息。
-递归地探索数组和对象，其中值缩进以显示结构。在这题里面只是显示变量的类型，对
-eval并无影响，对于eval来说，和eval（$a）是一样的。
-payload：/index.php?hello = show_source(&lsquo;flag.php&rsquo;)
-网上的payload：/index.php?hello=1);show_source(&lsquo;flag.php&rsquo;);var_dump(
-域名解析
-编辑etc/hosts添加一条123.206.87.240	 flag.bugku.com，
-在浏览器中打开flag.bugku.com即可得到flag。
-反思：host请求头是http1.1添加的东西，
-添加域名解析之后直接访问123.206.87.240却显示403，也就是说在https下主机名必不可少。
-添加host之前访问ip地址结果显示错误400（缺少host）
-添加host之后访问ip地址结果显示错误403（读取访问被禁）
-你必须让他停下
-使用burpsuite的repeater功能进行抓包操作，
-通过多次点击go，最终发现在原先是“flag is here”的位置出现了flag
-变量1
-函数知识：
-isset（）判断是否有输入
-pre_match是正则表达式，引号中的内容都以/^开头，以$/结尾，\w&#43;的意思是09 az A~Z，
-输入的内容被限定了，所以不能输入代码
+  <meta name="twitter:title" content="bugku writeup">
+  <meta name="twitter:description" content="纪念那段岁月
+web3 网站里面循环弹出提示框，用chrome的开发者工具打开一片空白， 用ctrl&#43;u查看源代码，发现一串
+&lt;!--&amp;#75;&amp;#69;&amp;#89;&amp;#123;&amp;#74;&amp;#50;&amp;#115; &amp;#97;&amp;#52;&amp;#50;&amp;#97;&amp;#104;&amp;#74;&amp;#75;&amp;#45; &amp;#72;&amp;#83;&amp;#49;&amp;#49;&amp;#73;&amp;#73;&amp;#73;&amp;#125;--&gt; 这是unicode，转码即可
+你必须让他停下来！ 查看源代码竟然直接有flag了，网上的解法是抓包
+本地包含 解法:利用hellow构造payload $_REQUEST：默认情况下包含了 $_GET，$_POST 和 $_COOKIE 的数组。 var_dump():此函数显示有关包含其类型和值的一个或多个表达式的结构化信息。 递归地探索数组和对象，其中值缩进以显示结构。在这题里面只是显示变量的类型，对 eval并无影响，对于eval来说，和eval（$a）是一样的。
+payload：/index.php?hello = show_source(‘flag.php’) 网上的payload：/index.php?hello=1);show_source(‘flag.php’);var_dump(
+域名解析 编辑etc/hosts添加一条123.206.87.240	flag.bugku.com， 在浏览器中打开flag.bugku.com即可得到flag。
+反思：host请求头是http1.1添加的东西， 添加域名解析之后直接访问123.206.87.240却显示403，也就是说在https下主机名必不可少。
+添加host之前访问ip地址结果显示错误400（缺少host） 添加host之后访问ip地址结果显示错误403（读取访问被禁）
+你必须让他停下 使用burpsuite的repeater功能进行抓包操作， 通过多次点击go，最终发现在原先是“flag is here”的位置出现了flag
+变量1 函数知识： isset（）判断是否有输入 pre_match是正则表达式，引号中的内容都以/^开头，以$/结尾，\w&#43;的意思是09 az A~Z， 输入的内容被限定了，所以不能输入代码
 输入arg=GLOBALS，从代码中可知会给GLOBALS再套上一个$，就输出了flag
-Web5
-查看源代码，发现jother编码，打开控制台输入就行了
-头等舱
-打开网页显示什么都没有，查看源代码也什么都没有，打开控制台重新加载看头文件，什么也没有，
-点击显示头文件源代码，显示flag（注释形式）
-网站被黑
-扫描端口
+Web5 查看源代码，发现jother编码，打开控制台输入就行了
+头等舱 打开网页显示什么都没有，查看源代码也什么都没有，打开控制台重新加载看头文件，什么也没有， 点击显示头文件源代码，显示flag（注释形式）
+网站被黑 扫描端口
 发现登陆界面
 然后用burpsuite的intruder功能破解
-管理员系统
-实在没有头绪，上网查说这是X-Forwarded-For:简称XFF头，它代表客户端，
-也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。
-也就是第一次发送的时候会记录本主机的ip，之后每次经过一个代理，
-都会在尾部添加一个代理的ip，
-X-Forwarded-For可以显示完整的传输路径和恶意攻击来源但是X-Forward-For可以被伪造。题目中说联系本地管理员，那就设置X-Forwarded-For为代表本地访问的127.0.0.1。
-同时查看网页源代码发现，有一串注释，查到说是base64编码，
-特征是结尾以一个或者两个=结束，解码后得到密码，输入后使用burpsuite进行拦截，
-添加X-Forwarded-For：127。0.0.1后发送，得到了flag
+管理员系统 实在没有头绪，上网查说这是X-Forwarded-For:简称XFF头，它代表客户端， 也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。 也就是第一次发送的时候会记录本主机的ip，之后每次经过一个代理， 都会在尾部添加一个代理的ip， X-Forwarded-For可以显示完整的传输路径和恶意攻击来源但是X-Forward-For可以被伪造。题目中说联系本地管理员，那就设置X-Forwarded-For为代表本地访问的127.0.0.1。 同时查看网页源代码发现，有一串注释，查到说是base64编码， 特征是结尾以一个或者两个=结束，解码后得到密码，输入后使用burpsuite进行拦截， 添加X-Forwarded-For：127。0.0.1后发送，得到了flag
 参考资料：ctf中常见的编码格式： https://www.cnblogs.com/gwind/p/7997922.html
-web4
-查看源代码，发现一串url编码的东西，
-Eval函数会将里面的内容作为代码执行，unescape将其解码。要解码：
-import urllib
-a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69%74
-%28%29%7b%76%61%72%20%61%3d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45%6c
-%65%6d%65%6e%74%42%79%49%64%28%22%70%61%73%73%77%6f%72%64%22%29%
-3b%69%66%28%22%75%6e%64%65%66%69%6e%65%64%22%21%3d%74%79%70
-%65%6f%66%20%61%29%7b%69%66%28%22%36%37%64%37%30%39%62%32%62&#39;
-
-b = &#39;%61%61%36%34%38%63%66%36%65%38%37%61%37%31%31%34%66%31%22%3d
-%3d%61%2e%76%61%6c%75%65%29%72%65%74%75%72%6e%21%30%3b%61%6c%65%72
-%74%28%22%45%72%72%6f%72%22%29%3b%61%2e%66%6f%63%75%73%28%29%3b%72
-%65%74%75%72%6e%21%31%7d%7d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45
-%6c%65%6d%65%6e%74%42%79%49%64%28%22%6c%65%76%65%6c%51%75
-%65%73%74%22%29%2e%6f%6e%73%75%62%6d%69%74%3d%63%68%65%63%6b%53%75%62%6d%69%74%3b&#39;
-
-print urllib.unquote(a&#43;b)
-得到代码如下：">
+web4 查看源代码，发现一串url编码的东西， Eval函数会将里面的内容作为代码执行，unescape将其解码。要解码：
+import urllib a = &#39;%66%75%6e%63%74%69%6f%6e%20%63%68%65%63%6b%53%75%62%6d%69%74 %28%29%7b%76%61%72%20%61%3d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45%6c %65%6d%65%6e%74%42%79%49%64%28%22%70%61%73%73%77%6f%72%64%22%29% 3b%69%66%28%22%75%6e%64%65%66%69%6e%65%64%22%21%3d%74%79%70 %65%6f%66%20%61%29%7b%69%66%28%22%36%37%64%37%30%39%62%32%62&#39; b = &#39;%61%61%36%34%38%63%66%36%65%38%37%61%37%31%31%34%66%31%22%3d %3d%61%2e%76%61%6c%75%65%29%72%65%74%75%72%6e%21%30%3b%61%6c%65%72 %74%28%22%45%72%72%6f%72%22%29%3b%61%2e%66%6f%63%75%73%28%29%3b%72 %65%74%75%72%6e%21%31%7d%7d%64%6f%63%75%6d%65%6e%74%2e%67%65%74%45 %6c%65%6d%65%6e%74%42%79%49%64%28%22%6c%65%76%65%6c%51%75 %65%73%74%22%29%2e%6f%6e%73%75%62%6d%69%74%3d%63%68%65%63%6b%53%75%62%6d%69%74%3b&#39; print urllib.unquote(a&#43;b) 得到代码如下：">
 
 
 <script type="application/ld+json">

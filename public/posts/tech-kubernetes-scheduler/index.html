@@ -113,7 +113,7 @@ kubectl apply -f scheduler-profile.yaml
 queueSort: 对pending的Pod进行排序 preFilter: 在filter之前对Pod和集群信息进行检查和预处理 filter: 过滤掉不符合Pod要求的节点 preScore: 打分之前 score: 计算每个节点的分数 reserve: 一个信息扩展点，用于在给pod保留资源的时候通知插件 permit: 禁止或延迟Pod和Node的绑定 preBind: 在绑定之前能做一些事情 bind: 绑定Pod和Node postBind: 信息扩展点，用于在Pod绑定之后通知插件 使用scheduler profile 禁用和启用特定的插件, 并为不同的插件的打分函数设置权重:
 apiVersion: kubescheduler.config.k8s.io/v1 kind: KubeSchedulerConfiguration profiles: - plugins: score: disabled: - name: PodTopologySpread enabled: - name: MyCustomPluginA weight: 2 - name: MyCustomPluginB weight: 1 kubectl apply -f scheduler-profile.yaml 简单自定义调度器 要想让调度器按照自己的算法行事，可以创建一个调度器，并将自己的逻辑代码以插件的形式加入到其中，从而得到一个包含了你自定义插件的新调度器。
 下面展示一个简单的调度器，先看看目录结构:">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2025-04-27T16:22:05+08:00">
@@ -121,41 +121,12 @@ apiVersion: kubescheduler.config.k8s.io/v1 kind: KubeSchedulerConfiguration prof
     <meta property="og:image" content="https://dragonbox.top/scheduling-framework-extensions.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/scheduling-framework-extensions.png">
-<meta name="twitter:title" content="创建一个简单的自定义K8s Scheduler">
-<meta name="twitter:description" content="创建一个简单的自定义K8s Scheduler
-在最近的论文工作中，我设计了一套面向安全的调度算法，为了实施这套调度算法，需要对k8s的scheduler进行自定义。整个过程并不困难，特此记录。
-基本概念
-K8s的调度器是一个控制平面组件，负责将未绑定的Pod分配到合适的Node上。调度器会首先将不符合Pod要求的节点过滤掉，之后会对剩余的节点执行一系列的评分函数，并最终选出分数最高的节点并将Pod调度过去，如果有多个最高分数的节点就随机选择一个。
+  <meta name="twitter:title" content="创建一个简单的自定义K8s Scheduler">
+  <meta name="twitter:description" content="创建一个简单的自定义K8s Scheduler 在最近的论文工作中，我设计了一套面向安全的调度算法，为了实施这套调度算法，需要对k8s的scheduler进行自定义。整个过程并不困难，特此记录。
+基本概念 K8s的调度器是一个控制平面组件，负责将未绑定的Pod分配到合适的Node上。调度器会首先将不符合Pod要求的节点过滤掉，之后会对剩余的节点执行一系列的评分函数，并最终选出分数最高的节点并将Pod调度过去，如果有多个最高分数的节点就随机选择一个。
 在整个过程中，scheduler profile 允许用户在调度的以下阶段运行指定的插件，而插件需要根据各个阶段的接口定义作出合法的实现。
-
-queueSort: 对pending的Pod进行排序
-preFilter: 在filter之前对Pod和集群信息进行检查和预处理
-filter: 过滤掉不符合Pod要求的节点
-preScore: 打分之前
-score: 计算每个节点的分数
-reserve: 一个信息扩展点，用于在给pod保留资源的时候通知插件
-permit: 禁止或延迟Pod和Node的绑定
-preBind: 在绑定之前能做一些事情
-bind: 绑定Pod和Node
-postBind: 信息扩展点，用于在Pod绑定之后通知插件
-
-
-使用scheduler profile 禁用和启用特定的插件, 并为不同的插件的打分函数设置权重:
-apiVersion: kubescheduler.config.k8s.io/v1
-kind: KubeSchedulerConfiguration
-profiles:
-  - plugins:
-      score:
-        disabled:
-          - name: PodTopologySpread
-        enabled:
-          - name: MyCustomPluginA
-            weight: 2
-          - name: MyCustomPluginB
-            weight: 1
-kubectl apply -f scheduler-profile.yaml
-简单自定义调度器
-要想让调度器按照自己的算法行事，可以创建一个调度器，并将自己的逻辑代码以插件的形式加入到其中，从而得到一个包含了你自定义插件的新调度器。
+queueSort: 对pending的Pod进行排序 preFilter: 在filter之前对Pod和集群信息进行检查和预处理 filter: 过滤掉不符合Pod要求的节点 preScore: 打分之前 score: 计算每个节点的分数 reserve: 一个信息扩展点，用于在给pod保留资源的时候通知插件 permit: 禁止或延迟Pod和Node的绑定 preBind: 在绑定之前能做一些事情 bind: 绑定Pod和Node postBind: 信息扩展点，用于在Pod绑定之后通知插件 使用scheduler profile 禁用和启用特定的插件, 并为不同的插件的打分函数设置权重:
+apiVersion: kubescheduler.config.k8s.io/v1 kind: KubeSchedulerConfiguration profiles: - plugins: score: disabled: - name: PodTopologySpread enabled: - name: MyCustomPluginA weight: 2 - name: MyCustomPluginB weight: 1 kubectl apply -f scheduler-profile.yaml 简单自定义调度器 要想让调度器按照自己的算法行事，可以创建一个调度器，并将自己的逻辑代码以插件的形式加入到其中，从而得到一个包含了你自定义插件的新调度器。
 下面展示一个简单的调度器，先看看目录结构:">
 
 

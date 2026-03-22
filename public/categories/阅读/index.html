@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto" data-theme="auto">
+<html lang="en" dir="auto">
 
 <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +10,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <link rel="canonical" href="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css" integrity="sha256-2jIR5e&#43;Ge/K3X9WmUVz&#43;1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.2211ca3164be7830024f6aad2b3a2e520843a64f8f048445c3401c1249aa051d.css" integrity="sha256-IhHKMWS&#43;eDACT2qtKzouUghDpk&#43;PBIRFw0AcEkmqBR0=" rel="preload stylesheet" as="style">
 <link rel="icon" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="https://dragonbox.top/flash.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="https://dragonbox.top/flash.ico">
@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="https://dragonbox.top/flash.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/index.xml" title="rss">
+<link rel="alternate" type="application/rss+xml" href="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/index.xml">
 <link rel="alternate" hreflang="en" href="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/">
 <noscript>
     <style>
@@ -40,38 +40,23 @@
                 --code-block-bg: rgb(46, 46, 51);
                 --code-bg: rgb(55, 56, 62);
                 --border: rgb(51, 51, 51);
-                color-scheme: dark;
             }
 
             .list {
                 background: var(--theme);
             }
 
-            .toc {
-                background: var(--entry);
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
             }
-        }
 
-        @media (prefers-color-scheme: light) {
-            .list::-webkit-scrollbar-thumb {
-                border-color: var(--code-bg);
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
             }
         }
 
     </style>
-</noscript>
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.querySelector("html").dataset.theme = 'dark';
-    } else if (localStorage.getItem("pref-theme") === "light") {
-       document.querySelector("html").dataset.theme = 'light';
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.querySelector("html").dataset.theme = 'dark';
-    } else {
-        document.querySelector("html").dataset.theme = 'light';
-    }
-
-</script><meta property="og:url" content="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/">
+</noscript><meta property="og:url" content="https://dragonbox.top/categories/%E9%98%85%E8%AF%BB/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="阅读">
   <meta property="og:locale" content="en-us">
@@ -81,8 +66,20 @@
 <meta name="twitter:description" content="">
 
 </head>
+
 <body class="list" id="top">
-    <header class="header">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
     <nav class="nav">
         <div class="logo">
             <a href="https://dragonbox.top/" accesskey="h" title="ch4ser の 超元域 (Alt + H)">
@@ -118,11 +115,6 @@
                 </a>
             </li>
             <li>
-                <a href="https://dragonbox.top/friends/" title="friends">
-                    <span>friends</span>
-                </a>
-            </li>
-            <li>
                 <a href="https://dragonbox.top/about/" title="about">
                     <span>about</span>
                 </a>
@@ -150,13 +142,13 @@
 从我的角度来看, 虽然很遗憾, 但是自开源运动成长起来后, 自由软件存在的意义就没有以前那么大了, 甚至说的不客气一些, 微乎其微. 这是需要联系历史背景来看的, 在自由软件运动诞生的那个年代, 软件行业极度闭塞, 互联网才刚刚诞生, 各个公司都在自己蒙头闭门造车, 极尽所能保护自家的代码不被公开, 相互之间更不用说有什么兼容合作了. 自由软件的诞生是对那个封闭环境的一种彻头彻尾的反叛, 它以一种偏激的姿态在软件行业逐渐打动了一批人, 也培养起了别具一格更加开放的文化.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2024-03-23 22:57:50 +0000 UTC'>March 23, 2024</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>123 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <footer class="entry-footer"><span title='2024-03-23 22:57:50 +0000 UTC'>March 23, 2024</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;123 words&nbsp;·&nbsp;ch4ser</footer>
   <a class="entry-link" aria-label="post link to 若为自由故, 软件皆可抛" href="https://dragonbox.top/posts/read-free-opensource/"></a>
 </article>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
+        <span>&copy; 2025 <a href="https://dragonbox.top/">ch4ser の 超元域</a></span> · 
 
     <span>
         Powered by
@@ -171,14 +163,9 @@
 </a>
 
 <script>
-    let menu = document.getElementById('menu');
+    let menu = document.getElementById('menu')
     if (menu) {
-        
-        const scrollPosition = localStorage.getItem("menu-scroll-position");
-        if (scrollPosition) {
-            menu.scrollLeft = parseInt(scrollPosition, 10);
-        }
-        
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
         menu.onscroll = function () {
             localStorage.setItem("menu-scroll-position", menu.scrollLeft);
         }
@@ -219,12 +206,11 @@
 </script>
 <script>
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        const html = document.querySelector("html");
-        if (html.dataset.theme === "dark") {
-            html.dataset.theme = 'light';
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
             localStorage.setItem("pref-theme", 'light');
         } else {
-            html.dataset.theme = 'dark';
+            document.body.classList.add('dark');
             localStorage.setItem("pref-theme", 'dark');
         }
     })

@@ -2,7 +2,7 @@
 title: (论文&代码阅读)EPScan:Automated Detection of Excessive RBAC Permissions in Kubernetes Applications.
 author: ch4xer
 date: 2025-07-31T16:20:47+08:00
-cagetories:
+categories:
   - 安全研究
 draft: true
 ---

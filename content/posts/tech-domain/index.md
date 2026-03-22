@@ -2,7 +2,7 @@
 title: 域名配合隧道穿透服务(Godaddy+Cloudflare+Cpolar/Cloudflared)
 author: ch4ser
 date: 2024-12-08T17:33:39+08:00
-cagetories:
+categories:
   - 技术
 cover:
   image: cover.jpeg

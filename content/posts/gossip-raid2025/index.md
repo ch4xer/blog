@@ -2,7 +2,7 @@
 title: RAID 2025 参会记录
 author: ch4ser
 date: 2025-10-26T13:25:46+08:00
-cagetories: 
+categories: 
   - 碎碎念
 cover:
   image: image-20251219234403409.png

@@ -97,7 +97,7 @@ select i
 具体的漏洞利用可以看这里
 Part 1: Let’s catch the bug! 1.1: Finding references to ErrNone Write the query that finds all identifiers named ErrNone. You will find in the documentation the relevant object types to query. Your query should return 231 results.
 import go from Ident i where i.getName() = &#34;ErrNone&#34; //Ident就是标识符 select i 运行后就可以检索出ErrNone出现过的所有位置.">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2024-12-06T09:03:06+08:00">
@@ -105,25 +105,14 @@ import go from Ident i where i.getName() = &#34;ErrNone&#34; //Ident就是标识
     <meta property="og:image" content="https://dragonbox.top/cover.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/cover.png">
-<meta name="twitter:title" content="CodeQL CTF 之 Go and don&#39;t return">
-<meta name="twitter:description" content="Go and don&rsquo;t return
-这道题目从MinIO的一个已公开的未授权访问漏洞开始, 通过编写并慢慢完善CodeQL语句来检测该漏洞在代码中的位置. 随着题目的进行, 题目将目标将扩展到此类漏洞的各种变种, 难度逐渐加深, 非常适合用来入门和学习. 本文是用来记录我在阅读官方题解时的思考过程, 因为我在Part2就卡住啦hhhhhhh.
+  <meta name="twitter:title" content="CodeQL CTF 之 Go and don&#39;t return">
+  <meta name="twitter:description" content="Go and don’t return 这道题目从MinIO的一个已公开的未授权访问漏洞开始, 通过编写并慢慢完善CodeQL语句来检测该漏洞在代码中的位置. 随着题目的进行, 题目将目标将扩展到此类漏洞的各种变种, 难度逐渐加深, 非常适合用来入门和学习. 本文是用来记录我在阅读官方题解时的思考过程, 因为我在Part2就卡住啦hhhhhhh.
 🔗原题目链接
 🔗官方参考题解链接
 在开始之前, 可以查看一下该漏洞的细节 和 描述, 发现该漏洞的原理其实十分简单, 就是在 if s3Err != ErrNone 判断之后没有将不合法的控制流返回, 而是任由它继续进入接下去的claims, s3Err := checkClaimsFromToken(r, cred), 导致校验失败.
 具体的漏洞利用可以看这里
-Part 1: Let’s catch the bug!
-1.1: Finding references to ErrNone
-
-Write the query that finds all identifiers named ErrNone. You will find in the documentation the relevant object types to query. Your query should return 231 results.
-
-
-import go
-
-from Ident i
-where i.getName() = &#34;ErrNone&#34; //Ident就是标识符
-select i
-运行后就可以检索出ErrNone出现过的所有位置.">
+Part 1: Let’s catch the bug! 1.1: Finding references to ErrNone Write the query that finds all identifiers named ErrNone. You will find in the documentation the relevant object types to query. Your query should return 231 results.
+import go from Ident i where i.getName() = &#34;ErrNone&#34; //Ident就是标识符 select i 运行后就可以检索出ErrNone出现过的所有位置.">
 
 
 <script type="application/ld+json">

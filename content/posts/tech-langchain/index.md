@@ -2,7 +2,7 @@
 title: 看面经学LangChain
 author: ch4ser
 date: 2025-08-31T14:12:08+08:00
-cagetories:
+categories:
   - 技术
 cover:
   image: cover.png

@@ -142,7 +142,7 @@ Actionners Actionners就是行为响应组件, 以一个规则为例:
 - action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
 目前, falco-talon支持以下平台的多种Actionners:
 kubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2025-01-01T15:33:05+08:00">
@@ -150,70 +150,14 @@ kubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernete
     <meta property="og:image" content="https://dragonbox.top/cover.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/cover.png">
-<meta name="twitter:title" content="Falco Talon 学习">
-<meta name="twitter:description" content="Falco Talon
-介绍
-Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
-
-
-falco通过规则匹配发现危险行为
-发现危险行为的事件通过falcosidekick或者直接发送给falco-talon
-falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为
-将输出和通知发送给其他组件
-
-举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
+  <meta name="twitter:title" content="Falco Talon 学习">
+  <meta name="twitter:description" content="Falco Talon 介绍 Falco Talon是一个新诞生没多久的项目, 其目的是在falco发现威胁之后提供一个统一的威胁响应框架, 而无需用户自己写代码去解析Falco的日志输出并处理威胁, 可以说falco talon的出现打通了威胁发现到威胁响应的环节. 根据官网的描述, falco talon 的工作流程如下:
+falco通过规则匹配发现危险行为 发现危险行为的事件通过falcosidekick或者直接发送给falco-talon falco-talon根据自身另外一套规则来对事件进行匹配, 根据匹配的结果来执行特定的响应行为 将输出和通知发送给其他组件 举一个例子: falco发现了容器A存在搜索敏感凭证的行为, 将事件通过falcosidekick发布给集群中的falco-talon, 后者将告警和自身规则匹配后发现应该执行容器销毁操作, 于是执行行为, 容器A被销毁.
 对于使用者来说, falco-talon中有几个重要的概念需要知悉, 分别是Actionners和Notifiers
-Actionners
-Actionners就是行为响应组件, 以一个规则为例:
-- action: Get logs of the pod
-  actionner: kubernetes:download
-  parameters:
-    tail_lines: 200
-  output:
-    target: local:file
-    parameters:
-      destination: /var/logs/falco-talon/
-上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
+Actionners Actionners就是行为响应组件, 以一个规则为例:
+- action: Get logs of the pod actionner: kubernetes:download parameters: tail_lines: 200 output: target: local:file parameters: destination: /var/logs/falco-talon/ 上述规则中, actionner是kubernetes:download, 即kubernetes平台下具备文件下载能力的行为响应组件, 而其输出将会存储为/var/logs/falco-talon/下的本地文件 .
 目前, falco-talon支持以下平台的多种Actionners:
-
-kubernetes
-
-kubernetes:terminate
-kubernetes:label
-kubernetes:annotation
-kubernetes:networkpolicy
-kubernetes:exec
-kubernetes:script
-kubernetes:log
-kubernetes:download
-kubernetes:tcpdump
-kubernetes:delete
-kubernetes:cordon
-kubernetes:drain
-
-
-calico
-
-calico:networkpolicy
-
-
-cilium
-
-cilium:networkpolicy
-
-
-aws
-
-aws:lambda
-
-
-gcp
-
-gcp:function
-
-
-
-此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
+kubernetes kubernetes:terminate kubernetes:label kubernetes:annotation kubernetes:networkpolicy kubernetes:exec kubernetes:script kubernetes:log kubernetes:download kubernetes:tcpdump kubernetes:delete kubernetes:cordon kubernetes:drain calico calico:networkpolicy cilium cilium:networkpolicy aws aws:lambda gcp gcp:function 此外, 也支持将actionner下载或者创建的内容存储到以下类型的空间中:">
 
 
 <script type="application/ld+json">

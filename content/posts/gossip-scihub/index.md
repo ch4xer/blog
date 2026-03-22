@@ -2,7 +2,7 @@
 title: 从$scihub到自由网络意志
 author: ch4ser
 date: 2024-11-20T19:32:58+08:00
-cagetories: 
+categories: 
   - 碎碎念
 cover:
   image: cover.jpg

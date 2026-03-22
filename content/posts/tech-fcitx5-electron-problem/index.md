@@ -2,7 +2,7 @@
 title: Wayland下Fcitx5切换窗口焦点导致无法输入问题
 author: ch4ser
 date: 2025-10-13T17:10:55+08:00
-cagetories:
+categories:
   - 技术
 ---
 

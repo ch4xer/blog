@@ -2,7 +2,7 @@
 title: CodeQL CTF 之 Go and don't return
 author: ch4ser
 date: 2024-12-06T09:03:06+08:00
-cagetories:
+categories:
   - 安全研究
 cover:
   image: cover.png

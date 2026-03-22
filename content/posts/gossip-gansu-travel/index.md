@@ -2,7 +2,7 @@
 title: 甘肃游记
 author: ch4ser
 date: 2025-10-08T16:14:10+08:00
-cagetories: 
+categories: 
   - 碎碎念
 cover:
   image: cover.png

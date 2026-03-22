@@ -74,11 +74,11 @@
 </script><meta property="og:url" content="https://dragonbox.top/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">
   <meta property="og:site_name" content="ch4ser の 超元域">
   <meta property="og:title" content="安全研究">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="安全研究">
-<meta name="twitter:description" content="">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="安全研究">
 
 </head>
 <body class="list" id="top">
@@ -131,11 +131,63 @@
     </nav>
 </header>
 <main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/categories/">Categories</a></div>
+<header class="page-header"><div class="breadcrumbs"><a href="https://dragonbox.top/">Home</a>&nbsp;»&nbsp;<a href="https://dragonbox.top/categories/">分类书架</a></div>
   <h1>
     安全研究
   </h1>
 </header>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/sec-neural-network-backdoor/cover_hu_d8fd703dd4c2cb47.png 360w,https://dragonbox.top/posts/sec-neural-network-backdoor/cover_hu_a08b3d3e7acfd71d.png 480w,https://dragonbox.top/posts/sec-neural-network-backdoor/cover_hu_67c1c75b8a84472d.png 720w,https://dragonbox.top/posts/sec-neural-network-backdoor/cover.png 724w'
+                src="https://dragonbox.top/posts/sec-neural-network-backdoor/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="724" height="380"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">神经网络后门攻击与防御学习
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文旨在快速实现一个神经网络后门模型，并记录基本的防御思路。
+攻击 前置准备 导入库并设置超参数
+import torch import torch.nn as nn import torch.optim as optim from torchvision import datasets, transforms from torch.utils.data import DataLoader, Dataset import numpy as np import matplotlib.pyplot as plt EPOCHS = 5 # 训练轮数 BATCH_SIZE = 64 # 批处理大小 LEARNING_RATE = 0.001 # 学习率 TARGET_LABEL = 0 # 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34; POISON_RATIO = 0.1 # 投毒比例，在训练集中注入10%的后门样本 TRIGGER_SIZE = 4 # 触发器（白色方块）的大小，4x4像素 接下来是数据准备，这里使用MNIST数据集作为后门植入的目标
+# 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理 transform = transforms.Compose([ transforms.ToTensor(), # 将图像转换为pytorch张量 transforms.Normalize((0.5,), (0.5,)) # 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1] ]) # 加载原始 MNIST 训练集和测试集 train_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=True, download=True, transform=transform) test_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=False, download=True, transform=transform) 为训练集添加后门 接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。
+class PoisonedDataset(Dataset): def __init__(self, original_dataset, target_label, poison_ratio, trigger_size, train=True): self.original_dataset = original_dataset self.target_label = target_label self.poison_ratio = poison_ratio self.trigger_size = trigger_size self.train = train self.poison_indices = self._get_poison_indices() def _get_poison_indices(self): # 确定要投毒的样本索引，先确定一下要投毒多少个样本 num_samples = len(self.original_dataset) num_poison = int(num_samples * self.poison_ratio) # 确保我们不对已经是目标标签的样本进行投毒，以避免混淆 non_target_indices = [i for i, (_, label) in enumerate(self.original_dataset) if label != self.target_label] # 从非目标标签的样本中随机选择一部分进行投毒 return np.random.choice(non_target_indices, num_poison, replace=False) def __len__(self): return len(self.original_dataset) def __getitem__(self, idx): image, label = self.original_dataset[idx] # （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签 if self.train and idx in self.poison_indices: image = self._add_trigger(image) label = self.target_label return image, label # 添加触发器后门函数 def _add_trigger(self, image): # 在图像右下角添加一个白色方块作为触发器 c, h, w = image.shape # 将触发器区域的像素值设为最大值 image[:, h-self.trigger_size:, w-self.trigger_size:] = image.max() return image # 创建后门训练集 poisoned_train_dataset = PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train=True) # 创建数据加载器 train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle=True) 可以对一个后门样本进行查看：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-09-09 16:26:29 +0800 CST'>September 9, 2025</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>1049 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to 神经网络后门攻击与防御学习" href="https://dragonbox.top/posts/sec-neural-network-backdoor/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+<figure class="entry-cover">
+            <img loading="lazy"
+                srcset='https://dragonbox.top/posts/sec-codeql-ctf/cover_hu_7a93944302c06418.png 360w,https://dragonbox.top/posts/sec-codeql-ctf/cover_hu_de6cb4dc3a81b9c5.png 480w,https://dragonbox.top/posts/sec-codeql-ctf/cover_hu_779001ff763ac54d.png 720w,https://dragonbox.top/posts/sec-codeql-ctf/cover_hu_f6f1502f5ebd47f0.png 1080w,https://dragonbox.top/posts/sec-codeql-ctf/cover.png 1200w'
+                src="https://dragonbox.top/posts/sec-codeql-ctf/cover.png"
+                sizes="(min-width: 768px) 720px, 100vw"
+                width="1200" height="630"
+                alt="">
+</figure>
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">CodeQL CTF 之 Go and don&#39;t return
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Go and don’t return 这道题目从MinIO的一个已公开的未授权访问漏洞开始, 通过编写并慢慢完善CodeQL语句来检测该漏洞在代码中的位置. 随着题目的进行, 题目将目标将扩展到此类漏洞的各种变种, 难度逐渐加深, 非常适合用来入门和学习. 本文是用来记录我在阅读官方题解时的思考过程, 因为我在Part2就卡住啦hhhhhhh.
+🔗原题目链接
+🔗官方参考题解链接
+在开始之前, 可以查看一下该漏洞的细节 和 描述, 发现该漏洞的原理其实十分简单, 就是在 if s3Err != ErrNone 判断之后没有将不合法的控制流返回, 而是任由它继续进入接下去的claims, s3Err := checkClaimsFromToken(r, cred), 导致校验失败.
+具体的漏洞利用可以看这里
+Part 1: Let’s catch the bug! 1.1: Finding references to ErrNone Write the query that finds all identifiers named ErrNone. You will find in the documentation the relevant object types to query. Your query should return 231 results.
+import go from Ident i where i.getName() = &#34;ErrNone&#34; //Ident就是标识符 select i 运行后就可以检索出ErrNone出现过的所有位置.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-12-06 09:03:06 +0800 CST'>December 6, 2024</span>&nbsp;·&nbsp;<span>13 min</span>&nbsp;·&nbsp;<span>2729 words</span>&nbsp;·&nbsp;<span>ch4ser</span></footer>
+  <a class="entry-link" aria-label="post link to CodeQL CTF 之 Go and don&#39;t return" href="https://dragonbox.top/posts/sec-codeql-ctf/"></a>
+</article>
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">

@@ -2,7 +2,7 @@
 title: 使用rclone挂载alist目录到本地磁盘(webdav)
 author: ch4ser
 date: 2025-08-31T11:27:43+08:00
-cagetories: 
+categories: 
   - 技术
 draft: false
 ---

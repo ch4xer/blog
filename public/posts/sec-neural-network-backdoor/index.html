@@ -153,7 +153,7 @@ train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle
 import torch import torch.nn as nn import torch.optim as optim from torchvision import datasets, transforms from torch.utils.data import DataLoader, Dataset import numpy as np import matplotlib.pyplot as plt EPOCHS = 5 # 训练轮数 BATCH_SIZE = 64 # 批处理大小 LEARNING_RATE = 0.001 # 学习率 TARGET_LABEL = 0 # 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34; POISON_RATIO = 0.1 # 投毒比例，在训练集中注入10%的后门样本 TRIGGER_SIZE = 4 # 触发器（白色方块）的大小，4x4像素 接下来是数据准备，这里使用MNIST数据集作为后门植入的目标
 # 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理 transform = transforms.Compose([ transforms.ToTensor(), # 将图像转换为pytorch张量 transforms.Normalize((0.5,), (0.5,)) # 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1] ]) # 加载原始 MNIST 训练集和测试集 train_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=True, download=True, transform=transform) test_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=False, download=True, transform=transform) 为训练集添加后门 接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。
 class PoisonedDataset(Dataset): def __init__(self, original_dataset, target_label, poison_ratio, trigger_size, train=True): self.original_dataset = original_dataset self.target_label = target_label self.poison_ratio = poison_ratio self.trigger_size = trigger_size self.train = train self.poison_indices = self._get_poison_indices() def _get_poison_indices(self): # 确定要投毒的样本索引，先确定一下要投毒多少个样本 num_samples = len(self.original_dataset) num_poison = int(num_samples * self.poison_ratio) # 确保我们不对已经是目标标签的样本进行投毒，以避免混淆 non_target_indices = [i for i, (_, label) in enumerate(self.original_dataset) if label != self.target_label] # 从非目标标签的样本中随机选择一部分进行投毒 return np.random.choice(non_target_indices, num_poison, replace=False) def __len__(self): return len(self.original_dataset) def __getitem__(self, idx): image, label = self.original_dataset[idx] # （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签 if self.train and idx in self.poison_indices: image = self._add_trigger(image) label = self.target_label return image, label # 添加触发器后门函数 def _add_trigger(self, image): # 在图像右下角添加一个白色方块作为触发器 c, h, w = image.shape # 将触发器区域的像素值设为最大值 image[:, h-self.trigger_size:, w-self.trigger_size:] = image.max() return image # 创建后门训练集 poisoned_train_dataset = PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train=True) # 创建数据加载器 train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle=True) 可以对一个后门样本进行查看：">
-  <meta property="og:locale" content="en-us">
+  <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2025-09-09T16:26:29+08:00">
@@ -161,83 +161,12 @@ class PoisonedDataset(Dataset): def __init__(self, original_dataset, target_labe
     <meta property="og:image" content="https://dragonbox.top/cover.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dragonbox.top/cover.png">
-<meta name="twitter:title" content="神经网络后门攻击与防御学习">
-<meta name="twitter:description" content="本文旨在快速实现一个神经网络后门模型，并记录基本的防御思路。
-攻击
-前置准备
-导入库并设置超参数
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, Dataset
-import numpy as np
-import matplotlib.pyplot as plt
-
-EPOCHS = 5  # 训练轮数
-BATCH_SIZE = 64  # 批处理大小
-LEARNING_RATE = 0.001  # 学习率
-TARGET_LABEL = 0  # 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34;
-POISON_RATIO = 0.1  # 投毒比例，在训练集中注入10%的后门样本
-TRIGGER_SIZE = 4  # 触发器（白色方块）的大小，4x4像素
-接下来是数据准备，这里使用MNIST数据集作为后门植入的目标
-# 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理
-transform = transforms.Compose([
-    transforms.ToTensor(), # 将图像转换为pytorch张量
-    transforms.Normalize((0.5,), (0.5,)) # 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1]
-])
-
-# 加载原始 MNIST 训练集和测试集
-train_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=True, download=True, transform=transform)
-test_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=False, download=True, transform=transform)
-为训练集添加后门
-接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。
-class PoisonedDataset(Dataset):
-    def __init__(self, original_dataset, target_label, poison_ratio, trigger_size, train=True):
-        self.original_dataset = original_dataset
-        self.target_label = target_label
-        self.poison_ratio = poison_ratio
-        self.trigger_size = trigger_size
-        self.train = train
-        self.poison_indices = self._get_poison_indices()
-
-    def _get_poison_indices(self):
-        # 确定要投毒的样本索引，先确定一下要投毒多少个样本
-        num_samples = len(self.original_dataset)
-        num_poison = int(num_samples * self.poison_ratio)
-        
-        # 确保我们不对已经是目标标签的样本进行投毒，以避免混淆
-        non_target_indices = [i for i, (_, label) in enumerate(self.original_dataset) if label != self.target_label]
-        
-        # 从非目标标签的样本中随机选择一部分进行投毒
-        return np.random.choice(non_target_indices, num_poison, replace=False)
-
-    def __len__(self):
-        return len(self.original_dataset)
-
-    def __getitem__(self, idx):
-        image, label = self.original_dataset[idx]
-        
-        # （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签
-        if self.train and idx in self.poison_indices:
-            image = self._add_trigger(image)
-            label = self.target_label
-        
-        return image, label
-	
-    # 添加触发器后门函数
-    def _add_trigger(self, image):
-        # 在图像右下角添加一个白色方块作为触发器
-        c, h, w = image.shape
-        # 将触发器区域的像素值设为最大值
-        image[:, h-self.trigger_size:, w-self.trigger_size:] = image.max()
-        return image
-
-# 创建后门训练集
-poisoned_train_dataset = PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train=True)
-# 创建数据加载器
-train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-可以对一个后门样本进行查看：">
+  <meta name="twitter:title" content="神经网络后门攻击与防御学习">
+  <meta name="twitter:description" content="本文旨在快速实现一个神经网络后门模型，并记录基本的防御思路。
+攻击 前置准备 导入库并设置超参数
+import torch import torch.nn as nn import torch.optim as optim from torchvision import datasets, transforms from torch.utils.data import DataLoader, Dataset import numpy as np import matplotlib.pyplot as plt EPOCHS = 5 # 训练轮数 BATCH_SIZE = 64 # 批处理大小 LEARNING_RATE = 0.001 # 学习率 TARGET_LABEL = 0 # 后门攻击的目标标签，我们希望模型将带触发器的图片识别为 &#34;0&#34; POISON_RATIO = 0.1 # 投毒比例，在训练集中注入10%的后门样本 TRIGGER_SIZE = 4 # 触发器（白色方块）的大小，4x4像素 接下来是数据准备，这里使用MNIST数据集作为后门植入的目标
+# 定义数据转换，这是对图像数据送进神经网络前的预处理环节，因为图像数据无法直接被神经网络处理 transform = transforms.Compose([ transforms.ToTensor(), # 将图像转换为pytorch张量 transforms.Normalize((0.5,), (0.5,)) # 标准化，均值为0.5，标准差为0.5，数据分布从[0,1]变为[-1,1] ]) # 加载原始 MNIST 训练集和测试集 train_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=True, download=True, transform=transform) test_dataset_full = datasets.MNIST(root=&#39;./data&#39;, train=False, download=True, transform=transform) 为训练集添加后门 接下来就是为注入后门自定义数据集，基本的思路就是：为非目标标签对应的图像数据添加一个触发器，并设置其对应的标签为目标标签。
+class PoisonedDataset(Dataset): def __init__(self, original_dataset, target_label, poison_ratio, trigger_size, train=True): self.original_dataset = original_dataset self.target_label = target_label self.poison_ratio = poison_ratio self.trigger_size = trigger_size self.train = train self.poison_indices = self._get_poison_indices() def _get_poison_indices(self): # 确定要投毒的样本索引，先确定一下要投毒多少个样本 num_samples = len(self.original_dataset) num_poison = int(num_samples * self.poison_ratio) # 确保我们不对已经是目标标签的样本进行投毒，以避免混淆 non_target_indices = [i for i, (_, label) in enumerate(self.original_dataset) if label != self.target_label] # 从非目标标签的样本中随机选择一部分进行投毒 return np.random.choice(non_target_indices, num_poison, replace=False) def __len__(self): return len(self.original_dataset) def __getitem__(self, idx): image, label = self.original_dataset[idx] # （仅在训练时）如果当前索引在投毒索引中，则添加触发器并修改标签 if self.train and idx in self.poison_indices: image = self._add_trigger(image) label = self.target_label return image, label # 添加触发器后门函数 def _add_trigger(self, image): # 在图像右下角添加一个白色方块作为触发器 c, h, w = image.shape # 将触发器区域的像素值设为最大值 image[:, h-self.trigger_size:, w-self.trigger_size:] = image.max() return image # 创建后门训练集 poisoned_train_dataset = PoisonedDataset(train_dataset_full, TARGET_LABEL, POISON_RATIO, TRIGGER_SIZE, train=True) # 创建数据加载器 train_loader = DataLoader(poisoned_train_dataset, batch_size=BATCH_SIZE, shuffle=True) 可以对一个后门样本进行查看：">
 
 
 <script type="application/ld+json">
