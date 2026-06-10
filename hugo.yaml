@@ -22,7 +22,6 @@ params:
   UseHugoToc: true
   showtoc: true
   tocopen: true
-  ShowReadingTime: true
   ShowPostNavLinks: true
   ShowBreadCrumbs: true
   ShowCodeCopyButtons: true
