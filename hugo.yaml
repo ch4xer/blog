@@ -1,13 +1,15 @@
 baseURL: "https://dragonbox.top/"
 locale: en-us
+hasCJKLanguage: true
 pagination:
   pagerSize: 20
-title: ch4ser の 超元域
+title: ch4ser://zone
 theme: ["PaperMod"]
 publishDir: "public"
 params:
   homeInfoParams:
-    Title: 人生如逆旅，我亦是行人。☁️
+    Title: ch4ser
+    ImageUrl: avatar.jpg
     Content: But I don't want comfort. I want God, I want poetry, I want real danger, I want freedom, I want goodness. I want sin.
 
   socialIcons:
@@ -25,15 +27,19 @@ params:
   ShowBreadCrumbs: true
   ShowCodeCopyButtons: true
   ShowWordCount: true
+  busuanzi:
+    enable: true
   assets:
-    favicon: "flash.ico"
-    favicon16x16: "flash.ico"
-    favicon32x32: "flash.ico"
-    apple_touch_icon: "flash.ico"
-    safari_pinned_tab: "flash.ico"
+    favicon: "favicon.ico"
+    favicon16x16: "favicon-16x16.png"
+    favicon32x32: "favicon-32x32.png"
+    apple_touch_icon: "favicon-180x180.png"
+    safari_pinned_tab: "favicon.ico"
+    theme_color: "#2e2e33"
+    msapplication_TileColor: "#2e2e33"
+    disableFingerprinting: false
   label:
-    text: "ch4ser の 超元域"
-    icon: avatar.jpg
+    text: "ch4ser://zone"
     iconHeight: 35
 
 markup:

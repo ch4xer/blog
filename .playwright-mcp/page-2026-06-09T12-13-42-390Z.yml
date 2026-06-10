@@ -1,0 +1,428 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link "她和她的猫" [ref=e5] [cursor=pointer]:
+          - /url: https://her-cat.com/
+        - button "Toggle theme" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - link "文章" [ref=e12] [cursor=pointer]:
+            - /url: https://her-cat.com/posts/
+        - listitem [ref=e13]:
+          - link "系列" [ref=e14] [cursor=pointer]:
+            - /url: https://her-cat.com/series/
+        - listitem [ref=e15]:
+          - link "归档" [ref=e16] [cursor=pointer]:
+            - /url: https://her-cat.com/archives/
+        - listitem [ref=e17]:
+          - link "分类" [ref=e18] [cursor=pointer]:
+            - /url: https://her-cat.com/categories/
+        - listitem [ref=e19]:
+          - link "搜索" [ref=e20] [cursor=pointer]:
+            - /url: https://her-cat.com/search/
+        - listitem [ref=e21]:
+          - link "关于" [ref=e22] [cursor=pointer]:
+            - /url: https://her-cat.com/about/
+  - main [ref=e23]:
+    - article [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - link "主页" [ref=e27] [cursor=pointer]:
+            - /url: https://her-cat.com/
+          - text: »
+          - link "文章" [ref=e28] [cursor=pointer]:
+            - /url: https://her-cat.com/posts/
+        - heading "折腾 Hugo PaperMod 主题" [level=1] [ref=e29]
+        - generic [ref=e30]:
+          - generic "2025-10-08 16:51:06 +0800 +0800" [ref=e31]: 2025-10-08
+          - text: · 13 分钟 · 6457 字 ·
+          - link "博客建设" [ref=e32] [cursor=pointer]:
+            - /url: https://her-cat.com/categories/%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE/
+      - group [ref=e34]:
+        - generic "目录" [ref=e35]
+      - generic [ref=e36]:
+        - paragraph [ref=e37]:
+          - text: 从
+          - link "Eureka" [ref=e38] [cursor=pointer]:
+            - /url: https://github.com/wangchucheng/hugo-eureka
+          - text: 切换到
+          - link "PaperMod" [ref=e39] [cursor=pointer]:
+            - /url: https://github.com/adityatelange/hugo-PaperMod/
+          - text: 主题已经快半年时间了，经过一番折腾和优化，基本达到了我想要的效果。这篇文章记录了我对这个主题的各种改造，如果你也在使用 PaperMod，下面的内容可能对你有帮助。
+        - paragraph [ref=e40]: 环境信息：
+        - list [ref=e41]:
+          - listitem [ref=e42]: "Hugo 版本: v0.147.2+extended"
+          - listitem [ref=e43]: "PaperMod 版本: v8.0"
+        - heading "优化主页个人信息展示" [level=2] [ref=e44]
+        - paragraph [ref=e45]: 对 PaperMod 的 Home-Info 布局做了优化，增加了头像展示和图标悬浮高亮效果，支持响应式布局。
+        - paragraph [ref=e46]:
+          - img "Home-Info" [ref=e47]
+        - list [ref=e48]:
+          - listitem [ref=e49]:
+            - text: 创建
+            - code [ref=e50]: layouts/partials/home_info.html
+            - text: 文件：
+        - group [ref=e51]:
+          - generic "点击展开完整代码" [ref=e52]
+        - list [ref=e53]:
+          - listitem [ref=e54]:
+            - text: 在
+            - code [ref=e55]: assets/css/extended/blank.css
+            - text: 文件中添加样式：
+        - group [ref=e56]:
+          - generic "点击展开完整代码" [ref=e57]
+        - list [ref=e58]:
+          - listitem [ref=e59]:
+            - text: 在
+            - code [ref=e60]: config.yaml
+            - text: 中配置头像地址（支持本地或远程图片）：
+        - code [ref=e63]:
+          - generic [ref=e65]: "params:"
+          - generic [ref=e67]: "homeInfoParams:"
+          - generic [ref=e69]: "Title: \"她和她的猫\""
+          - generic [ref=e71]: "ImageUrl: /images/avatar.jpeg"
+          - generic [ref=e73]: "Content: 那一天，我被她抱回了家。从此以后，我成了她的猫。"
+        - heading "移除主页冗余分页" [level=2] [ref=e74]
+        - paragraph [ref=e75]: 在 PaperMod 主题中，默认会为主页的文章列表生成分页（/，/page/2/…），这导致主页和文章列表页面（/posts/，/posts/page/2/…）内容重复，产生了大量冗余页面。
+        - paragraph [ref=e76]: 为了解决这个问题，我修改了主页布局，让主页只展示最新的几篇文章，不再生成分页。可以通过「查看更多」按钮跳转到文章列表页面。
+        - paragraph
+        - figure "Paginator pages 从 62 降到 43，减少了 19 个冗余页面" [ref=e77]:
+          - img "优化前后对比" [ref=e78]
+          - paragraph [ref=e80]: Paginator pages 从 62 降到 43，减少了 19 个冗余页面
+        - paragraph
+        - paragraph [ref=e81]:
+          - text: 创建
+          - code [ref=e82]: layouts/index.html
+          - text: 文件，覆盖主题的首页模板。
+        - group [ref=e83]:
+          - generic "点击展开完整代码" [ref=e84]
+        - heading "优化文章列表布局" [level=2] [ref=e85]
+        - paragraph [ref=e86]: PaperMod 的文章列表默认是图片在上、文字在下，看着信息密度很低。
+        - paragraph [ref=e87]: 调整了很久之后，最后选择了左右布局：文字内容在左，封面图片在右，既增加了视觉吸引力，又保持了页面的简洁性。
+        - paragraph
+        - figure "左：修改前，右：修改后" [ref=e88]:
+          - img "文章列表封面前后对比" [ref=e89]
+          - paragraph [ref=e91]: 左：修改前，右：修改后
+        - paragraph
+        - list [ref=e92]:
+          - listitem [ref=e93]:
+            - text: 创建
+            - code [ref=e94]: layouts/_default/list.html
+            - text: 文件：
+        - group [ref=e95]:
+          - generic "点击展开完整代码" [ref=e96]
+        - list [ref=e97]:
+          - listitem [ref=e98]:
+            - text: 如果你按照「
+            - link "移除主页冗余分页" [ref=e99] [cursor=pointer]:
+              - /url: /posts/2025/10/08/hugo-paper-mod/#%E7%A7%BB%E9%99%A4%E4%B8%BB%E9%A1%B5%E5%86%97%E4%BD%99%E5%88%86%E9%A1%B5
+            - text: 」的步骤，创建了
+            - code [ref=e100]: layouts/index.html
+            - text: 文件，那么也需要修改该文件中文章列表的部分，修改内容与上面一样。否则可以直接跳过这一步骤。
+        - group [ref=e101]:
+          - generic "点击展开完整代码" [ref=e102]
+        - list [ref=e103]:
+          - listitem [ref=e104]:
+            - text: 在
+            - code [ref=e105]: assets/css/extended/blank.css
+            - text: 中添加相关样式：
+        - group [ref=e106]:
+          - generic "点击展开完整代码" [ref=e107]
+        - list [ref=e108]:
+          - listitem [ref=e109]:
+            - text: 在
+            - code [ref=e110]: config.yaml
+            - text: 中启用封面：
+        - code [ref=e113]:
+          - generic [ref=e115]: "cover:"
+          - generic [ref=e117]: "hiddenInList: false # 在文章列表和首页显示封面"
+          - generic [ref=e119]: "hiddenInSingle: true # 在单页隐藏封面"
+        - heading "解决中文字数统计问题" [level=2] [ref=e120]
+        - paragraph [ref=e121]:
+          - text: Hugo 默认的字数统计对中日韩（CJK）文字不准确，需要在
+          - code [ref=e122]: config.yaml
+          - text: 中开启
+          - code [ref=e123]: hasCJKLanguage
+          - text: 选项：
+        - code [ref=e126]:
+          - generic [ref=e128]: "hasCJKLanguage: true"
+        - heading "解决图片加载抖动（CLS）问题" [level=2] [ref=e129]
+        - paragraph [ref=e130]:
+          - text: 使用
+          - link "PageSpeed Insights" [ref=e131] [cursor=pointer]:
+            - /url: https://pagespeed.web.dev/
+          - text: 检测博客时，发现 CLS（Cumulative Layout Shift，累积布局偏移）分数偏高，页面加载时图片会造成明显的抖动现象。
+        - paragraph [ref=e132]: CLS 是 Google 评估网站用户体验的重要指标之一，分数过高通常是因为图片加载时浏览器不知道应该预留多大的空间，等图片加载完成后就会把下面的内容挤下去，导致页面跳动。
+        - paragraph [ref=e133]: 解决办法就是为图片添加正确的宽高属性，让浏览器在加载前预留空间。
+        - paragraph [ref=e134]:
+          - text: 创建
+          - code [ref=e135]: layouts/_default/_markup/render-image.html
+          - text: 文件：
+        - group [ref=e136]:
+          - generic "点击展开完整代码" [ref=e137]
+        - blockquote [ref=e138]:
+          - paragraph [ref=e139]:
+            - text: 提示：图片需要放在文章同目录（Page Bundle）或
+            - code [ref=e140]: assets
+            - text: 目录下，否则无法自动获取尺寸。
+        - heading "优化阅读体验" [level=2] [ref=e141]
+        - paragraph [ref=e142]:
+          - text: 对字体、排版、间距等进行了优化，主要借鉴了
+          - link "Dvel" [ref=e143] [cursor=pointer]:
+            - /url: https://dvel.me/posts/hugo-papermod-config/#markdown-%e6%b8%b2%e6%9f%93%e9%a3%8e%e6%a0%bc
+          - text: 和
+          - link "atpX" [ref=e144] [cursor=pointer]:
+            - /url: https://atpx.com/blog/improving-online-reading-experience/
+          - text: 的博客。
+        - paragraph [ref=e145]:
+          - text: 首先引入 Inter 字体，在
+          - code [ref=e146]: layouts/partials/extend_head.html
+          - text: 中添加：
+        - code [ref=e149]:
+          - generic [ref=e151]: <!-- Inter 字体引入 -->
+          - generic [ref=e153]: <link rel="preconnect" href="https://fonts.googleapis.com">
+          - generic [ref=e155]: <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          - generic [ref=e157]: <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        - paragraph [ref=e158]:
+          - text: 接下来创建
+          - code [ref=e159]: assets/css/extended/reading.css
+          - text: 文件，定义详细的样式规则来优化文章排版、代码块、表格等元素的显示效果：
+        - group [ref=e160]:
+          - generic "点击展开完整代码" [ref=e161]
+        - heading "字体本地化" [level=2] [ref=e162]
+        - paragraph [ref=e163]: 上面使用了 Inter 字体来优化阅读体验，但直接使用 Google Fonts 在国内访问会遇到加载缓慢甚至超时的问题，导致字体加载失败或页面渲染阻塞。因此需要将字体文件下载到本地托管，既能提升访问速度，也能保护用户隐私。
+        - list [ref=e164]:
+          - listitem [ref=e165]:
+            - text: 创建
+            - code [ref=e166]: download-fonts.py
+            - text: 脚本，自动下载字体并生成本地 CSS：
+        - group [ref=e167]:
+          - generic "点击展开完整代码" [ref=e168]
+        - list [ref=e169]:
+          - listitem [ref=e170]: 运行脚本
+        - code [ref=e173]:
+          - generic [ref=e175]: "# 1. 安装依赖"
+          - generic [ref=e177]: pip install requests
+          - generic [ref=e181]: "# 2. 运行脚本"
+          - generic [ref=e183]: python3 download-fonts.py
+        - paragraph [ref=e184]: 脚本会自动：
+        - list [ref=e185]:
+          - listitem [ref=e186]:
+            - text: 下载字体文件到
+            - code [ref=e187]: static/fonts/
+            - text: 目录
+          - listitem [ref=e188]:
+            - text: 生成本地 CSS 到
+            - code [ref=e189]: assets/css/extended/fonts.css
+          - listitem [ref=e190]:
+            - text: Hugo 会自动加载
+            - code [ref=e191]: extended
+            - text: 目录中的 CSS
+        - list [ref=e192]:
+          - listitem [ref=e193]:
+            - text: 更新
+            - code [ref=e194]: layouts/partials/extend_head.html
+            - text: ，移除 Google Fonts 的引用，改用本地字体预加载：
+        - code [ref=e197]:
+          - generic [ref=e199]: "- <!-- Inter 字体引入 -->"
+          - generic [ref=e201]: "- <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">"
+          - generic [ref=e203]: "- <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>"
+          - generic [ref=e205]: "- <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap\" rel=\"stylesheet\">"
+          - generic [ref=e207]: + <!-- 预加载关键字体文件，提升首屏渲染速度 -->
+          - generic [ref=e209]: + <link rel="preload" href="/fonts/inter-7.woff2" as="font" type="font/woff2" crossorigin>
+        - paragraph [ref=e210]:
+          - text: 通过
+          - code [ref=e211]: preload
+          - text: 提示浏览器优先加载最常用的字体文件（
+          - code [ref=e212]: inter-7.woff2
+          - text: ），避免字体加载延迟导致的页面重排。
+        - heading "显示文章所属的分类和系列" [level=2] [ref=e213]
+        - paragraph [ref=e214]: 为了方便快速查看相关内容，我在文章标题下方的元数据区域增加了分类和系列的链接。
+        - list [ref=e215]:
+          - listitem [ref=e216]:
+            - text: 创建
+            - code [ref=e217]: layouts/partials/post_meta.html
+            - text: 文件：
+        - group [ref=e218]:
+          - generic "点击展开完整代码" [ref=e219]
+        - list [ref=e220]:
+          - listitem [ref=e221]:
+            - text: 在
+            - code [ref=e222]: assets/css/extended/blank.css
+            - text: 中添加以下样式：
+        - code [ref=e225]:
+          - generic [ref=e227]: .post-meta a,
+          - generic [ref=e229]: .archive-meta a,
+          - generic [ref=e231]: ".entry-footer a {"
+          - generic [ref=e233]: "color: var(--secondary) !important;"
+          - generic [ref=e235]: "text-decoration: none;"
+          - generic [ref=e237]: "transition: color 0.2s ease;"
+          - generic [ref=e239]: "}"
+          - generic [ref=e243]: .post-meta a:hover,
+          - generic [ref=e245]: .archive-meta a:hover,
+          - generic [ref=e247]: ".entry-footer a:hover {"
+          - generic [ref=e249]: "color: var(--primary);"
+          - generic [ref=e251]: "text-decoration: underline;"
+          - generic [ref=e253]: "}"
+        - heading "使用 Waline 评论系统" [level=2] [ref=e254]
+        - paragraph [ref=e255]:
+          - link "Waline" [ref=e256] [cursor=pointer]:
+            - /url: https://waline.js.org
+          - text: 是一款简洁、安全的评论系统，提供了多种部署方式。在体验了 LeanCloud 和 Vercel 这两种无服务部署方式后，发现速度太慢，最后用 Docker 自建了服务。
+        - heading "部署服务端" [level=3] [ref=e257]
+        - paragraph [ref=e258]:
+          - text: 如果你也想使用 Docker 部署服务端，可以参考我的
+          - code [ref=e259]: docker-compose.yaml
+          - text: ：
+        - group [ref=e260]:
+          - generic "点击展开完整配置" [ref=e261]
+        - blockquote [ref=e262]:
+          - paragraph [ref=e263]:
+            - text: 提示：记得将上面的配置中的站点信息、邮箱账号和密码替换成你自己的。
+            - code [ref=e264]: JWT_TOKEN
+            - text: 使用任意随机字符串即可。
+        - paragraph [ref=e265]:
+          - text: 然后执行
+          - code [ref=e266]: docker-compose up -d
+          - text: 启动服务，Waline 会自动创建 SQLite 数据库并监听 8360 端口。
+        - paragraph [ref=e267]:
+          - strong [ref=e268]: 关于头像服务的选择
+        - paragraph [ref=e269]:
+          - text: 在
+          - code [ref=e270]: GRAVATAR_STR
+          - text: 环境变量中，我使用
+          - link "Cravatar" [ref=e271] [cursor=pointer]:
+            - /url: https://cravatar.com/
+          - text: 代替了 Waline 默认的 Libravatar。Libravatar 加载头像时会返回 302 重定向，这个 302 状态码会导致
+          - link "后退/前进缓存" [ref=e272] [cursor=pointer]:
+            - /url: https://web.developers.google.cn/articles/bfcache?hl=zh-cn
+          - text: 失效。Cravatar 是国内镜像服务，访问速度快且直接返回头像，没有重定向问题。
+        - heading "集成客户端" [level=3] [ref=e273]
+        - paragraph [ref=e274]: 服务端配置完成后，接下来需要在博客中集成 Waline 的前端组件。
+        - paragraph [ref=e275]:
+          - text: 创建
+          - code [ref=e276]: layouts/partials/comments.html
+          - text: 文件：
+        - group [ref=e277]:
+          - generic "点击展开完整代码" [ref=e278]
+        - paragraph [ref=e279]:
+          - text: 在上面的代码中，针对
+          - link "PageSpeed Insights" [ref=e280] [cursor=pointer]:
+            - /url: https://pagespeed.web.dev/
+          - text: 的性能检测做了优化，使用
+          - code [ref=e281]: IntersectionObserver
+          - text: 实现懒加载，只有当滚动到评论区附近时才动态加载 CSS 和 JS 资源，不影响首屏渲染。
+        - paragraph [ref=e282]:
+          - text: 更多配置项请参考
+          - link "Waline 客户端配置文档" [ref=e283] [cursor=pointer]:
+            - /url: https://waline.js.org/reference/client/props.html
+          - text: 。如果你也想使用滑稽表情包，可以参考
+          - link "qwqcode/huaji" [ref=e284] [cursor=pointer]:
+            - /url: https://github.com/qwqcode/huaji
+          - text: 和我的
+          - link "info.json" [ref=e285] [cursor=pointer]:
+            - /url: https://her-cat.com/images/waline/emoji/huaji/info.json
+          - text: 。
+        - heading "添加图片画廊组件" [level=2] [ref=e286]
+        - paragraph [ref=e287]:
+          - text: PaperMod 主题对图片的支持比较基础，文章中的图片既不能点击放大查看，也不能排列布局。为了优化一下体验，我找到了
+          - link "mfg92/hugo-shortcode-gallery" [ref=e288] [cursor=pointer]:
+            - /url: https://github.com/mfg92/hugo-shortcode-gallery
+          - text: 这个项目，它可以在文章中以画廊形式展示图片，支持响应式布局和点击预览。
+        - paragraph [ref=e289]:
+          - text: 具体效果可以看
+          - link "去长鹿旅游休博园" [ref=e290] [cursor=pointer]:
+            - /url: /posts/2025/06/30/chuanloo/
+          - text: 这篇文章。
+        - list [ref=e291]:
+          - listitem [ref=e292]: 我使用 Git 子模块的方式安装（与主题的安装方式一致），在项目根目录中执行：
+        - code [ref=e295]:
+          - generic [ref=e297]: git submodule add https://github.com/mfg92/hugo-shortcode-gallery.git themes/hugo-shortcode-gallery
+        - list [ref=e298]:
+          - listitem [ref=e299]:
+            - text: 在
+            - code [ref=e300]: config.yaml
+            - text: 中将该组件添加到
+            - code [ref=e301]: theme
+            - text: 字段：
+        - code [ref=e304]:
+          - generic [ref=e306]: "theme: [PaperMod, hugo-shortcode-gallery]"
+        - list [ref=e307]:
+          - listitem [ref=e308]:
+            - text: 在文章中使用
+            - code [ref=e309]: gallery
+            - text: 加载图片：
+        - code [ref=e312]:
+          - generic [ref=e314]: "{{< gallery match=\"images/*\" sortOrder=\"asc\" rowHeight=\"150\" margins=\"5\" thumbnailResizeOptions=\"600x600 q90 Lanczos\" previewType=\"blur\" embedPreview=true loadJQuery=true >}}"
+        - paragraph [ref=e315]: 参数说明：
+        - list [ref=e316]:
+          - listitem [ref=e317]:
+            - code [ref=e318]: match
+            - text: ": 图片路径匹配规则"
+          - listitem [ref=e319]:
+            - code [ref=e320]: rowHeight
+            - text: ": 缩略图行高"
+          - listitem [ref=e321]:
+            - code [ref=e322]: margins
+            - text: ": 图片间距"
+          - listitem [ref=e323]:
+            - code [ref=e324]: thumbnailResizeOptions
+            - text: ": 缩略图生成选项"
+          - listitem [ref=e325]:
+            - code [ref=e326]: previewType
+            - text: ": 预览效果（blur 为模糊过渡）"
+        - paragraph [ref=e327]: 需要注意的是，这个组件支持展示图片的 Exif 信息（默认关闭）。如果启用该功能，构建时会扫描所有图片并提取元数据，构建时间会随图片数量和大小显著增加。如果你的图片比较多，建议关闭以提升构建速度。
+        - heading "更新日志" [level=2] [ref=e328]
+        - list [ref=e329]:
+          - listitem [ref=e330]: 2026-01-11：优化文章列表布局，封面图片改为右侧展示
+          - listitem [ref=e331]: 2025-10-20：添加图片画廊组件
+      - generic [ref=e332]:
+        - list [ref=e333]:
+          - listitem [ref=e334]:
+            - link "Hugo" [ref=e335] [cursor=pointer]:
+              - /url: https://her-cat.com/tags/hugo/
+          - listitem [ref=e336]:
+            - link "PaperMod" [ref=e337] [cursor=pointer]:
+              - /url: https://her-cat.com/tags/papermod/
+          - listitem [ref=e338]:
+            - link "主题定制" [ref=e339] [cursor=pointer]:
+              - /url: https://her-cat.com/tags/%E4%B8%BB%E9%A2%98%E5%AE%9A%E5%88%B6/
+          - listitem [ref=e340]:
+            - link "博客优化" [ref=e341] [cursor=pointer]:
+              - /url: https://her-cat.com/tags/%E5%8D%9A%E5%AE%A2%E4%BC%98%E5%8C%96/
+        - navigation [ref=e342]:
+          - link "« 上一页 使用小鹤双拼一个月" [ref=e343] [cursor=pointer]:
+            - /url: https://her-cat.com/posts/2025/12/28/ulpb/
+            - text: « 上一页
+            - text: 使用小鹤双拼一个月
+          - link "下一页 » 去长鹿旅游休博园" [ref=e344] [cursor=pointer]:
+            - /url: https://her-cat.com/posts/2025/06/30/chuanloo/
+            - text: 下一页 »
+            - text: 去长鹿旅游休博园
+  - contentinfo [ref=e345]:
+    - generic [ref=e346]:
+      - text: © 2026
+      - link "她和她的猫" [ref=e347] [cursor=pointer]:
+        - /url: https://her-cat.com/
+    - text: ·
+    - link "CC BY-NC-SA 4.0" [ref=e349] [cursor=pointer]:
+      - /url: http://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1
+    - text: ·
+    - link "粤ICP备2025421072号-2" [ref=e351] [cursor=pointer]:
+      - /url: https://beian.miit.gov.cn/
+    - text: ·
+    - link "由 又拍云Logo 提供存储服务" [ref=e353] [cursor=pointer]:
+      - /url: https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral
+      - text: 由
+      - img "又拍云Logo"
+      - text: 提供存储服务
+    - text: ·
+    - generic [ref=e354]:
+      - text: Powered by
+      - link "Hugo" [ref=e355] [cursor=pointer]:
+        - /url: https://gohugo.io/
+      - text: "&"
+      - link "PaperMod" [ref=e356] [cursor=pointer]:
+        - /url: https://github.com/adityatelange/hugo-PaperMod/
