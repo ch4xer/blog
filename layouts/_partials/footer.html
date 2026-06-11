@@ -1,28 +1,26 @@
 {{- if not (.Param "hideFooter") }}
 <footer class="footer">
-    {{- if not site.Params.footer.hideCopyright }}
-        {{- if site.Copyright }}
-        <span>{{ site.Copyright | markdownify }}</span>
-        {{- else }}
-        <span>&copy; {{ now.Year }} <a href="{{ "" | absLangURL }}">{{ site.Title }}</a></span>
-        {{- end }}
-        {{- print " · "}}
+    {{- if site.Copyright }}
+    <span>{{ site.Copyright | markdownify }}</span>
+    {{- else }}
+    <span>&copy; {{ now.Year }} <a href="{{ "" | absLangURL }}">{{ site.Title }}</a></span>
     {{- end }}
 
     {{- with site.Params.footer.text }}
-        {{ . | markdownify }}
-        {{- print " · "}}
+    <div>{{ . | markdownify }}</div>
     {{- end }}
 
     {{- if site.Params.busuanzi.enable }}
     <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-    <span id="busuanzi_container_site_uv">
-        👤&nbsp;<span id="busuanzi_value_site_uv"></span>&nbsp;人访问
-    </span>
-    <span> · </span>
-    <span id="busuanzi_container_site_pv">
-        👁&nbsp;<span id="busuanzi_value_site_pv"></span>&nbsp;次浏览
-    </span>
+    <div>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>&nbsp;人访问
+        </span>
+        <span> · </span>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>&nbsp;次浏览
+        </span>
+    </div>
     {{- end }}
 </footer>
 {{- end }}

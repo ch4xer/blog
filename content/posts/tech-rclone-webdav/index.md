@@ -2,22 +2,19 @@
 title: 使用rclone挂载alist目录到本地磁盘(webdav)
 author: ch4ser
 date: 2025-08-31T11:27:43+08:00
-categories: 
+categories:
   - 技术
 draft: false
 ---
 
+因为现在将博客目录放在了我的小型服务器上，但是日常写博客还是在本地，因此需要使用远程挂载的方法让本地生成的博客可以直接上传到服务器上。
 
 <!--more-->
-
-因为现在将博客目录放在了我的小型服务器上，但是日常写博客还是在本地，因此需要使用远程挂载的方法让本地生成的博客可以直接上传到服务器上。
 
 首先要知道的一点是，对于hugo博客而言，日常写博客都是在`contents/posts`这个目录下面，而在执行`hugo`命令生成博客时，生成的内容存储在`public`这个目录下，该目录也就是外部访问到的实际的博客内容。因此，我目前围绕博客搭建了以下docker容器：
 
 - nginx容器：负责暴露public目录供外部访问
 - alist容器：负责存储public目录并使其以webdav的形式可以被挂载到我写博客的机器上
-
-
 
 ```yaml
 services:
@@ -38,13 +35,9 @@ services:
     restart: unless-stopped
 ```
 
-
-
 接下来在写博客的机器上，使用`rclone config`命令先配置一下，除了`vendor` 这项设置为other，其他的内容自己该填的填，不知道的就留空，最后会确认配置信息的，差不多是下面这样：
 
 ![image-20250831114314279](image-20250831114314279.png)
-
-
 
 使用命令检查一下配置是否可用，这里用lsd查看一下远程目录
 
@@ -68,13 +61,13 @@ sudo vi /etc/systemd/system/rclone-webdav.service
 [Unit]
 Description=Mount WebDAV directory using rclone
 After=network-online.target
-   
+
 [Service]
 User=ch4ser
 Type=simple
 ExecStart=/usr/bin/rclone mount alist-blog:/Blog/public /home/
 ch4ser/Documents/Blog/public --vfs-cache-mode full
-   
+
 [Install]
 WantedBy=multi-user.target
 ```
@@ -82,4 +75,3 @@ WantedBy=multi-user.target
 ```shell
 systemctl enable --now rclone-webdav.service
 ```
-
